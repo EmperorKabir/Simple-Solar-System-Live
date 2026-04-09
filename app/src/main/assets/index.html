@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Live Solar Astronomy</title>
+    <style>
+        body { margin: 0; background-color: #020202; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
+        #ui-container { position: absolute; z-index: 10; width: 100%; top: 0; pointer-events: none; }
+        #hud-telemetry { padding: 15px 20px; float: right; color: white; user-select: none; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 4px #000; text-transform: uppercase; font-size: 12px; text-align: right; display: none; }
+        .hud-btn { pointer-events: auto; margin-left: 20px; padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; cursor: pointer; border-radius: 4px; backdrop-filter: blur(4px); font-weight: bold; }
+        canvas { display: block; width: 100vw; height: 100vh; position: absolute; top:0; z-index: 1;}
+        
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: background 0.3s;
+        }
+        .btn-glass:active { background: rgba(255, 255, 255, 0.4); }
+        
+        #header-layer {
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            pointer-events: auto;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        #status {
+            color: white;
+            font-size: 26px;
+            font-weight: 300;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+        #sub-status {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            margin-top: 2px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        #bottom-layer {
+            position: absolute;
+            bottom: 80px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            pointer-events: auto;
+            z-index: 100;
+        }
+        
+        .planet-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-family: sans-serif;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            pointer-events: auto;
+            cursor: pointer;
+            margin-top: -20px; 
+            transition: opacity 0.5s;
+            text-shadow: 0 2px 4px rgba(0,0,0,1.0);
+        }
+        .hidden-label {
+            opacity: 0 !important;
+        }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./js/three.module.js",
+          "three/addons/": "./js/"
+        }
+      }
+    </script>
+</head>
+<body>
+    <div id="ui-container">
+        <div id="hud-telemetry" style="display:none; text-align: right; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 5px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">ORBIT: -- DAYS<br>DAY: -- HOURS</div>
+        <div style="clear: both; margin-bottom: 10px;"></div>
+    </div>
+
+    <div id="header-layer">
+        <h1 id="status">Solar System</h1>
+        <div id="sub-status">Live Positions</div>
+        <div style="display:flex; flex-direction:column; gap:5px; margin-top:5px;">
+            <button id="pluto-toggle" class="btn-glass" style="max-width: 140px; text-align: center;">Hide Pluto</button>
+            <button id="reset-btn" class="btn-glass" style="max-width: 140px; text-align: center;">Reset View</button>
+            <select id="nav-dropdown" class="btn-glass" style="max-width: 140px; font-family: sans-serif; font-size: 13px; color: white; background: rgba(0,0,0,0.6); outline: none;">
+                <option value="none" disabled selected>Jump to Body...</option>
+            </select>
+        </div>
+    </div>
+    
+    <div id="bottom-layer">
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/CSS2DRenderer.js';
+
+        // ============================================================
+        // 1. Core WebGL Engine Setup
+        // ============================================================
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
+        // Initial position will be set by calcResetView() after planets are created
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        document.body.appendChild(renderer.domElement);
+        
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        labelRenderer.domElement.style.zIndex = '5';
+        document.body.appendChild(labelRenderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = false;
+        controls.maxDistance = 750.0;
+        controls.minDistance = 1.0;
+        controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
+        controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+        
+        // ============================================================
+        // 2. Lighting — Point light at Sun + ambient + hemisphere fill
+        // ============================================================
+        scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x333333, 0.6));
+        const sunLight = new THREE.PointLight(0xffffff, 3.0, 0, 0);
+        sunLight.position.set(0, 0, 0); 
+        scene.add(sunLight);
+
+        // ============================================================
+        // 3. Astronomical Data — J2000 Keplerian Elements
+        // ============================================================
+        // All orbital elements are J2000.0 epoch (JD 2451545.0)
+        // a = semi-major axis (AU), e = eccentricity, i = inclination (deg)
+        // L = mean longitude (deg), w = longitude of perihelion (deg)
+        // node = longitude of ascending node (deg), n = mean motion (deg/day)
+        //
+        // Rotation parameters from IAU WGCCRE 2015 (Archinal et al. 2018):
+        // W0 = prime meridian angle at J2000 (deg), Wd = rotation rate (deg/day)
+        // obliquity = axial tilt to ecliptic (deg)
+        // poleLon = ecliptic longitude of north pole projection (deg)
+        //
+        // texOffset: empirical correction (deg) to align the texture's 0° longitude
+        //   with the IAU prime meridian, accounting for how the specific texture
+        //   image was authored (some textures have the PM at image center, others offset).
+        //   Three.js SphereGeometry maps U=0.5 (texture center) to the +X axis.
+        
+        const rawPlanetsData = {
+            Mercury: { order: 1, a: 0.3871, e: 0.2056, i: 7.00, L: 252.25, w: 77.45, node: 48.33, n: 4.0923344, period: 0.240846, size: 0.35,
+                rotPeriod: 58.6, obliquity: 0.034, W0: 329.5469, Wd: 6.1385025, poleLon: 281.01, texOffset: 0.0 },
+            Venus: { order: 2, a: 0.7233, e: 0.0067, i: 3.39, L: 181.97, w: 131.53, node: 76.68, n: 1.6021302, period: 0.615197, size: 0.55,
+                rotPeriod: -243.0, obliquity: 177.36, W0: 160.20, Wd: -1.4813688, poleLon: 272.76, texOffset: 0.0 },
+            Earth: { order: 3, a: 1.0000, e: 0.0167, i: 0.00, L: 100.46, w: 102.94, node: 0.00, n: 0.9856091, period: 1.000017, size: 0.7,
+                rotPeriod: 1.0, obliquity: 23.44, W0: 0, Wd: 0, poleLon: 0.0, texOffset: 0.0,
+                useGMST: true },
+            Mars: { order: 4, a: 1.5237, e: 0.0934, i: 1.85, L: -4.55, w: -23.94, node: 49.57, n: 0.5240330, period: 1.880847, size: 0.45,
+                rotPeriod: 1.03, obliquity: 25.19, W0: 176.630, Wd: 350.89198226, poleLon: 352.9, texOffset: 0.0 },
+            Jupiter: { order: 5, a: 5.2044, e: 0.0489, i: 1.30, L: 34.40, w: 14.75, node: 100.55, n: 0.0830853, period: 11.862615, size: 1.6,
+                rotPeriod: 0.41, obliquity: 3.13, W0: 284.95, Wd: 870.5366420, poleLon: 268.06, texOffset: 0.0 },
+            Saturn: { order: 6, a: 9.5826, e: 0.0565, i: 2.48, L: 49.94, w: 92.43, node: 113.71, n: 0.0334442, period: 29.447498, size: 1.4,
+                rotPeriod: 0.45, obliquity: 26.73, W0: 38.90, Wd: 810.7939024, poleLon: 40.59, texOffset: 0.0 },
+            Uranus: { order: 7, a: 19.201, e: 0.0463, i: 0.77, L: 313.23, w: 170.96, node: 74.22, n: 0.0117258, period: 84.016846, size: 1.1,
+                rotPeriod: -0.72, obliquity: 97.77, W0: 203.81, Wd: -501.1600928, poleLon: 257.31, texOffset: 0.0 },
+            Neptune: { order: 8, a: 30.047, e: 0.0085, i: 1.76, L: -55.12, w: 44.97, node: 131.72, n: 0.0059810, period: 164.79132, size: 1.05,
+                rotPeriod: 0.67, obliquity: 28.32, W0: 253.18, Wd: 536.3128492, poleLon: 299.36, texOffset: 0.0 },
+            Pluto: { order: 9, a: 39.482, e: 0.2488, i: 17.16, L: 238.92, w: 224.06, node: 110.30, n: 0.0039640, period: 247.92065, size: 0.25,
+                rotPeriod: -6.39, obliquity: 122.53, W0: 302.695, Wd: -56.3623195, poleLon: 227.34, texOffset: 0.0 }
+        };
+
+        // Pre-compute trigonometric values for orbital position calculation
+        const planetsData = {};
+        for (const [key, el] of Object.entries(rawPlanetsData)) {
+            const N_rad = el.node * Math.PI / 180.0;
+            const w_rad = (el.w - el.node) * Math.PI / 180.0;
+            const i_rad = el.i * Math.PI / 180.0;
+            planetsData[key] = {
+                ...el,
+                cw: Math.cos(w_rad), sw: Math.sin(w_rad),
+                cN: Math.cos(N_rad), sN: Math.sin(N_rad),
+                ci: Math.cos(i_rad), si: Math.sin(i_rad),
+                visualDist: el.order * 6.5
+            };
+        }
+
+        // ============================================================
+        // 4. Moon System Configuration
+        // ============================================================
+        // p = orbital period in Earth days (negative = retrograde orbit)
+        // dist = visual distance from host (scene units, NOT physical)
+        // L0 = mean longitude at J2000 epoch (degrees)
+        //   - Galilean moons: from Lieske (1998) ephemeris theory
+        //   - Saturn moons: from TASS/SAT ephemerides
+        //   - Uranian moons: from Laskar & Jacobson
+        //   - Earth Moon: from Meeus (L0 = 218.32°)
+        //   - Others: approximate values
+        // 
+        // The Moon (Earth's) is special: it orbits in the ecliptic plane (~5.14° inclination)
+        // NOT in Earth's equatorial plane with other moons' offset by host obliquity.
+        
+        const moonSystemConfig = [
+            // Earth — Moon orbits near the ecliptic, handled specially
+            { name: "Moon", host: "Earth", p: 27.32166, dist: 2.0, size: 0.27, irregular: false, texName: "Moon",
+              L0: 218.32, nRate: 13.17639648, inclination: 5.145, node0: 125.04, nodeRate: -0.05295386,
+              specialOrbit: "ecliptic" },
+            // Mars
+            { name: "Phobos", host: "Mars", p: 0.31891, dist: 0.9, size: 0.05, irregular: true, texName: "Phobos", L0: 35.06 },
+            { name: "Deimos", host: "Mars", p: 1.26244, dist: 1.3, size: 0.04, irregular: true, texName: "Deimos", L0: 162.0 },
+            // Jupiter — Galilean moons (Lieske 1998 L0 at J2000)
+            { name: "Io", host: "Jupiter", p: 1.769138, dist: 3.5, size: 0.13, irregular: false, texName: "Io", L0: 106.07 },
+            { name: "Europa", host: "Jupiter", p: 3.551181, dist: 4.5, size: 0.11, irregular: false, texName: "Europa", L0: 175.73 },
+            { name: "Ganymede", host: "Jupiter", p: 7.154553, dist: 5.5, size: 0.18, irregular: false, texName: "Ganymede", L0: 120.56 },
+            { name: "Callisto", host: "Jupiter", p: 16.68902, dist: 6.5, size: 0.16, irregular: false, texName: "Callisto", L0: 84.44 },
+            // Saturn — Major moons
+            { name: "Mimas", host: "Saturn", p: 0.94242, dist: 5.5, size: 0.08, irregular: false, texName: "Mimas", L0: 14.0 },
+            { name: "Enceladus", host: "Saturn", p: 1.37022, dist: 6.0, size: 0.09, irregular: false, texName: "Enceladus", L0: 211.0 },
+            { name: "Tethys", host: "Saturn", p: 1.88780, dist: 6.5, size: 0.10, irregular: false, texName: "Tethys", L0: 189.0 },
+            { name: "Dione", host: "Saturn", p: 2.73692, dist: 7.0, size: 0.10, irregular: false, texName: "Dione", L0: 322.0 },
+            { name: "Rhea", host: "Saturn", p: 4.51750, dist: 7.5, size: 0.11, irregular: false, texName: "Rhea", L0: 351.0 },
+            { name: "Titan", host: "Saturn", p: 15.94542, dist: 8.5, size: 0.20, irregular: false, texName: "Titan", L0: 186.0 },
+            { name: "Iapetus", host: "Saturn", p: 79.3302, dist: 9.5, size: 0.10, irregular: false, texName: "Iapetus", L0: 260.0 },
+            // Uranus
+            { name: "Miranda", host: "Uranus", p: 1.41348, dist: 2.8, size: 0.08, irregular: true, texName: "Miranda", L0: 120.0 },
+            { name: "Ariel", host: "Uranus", p: 2.52038, dist: 3.3, size: 0.10, irregular: false, texName: "Ariel", L0: 14.8 },
+            { name: "Umbriel", host: "Uranus", p: 4.14418, dist: 3.8, size: 0.10, irregular: false, texName: "Umbriel", L0: 108.9 },
+            { name: "Titania", host: "Uranus", p: 8.70588, dist: 4.5, size: 0.11, irregular: false, texName: "Titania", L0: 78.4 },
+            { name: "Oberon", host: "Uranus", p: 13.46324, dist: 5.2, size: 0.11, irregular: false, texName: "Oberon", L0: 105.1 },
+            // Neptune
+            { name: "Proteus", host: "Neptune", p: 1.12231, dist: 3.3, size: 0.08, irregular: true, texName: "Proteus", L0: 0.0 },
+            { name: "Triton", host: "Neptune", p: -5.87685, dist: 4.5, size: 0.15, irregular: false, texName: "Triton", L0: 264.78 },
+            // Pluto
+            { name: "Charon", host: "Pluto", p: 6.38723, dist: 1.8, size: 0.12, irregular: false, texName: "Charon", L0: 282.0 },
+            { name: "Styx", host: "Pluto", p: 20.16155, dist: 2.3, size: 0.03, irregular: true, texName: "Styx", L0: 0.0 },
+            { name: "Nix", host: "Pluto", p: 24.85463, dist: 3.0, size: 0.04, irregular: true, texName: "Nix", L0: 0.0 },
+            { name: "Kerberos", host: "Pluto", p: 32.16756, dist: 3.6, size: 0.03, irregular: true, texName: "Kerberos", L0: 0.0 },
+            { name: "Hydra", host: "Pluto", p: 38.20177, dist: 4.2, size: 0.04, irregular: true, texName: "Hydra", L0: 0.0 }
+        ];
+
+        // ============================================================
+        // 5. Texture Loading — All local files
+        // ============================================================
+        const tLoad = new THREE.TextureLoader();
+        const urls = {
+           Sun: "textures/Sun.jpg",
+           Mercury: "textures/Mercury.jpg",
+           Venus: "textures/Venus.jpg",
+           Earth: "textures/Earth.jpg",
+           Moon: "textures/Moon.jpg",
+           Mars: "textures/Mars.jpg",
+           Jupiter: "textures/Jupiter.jpg",
+           Saturn: "textures/Saturn.jpg",
+           Uranus: "textures/Uranus.jpg",
+           Neptune: "textures/Neptune.jpg",
+           Pluto: "textures/Pluto.jpg",
+           SaturnRing: "textures/SaturnRing.png",
+           EarthNormal: "textures/EarthNormal.jpg",
+           EarthSpecular: "textures/EarthSpecular.jpg",
+           EarthClouds: "textures/EarthClouds.png",
+           Io: "textures/Io.png",
+           Europa: "textures/Europa.jpg",
+           Ganymede: "textures/Ganymede.jpg",
+           Callisto: "textures/Callisto.jpg",
+           Titan: "textures/Titan.png",
+           Enceladus: "textures/Enceladus.jpg",
+           Rhea: "textures/Rhea.jpg",
+           Iapetus: "textures/Iapetus.jpg",
+           Mimas: "textures/Mimas.jpg",
+           Tethys: "textures/Tethys.jpg",
+           Dione: "textures/Dione.jpg",
+           Triton: "textures/Triton.jpg",
+           Charon: "textures/Charon.jpg",
+           Phobos: "textures/Phobos.jpg",
+           Deimos: "textures/Deimos.jpg",
+           Ariel: "textures/Ariel.jpg",
+           Umbriel: "textures/Umbriel.jpg",
+           Titania: "textures/Titania.jpg",
+           Oberon: "textures/Oberon.jpg",
+           Miranda: "textures/Miranda.jpg",
+           Nix: "textures/Nix.jpg",
+           Hydra: "textures/Hydra.jpg",
+           Styx: "textures/Styx.jpg",
+           Kerberos: "textures/Kerberos.jpg"
+        };
+
+        // Proteus has no dedicated texture file — use a generic grey
+        // (In the original code, "Proteus" was referenced but no texture file exists)
+
+        const tex = {};
+        for(let k in urls) {
+            tex[k] = tLoad.load(urls[k]);
+            tex[k].colorSpace = THREE.SRGBColorSpace;
+            if (renderer.capabilities.getMaxAnisotropy) {
+                tex[k].anisotropy = renderer.capabilities.getMaxAnisotropy();
+            }
+        }
+
+        // ============================================================
+        // 6. Astronomical Position Calculations
+        // ============================================================
+        
+        // Compute heliocentric ecliptic position, then map to visual scene coords
+        // Scene mapping: x_scene = x_ecliptic, y_scene = z_ecliptic, z_scene = -y_ecliptic
+        // This places the ecliptic in the XZ plane with north pole at +Y
+        function getOrbitPositionFast(elements, daysSinceJ2000, isRingPoint = false) {
+            let M = isRingPoint ? (daysSinceJ2000 * elements.n) : (elements.L - elements.w + elements.n * daysSinceJ2000);
+            M = M % 360.0;
+            const M_rad = M * Math.PI / 180.0;
+            // Newton-Raphson to solve Kepler's equation: E - e*sin(E) = M
+            let E = M_rad;
+            for(let i=0; i<8; i++) {
+                E = E - (E - elements.e * Math.sin(E) - M_rad) / (1.0 - elements.e * Math.cos(E));
+            }
+            const v = 2 * Math.atan( Math.sqrt((1+elements.e)/(1-elements.e)) * Math.tan(E/2) );
+            const r = elements.a * (1 - elements.e * Math.cos(E));
+            const x_orb = r * Math.cos(v);
+            const y_orb = r * Math.sin(v);
+            // Rotate from orbital plane to ecliptic frame
+            const x = (elements.cN*elements.cw - elements.sN*elements.sw*elements.ci)*x_orb + (-elements.cN*elements.sw - elements.sN*elements.cw*elements.ci)*y_orb;
+            const y = (elements.sN*elements.cw + elements.cN*elements.sw*elements.ci)*x_orb + (-elements.sN*elements.sw + elements.cN*elements.cw*elements.ci)*y_orb;
+            const z = (elements.sw*elements.si)*x_orb + (elements.cw*elements.si)*y_orb;
+            // Normalize to visual distance (preserves angular position, scales distance)
+            return new THREE.Vector3(x, z, -y).normalize().multiplyScalar(elements.visualDist);
+        }
+
+        // ============================================================
+        // 7. Sun Position Calculations (for Earth rotation alignment)
+        // ============================================================
+        // Meeus low-precision solar position (good to ~1 arcminute)
+        function getSunRA(d) {
+            const g = ((357.529 + 0.98560028 * d) % 360 + 360) % 360;
+            const q = ((280.459 + 0.98564736 * d) % 360 + 360) % 360;
+            const g_rad = g * Math.PI / 180;
+            const L = q + 1.915 * Math.sin(g_rad) + 0.020 * Math.sin(2 * g_rad);
+            const e = 23.439 - 0.00000036 * d;
+            const e_rad = e * Math.PI / 180;
+            const L_rad = L * Math.PI / 180;
+            const RA = Math.atan2(Math.cos(e_rad) * Math.sin(L_rad), Math.cos(L_rad)) * 180 / Math.PI;
+            return ((RA % 360) + 360) % 360;
+        }
+
+        // GMST in degrees (Meeus / Astronomical Almanac)
+        function getGMST(d) {
+            return ((280.46061837 + 360.98564736629 * d) % 360 + 360) % 360;
+        }
+
+        // ============================================================
+        // 8. Scene Object Construction
+        // ============================================================
+        const planets = {};
+        const planetMeshes = [];
+        const ringLines = {};
+        const labelsList = [];
+
+        function createLabel(text, radiusScale = 1.0) {
+            const div = document.createElement('div');
+            div.className = 'planet-label';
+            div.textContent = text;
+            div.dataset.bodyName = text; 
+            const label = new CSS2DObject(div);
+            label.position.set(0, radiusScale * 1.4, 0);
+            labelsList.push(div);
+            return label;
+        }
+
+        // Sun
+        const sunMat = new THREE.MeshStandardMaterial({
+            map: tex.Sun, emissive: 0xffffff, emissiveMap: tex.Sun,
+            emissiveIntensity: 1.5, roughness: 1.0, metalness: 0.0
+        });
+        const sun = new THREE.Mesh(new THREE.SphereGeometry(2.5, 64, 64), sunMat);
+        scene.add(sun);
+        sun.name = "Sun";
+        sun.add(createLabel("Sun", 2.5));
+        planetMeshes.push(sun);
+
+        // Compute initial Julian date
+        const currentDateInit = new Date();
+        const jdInit = currentDateInit.getTime() / 86400000.0 + 2440587.5;
+        const dInit = jdInit - 2451545.0;
+
+        // Store references for Earth's special Moon handling
+        let earthPivot = null;
+        let earthGroupPivot = null;
+
+        for (const [name, data] of Object.entries(planetsData)) {
+            // Draw orbit rings
+            const ringPoints = [];
+            for(let i = 0; i <= 360; i+=2) {
+                ringPoints.push(getOrbitPositionFast(data, (i / 360) * (data.period * 365.25), true));
+            }
+            const ring = new THREE.LineLoop(
+                new THREE.BufferGeometry().setFromPoints(ringPoints),
+                new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 })
+            );
+            scene.add(ring);
+            ringLines[name] = ring;
+
+            // Planet material
+            const matParams = { map: tex[name], roughness: 1.0, metalness: 0.0 };
+            if (name === "Earth") {
+                matParams.normalMap = tex.EarthNormal;
+                matParams.normalScale = new THREE.Vector2(0.5, 0.5);
+                matParams.roughnessMap = tex.EarthSpecular;
+            }
+            
+            const pMat = new THREE.MeshStandardMaterial(matParams);
+            const bodyMesh = new THREE.Mesh(new THREE.SphereGeometry(data.size, 64, 64), pMat);
+            bodyMesh.name = name + "_body";
+            data.bodyMesh = bodyMesh;
+            
+            // groupPivot: applies axial tilt & pole orientation
+            // For Earth, the tilt is applied specially because we handle rotation via GMST
+            let groupPivot = new THREE.Group();
+            groupPivot.name = name + "_tilt";
+            
+            if (name === "Earth") {
+                // Earth: tilt around Z by -obliquity, then rotate pole to ecliptic lon ~90°
+                // The pole direction in ecliptic coords has longitude ~90°
+                const qTilt = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -data.obliquity * Math.PI / 180.0);
+                const qLon = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), 90.0 * Math.PI / 180.0);
+                groupPivot.quaternion.multiplyQuaternions(qLon, qTilt);
+            } else {
+                const qTilt = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -data.obliquity * Math.PI / 180.0);
+                const qLon = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (data.poleLon || 0.0) * Math.PI / 180.0);
+                groupPivot.quaternion.multiplyQuaternions(qLon, qTilt);
+            }
+            groupPivot.add(bodyMesh);
+
+            // Click hitbox — enlarged for easy tapping on mobile.
+            // Uses _hit_ prefix so label occlusion raycaster skips it.
+            // Cap hitbox radius so it doesn't extend past the nearest moon's orbit.
+            let hitRadius = data.size * 2.0;
+            const hostMoons = moonSystemConfig.filter(m => m.host === name);
+            if (hostMoons.length > 0) {
+                const nearestMoonDist = Math.min(...hostMoons.map(m => m.dist));
+                // Don't let hitbox exceed 80% of nearest moon orbit
+                hitRadius = Math.min(hitRadius, nearestMoonDist * 0.8);
+            }
+            // Ensure hitbox is always at least 1.5x body size
+            hitRadius = Math.max(hitRadius, data.size * 1.5);
+            const hitMesh = new THREE.Mesh(
+                new THREE.SphereGeometry(hitRadius, 16, 16),
+                new THREE.MeshBasicMaterial({visible: false})
+            );
+            hitMesh.name = "_hit_" + name;
+            hitMesh.userData.bodyName = name;
+            groupPivot.add(hitMesh);
+
+            // pivot: positioned at orbital location
+            const pivot = new THREE.Group();
+            pivot.name = name;
+            pivot.position.copy(getOrbitPositionFast(data, dInit, false));
+            
+            // Planetary ring systems
+            function createProceduralRingGeometry(inner, outer, maxOpac, ringTint) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 256; canvas.height = 2;
+                const ctx = canvas.getContext('2d');
+                const g = ctx.createLinearGradient(0,0,256,0);
+                g.addColorStop(0, 'rgba(255,255,255,0)');
+                g.addColorStop(0.3, `rgba(255,255,255,${maxOpac})`);
+                g.addColorStop(0.6, `rgba(255,255,255,${maxOpac*0.5})`);
+                g.addColorStop(0.9, `rgba(255,255,255,${maxOpac})`);
+                g.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = g;
+                ctx.fillRect(0,0,256,2);
+                
+                const rTex = new THREE.CanvasTexture(canvas);
+                const ringGeom = new THREE.RingGeometry(inner, outer, 64);
+                const pos = ringGeom.attributes.position;
+                const uv = ringGeom.attributes.uv;
+                for(let i=0; i<pos.count; i++) {
+                    const vec = new THREE.Vector3().fromBufferAttribute(pos,i);
+                    uv.setXY(i, (vec.length() - inner)/(outer - inner), 0.5);
+                }
+                const mat = new THREE.MeshBasicMaterial({color: ringTint, map: rTex, transparent: true, side: THREE.DoubleSide});
+                const mesh = new THREE.Mesh(ringGeom, mat);
+                // Ring lies in equatorial plane of host — rotate from XY to XZ within tilt group
+                mesh.rotation.x = Math.PI / 2; 
+                return mesh;
+            }
+
+            if (name === "Saturn") {
+                // Saturn rings: D ring inner ~1.11 Rs, A ring outer ~2.27 Rs
+                // Planet visual size=1.4 (radius), so rings at ~1.72 to ~3.18 scene units
+                // Inner radius slightly above planet surface for visual clarity
+                const satRingInner = 1.72;
+                const satRingOuter = 3.18;
+                const ringGeom = new THREE.RingGeometry(satRingInner, satRingOuter, 64);
+                const pos = ringGeom.attributes.position;
+                const uv = ringGeom.attributes.uv;
+                for (let i = 0; i < pos.count; i++) {
+                    const vec = new THREE.Vector3().fromBufferAttribute(pos, i);
+                    uv.setXY(i, (vec.length() - satRingInner) / (satRingOuter - satRingInner), 1.0); 
+                }
+                const ringMesh = new THREE.Mesh(ringGeom, new THREE.MeshStandardMaterial({
+                    map: tLoad.load(urls.SaturnRing), side: THREE.DoubleSide, transparent: true
+                }));
+                ringMesh.rotation.x = Math.PI / 2; 
+                ringMesh.name = "_ring_Saturn";
+                groupPivot.add(ringMesh);
+            } else if (name === "Uranus") {
+                // Uranus epsilon ring at ~1.96 Ru, visual: planet size=1.1
+                // Narrow ring system, keep thin. Miranda at 2.8 — ring outer must be < 2.8
+                const uRing = createProceduralRingGeometry(1.65, 2.2, 0.45, 0xaabbff);
+                uRing.name = "_ring_Uranus";
+                groupPivot.add(uRing);
+            } else if (name === "Neptune") {
+                // Neptune Adams ring at ~2.54 Rn. Visual: planet size=1.05
+                // Proteus at 3.3 — ring outer must be < 3.3
+                const nRing = createProceduralRingGeometry(1.87, 2.8, 0.2, 0x88bbcc);
+                nRing.name = "_ring_Neptune";
+                groupPivot.add(nRing);
+            }
+
+            pivot.add(groupPivot);
+            pivot.add(createLabel(name, data.size)); 
+            scene.add(pivot);
+            planets[name] = pivot;
+            planetMeshes.push(pivot);
+
+            if (name === "Earth") {
+                earthPivot = pivot;
+                earthGroupPivot = groupPivot;
+            }
+        }
+
+        // ============================================================
+        // 9. Irregular body geometry (asteroids, small moons)
+        // ============================================================
+        function createIrregularGeometry(size) {
+            const geom = new THREE.IcosahedronGeometry(size, 8); 
+            const pos = geom.attributes.position;
+            const randSeed = size * 1000.0;
+            for (let i = 0; i < pos.count; i++) {
+                const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+                const noise = (Math.sin(x*4 + randSeed)*Math.cos(y*5)*Math.sin(z*6)) * 0.1;
+                const scaleX = 1.0 + (Math.sin(randSeed)*0.2); 
+                const scaleY = 1.0 + (Math.cos(randSeed)*0.1);
+                const scaleZ = 1.0 - (Math.sin(randSeed*0.5)*0.15); 
+                pos.setXYZ(i, (x + x*noise)*scaleX, (y + y*noise)*scaleY, (z + z*noise)*scaleZ);
+            }
+            geom.computeVertexNormals();
+            return geom;
+        }
+
+        // ============================================================
+        // 10. Moon Construction
+        // ============================================================
+        const activeMoons = [];
+        // Earth's Moon needs special scene-level handling (ecliptic orbit)
+        let earthMoonMesh = null;
+
+        for (const mc of moonSystemConfig) {
+            const mGeom = mc.irregular ? createIrregularGeometry(mc.size) : new THREE.SphereGeometry(mc.size, 32, 32);
+            
+            // Use correct texture — Proteus has no texture file, use grey material
+            let mMat;
+            if (mc.texName === "Proteus") {
+                mMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9, metalness: 0.0 });
+            } else {
+                mMat = new THREE.MeshStandardMaterial({ map: tex[mc.texName], roughness: 0.9, metalness: 0.0 });
+            }
+            
+            const mMesh = new THREE.Mesh(mGeom, mMat);
+            mMesh.name = mc.name;
+            mMesh.add(createLabel(mc.name, mc.size));
+            
+            const mHit = new THREE.Mesh(
+                new THREE.SphereGeometry(mc.size * 3.0, 16, 16),
+                new THREE.MeshBasicMaterial({visible: false})
+            );
+            mHit.name = "_hit_" + mc.name;
+            mHit.userData.bodyName = mc.name;
+            mMesh.add(mHit);
+            
+            if (mc.specialOrbit === "ecliptic") {
+                // Earth's Moon: add directly to Earth's pivot (orbital position group),
+                // NOT to the groupPivot (tilt group). This way the Moon orbits in
+                // scene coordinates (which IS the ecliptic plane), not Earth's equatorial plane.
+                earthMoonMesh = mMesh;
+                if (earthPivot) {
+                    earthPivot.add(mMesh);
+                }
+            } else {
+                // All other moons: orbit in their host's equatorial plane (inside groupPivot/tilt group)
+                const hostPlanet = planetsData[mc.host];
+                if (hostPlanet && hostPlanet.bodyMesh) {
+                    hostPlanet.bodyMesh.parent.add(mMesh);
+                } else {
+                    scene.add(mMesh);
+                }
+            }
+            
+            planetMeshes.push(mMesh);
+            activeMoons.push({ mesh: mMesh, config: mc });
+        }
+        
+        // ============================================================
+        // 11. UI Controls
+        // ============================================================
+        let plutoEnabled = true;
+        const plutoToggle = document.getElementById('pluto-toggle');
+        plutoToggle.addEventListener('click', () => {
+            plutoEnabled = !plutoEnabled;
+            if(planets["Pluto"]) planets["Pluto"].visible = plutoEnabled;
+            if(ringLines["Pluto"]) ringLines["Pluto"].visible = plutoEnabled;
+            for (const mc of activeMoons) {
+                if (mc.config.host === "Pluto") mc.mesh.visible = plutoEnabled;
+            }
+            plutoToggle.innerText = plutoEnabled ? "Hide Pluto" : "Show Pluto";
+        });
+
+        let viewMode = "GALAXY"; 
+        let targetPlanet = sun;
+        const lastTargetPos = new THREE.Vector3(0,0,0);
+
+        const statusTxt = document.getElementById('status');
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let pointerDownX = 0;
+        let pointerDownY = 0;
+
+        window.addEventListener('pointerdown', (event) => {
+            if (event.target.tagName !== 'CANVAS' && !event.target.classList.contains('planet-label')) return;
+            pointerDownX = event.clientX;
+            pointerDownY = event.clientY;
+        });
+
+        function flyToBody(clickedPlanet) {
+            targetPlanet = clickedPlanet;
+            viewMode = "PLANET";
+            statusTxt.innerText = targetPlanet.name;
+            
+            // Sync dropdown to selected body
+            const dropdown = document.getElementById("nav-dropdown");
+            const opts = dropdown.options;
+            for (let i = 0; i < opts.length; i++) {
+                if (opts[i].value === targetPlanet.name) {
+                    dropdown.selectedIndex = i;
+                    break;
+                }
+            }
+            
+            const worldPos = new THREE.Vector3();
+            targetPlanet.getWorldPosition(worldPos);
+            lastTargetPos.copy(worldPos);
+            
+            const isMoon = moonSystemConfig.find(m => m.name === targetPlanet.name);
+            
+            if (targetPlanet.name === "Sun") {
+                // Sun: position camera nearby with slight elevation
+                const camDist = 2.5 * 5.0;
+                camera.position.set(worldPos.x, worldPos.y + camDist * 0.15, worldPos.z + camDist);
+                controls.target.copy(worldPos);
+            } else if (isMoon) {
+                // === MOON SELECTED ===
+                // Position the camera so the moon is in foreground,
+                // parent planet visible behind it on one side
+                const hostPivot = planets[isMoon.host];
+                const hostWorldPos = new THREE.Vector3();
+                if (hostPivot) hostPivot.getWorldPosition(hostWorldPos);
+                
+                // Direction from parent planet to moon
+                const moonFromHost = worldPos.clone().sub(hostWorldPos).normalize();
+                // Camera goes along the moon-from-host direction, past the moon,
+                // so looking back sees the moon in foreground and planet behind
+                const camDist = isMoon.size * 5.0;
+                camera.position.copy(worldPos).add(moonFromHost.clone().multiplyScalar(camDist));
+                camera.position.y += isMoon.size * 1.0; // slight elevation
+                controls.target.copy(worldPos);
+            } else {
+                // === PLANET SELECTED ===
+                // Position camera on the opposite side from the Sun,
+                // so the Sun is directly behind the planet from camera's view.
+                // Zoom out far enough to see the outermost moon.
+                const bodySize = planetsData[targetPlanet.name].size;
+                
+                // Direction from Sun to planet
+                const sunToBody = worldPos.clone().normalize();
+                
+                // Find the outermost moon's distance for this planet
+                let maxMoonDist = 0;
+                for (const mc of moonSystemConfig) {
+                    if (mc.host === targetPlanet.name) {
+                        maxMoonDist = Math.max(maxMoonDist, mc.dist);
+                    }
+                }
+                // Camera distance: enough to see outermost moon + some margin
+                // If no moons, use 4x body size
+                let camDist = maxMoonDist > 0 ? maxMoonDist * 1.5 : bodySize * 5.0;
+                camDist = Math.max(camDist, bodySize * 4.0); // minimum zoom
+                
+                // Place camera along the Sun-to-planet direction, past the planet
+                camera.position.copy(worldPos).add(sunToBody.clone().multiplyScalar(camDist));
+                camera.position.y += camDist * 0.15; // slight elevation for 3D perspective
+                controls.target.copy(worldPos);
+            }
+            
+            const hud = document.getElementById("hud-telemetry");
+            if (planetsData[targetPlanet.name]) {
+                const daysRaw = Math.abs(planetsData[targetPlanet.name].period * 365.25);
+                const dHours = Math.abs(planetsData[targetPlanet.name].rotPeriod * 24.0).toFixed(1);
+                let orbitText = `${daysRaw.toFixed(1)} EARTH DAYS`;
+                if (daysRaw > 365.25) {
+                    const years = Math.floor(daysRaw / 365.25);
+                    const days = Math.floor(daysRaw % 365.25);
+                    orbitText = `${years} EARTH YEARS AND ${days} EARTH DAYS`;
+                }
+                hud.innerHTML = `YEAR LENGTH: ${orbitText}<br>DAY: ${dHours} HOURS`;
+            } else if (isMoon) {
+                const paramsAbs = Math.abs(isMoon.p);
+                const mHours = (paramsAbs * 24.0).toFixed(1);
+                let orbitText = `${paramsAbs.toFixed(1)} EARTH DAYS`;
+                if (paramsAbs > 365.25) {
+                    const years = Math.floor(paramsAbs / 365.25);
+                    const days = Math.floor(paramsAbs % 365.25);
+                    orbitText = `${years} EARTH YEARS AND ${days} EARTH DAYS`;
+                }
+                hud.innerHTML = `ORBIT TIME AROUND ${isMoon.host.toUpperCase()}: ${orbitText}<br>DAY: ${mHours} HOURS`;
+            } else {
+                hud.innerHTML = `YEAR LENGTH: CORE<br>DAY: 648 HOURS`;
+            }
+            hud.style.display = "block";
+        }
+
+        window.addEventListener('pointerup', (event) => {
+            const deltaX = Math.abs(event.clientX - pointerDownX);
+            const deltaY = Math.abs(event.clientY - pointerDownY);
+            if (deltaX > 5 || deltaY > 5) return;
+            
+            let clickedPlanet = null;
+            
+            if (event.target.classList.contains('planet-label')) {
+                const bName = event.target.dataset.bodyName;
+                if (bName === "Sun") clickedPlanet = sun;
+                else if (planets[bName]) clickedPlanet = planets[bName];
+                else clickedPlanet = activeMoons.find(m => m.config.name === bName)?.mesh;
+            } else if (event.target.tagName === 'CANVAS') {
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(planetMeshes, true);
+                if (intersects.length > 0) {
+                    let moonHit = null;
+                    let planetHit = null;
+                    for (let intx of intersects) {
+                        let current = intx.object;
+                        let bodyName = null;
+                        while(current) {
+                            // Check for hitbox userData first (hitboxes have _hit_ prefix in name)
+                            if (current.userData && current.userData.bodyName) {
+                                bodyName = current.userData.bodyName;
+                                break;
+                            }
+                            if (planets[current.name] || sun.name === current.name || activeMoons.find(m => m.config.name === current.name)) {
+                                bodyName = current.name;
+                                break;
+                            }
+                            current = current.parent;
+                        }
+                        if (bodyName) {
+                            if (activeMoons.find(m => m.config.name === bodyName)) {
+                                moonHit = activeMoons.find(m => m.config.name === bodyName).mesh;
+                                break;
+                            } else if (!planetHit) {
+                                if (bodyName === "Sun") planetHit = sun;
+                                else planetHit = planets[bodyName];
+                            }
+                        }
+                    }
+                    clickedPlanet = moonHit ? moonHit : planetHit;
+                }
+            }
+            
+            if (clickedPlanet) flyToBody(clickedPlanet);
+        });
+
+        // Navigation dropdown
+        const buildNavDropdown = () => {
+            const dropdown = document.getElementById("nav-dropdown");
+            let ht = `<option value="none" disabled selected>Jump to Body...</option>`;
+            ht += `<option value="Sun">Sun</option>`;
+            const pKeys = Object.keys(planetsData).sort((a,b) => planetsData[a].order - planetsData[b].order);
+            for(const p of pKeys) {
+                ht += `<option value="${p}">${p}</option>`;
+                const hMoons = moonSystemConfig.filter(m => m.host === p).sort((a,b) => a.dist - b.dist);
+                for(const m of hMoons) {
+                    ht += `<option value="${m.name}">&nbsp;&nbsp;&nbsp;${m.name}</option>`;
+                }
+            }
+            dropdown.innerHTML = ht;
+            dropdown.addEventListener('change', (e) => {
+                const tName = e.target.value;
+                let cObj = null;
+                if (tName === "Sun") cObj = sun;
+                else if (planets[tName]) cObj = planets[tName];
+                else cObj = activeMoons.find(m => m.config.name === tName)?.mesh;
+                if (cObj) flyToBody(cObj);
+                e.target.blur();
+            });
+        };
+        buildNavDropdown();
+
+        // Shared function for calculating the correct galaxy zoom level
+        // Dynamically adapts to screen resolution, size and aspect ratio
+        function calcResetView() {
+            let maxDist = 0;
+            for(const [pName, pData] of Object.entries(planetsData)) {
+                if(pData.visualDist > maxDist && pName !== "Pluto") maxDist = pData.visualDist;
+            }
+            if(plutoEnabled) maxDist = planetsData["Pluto"].visualDist;
+            const distRadius = maxDist * 1.1; 
+            const vFOV = (Math.PI / 180.0) * camera.fov;
+            const hFOV = 2 * Math.atan(Math.tan(vFOV / 2) * camera.aspect);
+            const activeFOV = (camera.aspect < 1.0) ? hFOV : vFOV;
+            const requiredDist = (distRadius * 1.1) / Math.tan(activeFOV / 2);
+            camera.position.set(0, requiredDist, 0);
+            controls.target.set(0,0,0);
+            viewMode = "GALAXY";
+            targetPlanet = null;
+        }
+
+        // Set initial camera to the same dynamic zoom as reset view
+        calcResetView();
+        statusTxt.innerText = "Solar System";
+
+        document.getElementById("reset-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            calcResetView();
+            statusTxt.innerText = "Solar System";
+            document.getElementById("hud-telemetry").style.display = "none";
+            // Reset dropdown to default
+            document.getElementById("nav-dropdown").selectedIndex = 0;
+        });
+
+        // ============================================================
+        // 12. Animation Loop
+        // ============================================================
+        let frameCount = 0;
+        const visibilityRaycaster = new THREE.Raycaster();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            frameCount++;
+            const now = new Date();
+            const dNow = (now.getTime() / 86400000.0 + 2440587.5) - 2451545.0;
+
+            // Update planet positions and rotations
+            for (const [key, data] of Object.entries(planetsData)) {
+                planets[key].position.copy(getOrbitPositionFast(data, dNow, false));
+                
+                if (data.useGMST) {
+                    // === EARTH ROTATION ===
+                    // Use GMST (Greenwich Mean Sidereal Time) for Earth's rotation.
+                    // GMST gives the angle of Greenwich relative to the vernal equinox (stars).
+                    // Combined with the Sun's position in the scene, this naturally produces
+                    // correct day/night: the lit hemisphere faces the Sun at origin.
+                    //
+                    // Three.js SphereGeometry: U=0.5 (texture center) maps to +X at rotation.y=0.
+                    // Standard Earth textures have Greenwich (0° lon) at image center.
+                    // So at rotation.y=0, Greenwich faces +X.
+                    //
+                    // GMST tells us the hour angle of the vernal equinox at Greenwich.
+                    // The vernal equinox direction in the scene is +X (ecliptic longitude 0°).
+                    // But the groupPivot rotates body +X by poleLon=90° in ecliptic longitude.
+                    // So we need: rotation.y = GMST_rad - poleLon_correction
+                    // poleLon=90° shifts the body's reference by 90°, so subtract 90°.
+                    
+                    const gmst_deg = getGMST(dNow);
+                    // Correction: groupPivot rotates +X by 90° ecliptic longitude (poleLon=90°)
+                    // So body rotation.y = GMST - 90° to compensate for this shift.
+                    // Additional: the texture image center (Greenwich) is at +X = 0° body rotation,
+                    // but we need it at GMST angle. So rotation.y = (GMST - 90)° in radians.
+                    data.bodyMesh.rotation.y = (gmst_deg - 90.0) * Math.PI / 180.0;
+                } else {
+                    // All other planets: use IAU W = W0 + Wd * d formula
+                    // The bodyMesh is inside groupPivot which has poleLon rotation applied.
+                    // W gives the prime meridian angle from the ascending node of the body's
+                    // equator on the ICRF equator. The poleLon rotation of the groupPivot
+                    // aligns the body's reference frame, so there's a poleLon shift to correct.
+                    //
+                    // For planets other than Earth, the poleLon is chosen to match IAU pole RA/Dec,
+                    // and the ascending node direction in the equatorial plane aligns accordingly.
+                    // The texOffset corrects for the texture's own alignment.
+                    const W = ((data.W0 + data.Wd * dNow) % 360 + 360) % 360;
+                    data.bodyMesh.rotation.y = (W + (data.texOffset || 0)) * Math.PI / 180.0;
+                }
+            }
+
+            // Sun rotation (sidereal period ~25.38 days at equator = 14.184 deg/day)
+            const sunW = ((284.95 + 14.184 * dNow) % 360 + 360) % 360;
+            sun.rotation.y = sunW * Math.PI / 180.0;
+            
+            // Update moon positions
+            for (const mc of activeMoons) {
+                if (mc.config.specialOrbit === "ecliptic") {
+                    // === EARTH'S MOON — Ecliptic plane orbit ===
+                    // Mean longitude with proper rate
+                    const L = ((mc.config.L0 + mc.config.nRate * dNow) % 360 + 360) % 360;
+                    const L_rad = L * Math.PI / 180.0;
+                    
+                    // Ascending node regresses ~18.6 year cycle
+                    const node = ((mc.config.node0 + mc.config.nodeRate * dNow) % 360 + 360) % 360;
+                    const node_rad = node * Math.PI / 180.0;
+                    const inc_rad = mc.config.inclination * Math.PI / 180.0;
+
+                    // Position in ecliptic coordinates
+                    // The Moon's argument from the ascending node
+                    const u = L_rad - node_rad;
+                    const x_ecl = mc.config.dist * (Math.cos(node_rad)*Math.cos(u) - Math.sin(node_rad)*Math.sin(u)*Math.cos(inc_rad));
+                    const y_ecl = mc.config.dist * (Math.sin(node_rad)*Math.cos(u) + Math.cos(node_rad)*Math.sin(u)*Math.cos(inc_rad));
+                    const z_ecl = mc.config.dist * Math.sin(u) * Math.sin(inc_rad);
+
+                    // Scene coords: x=x_ecl, y=z_ecl, z=-y_ecl
+                    // But the Moon mesh is a child of earthPivot (which is at Earth's position)
+                    // so these are relative to Earth
+                    mc.mesh.position.set(x_ecl, z_ecl, -y_ecl);
+                    
+                } else if (planets[mc.config.host]) {
+                    // Standard moons: orbit in host's equatorial plane (inside groupPivot)
+                    const L = ((mc.config.L0 + (360.0 / mc.config.p) * dNow) % 360 + 360) % 360;
+                    const r = L * Math.PI / 180.0;
+                    mc.mesh.position.set(mc.config.dist * Math.cos(r), 0, mc.config.dist * Math.sin(r));
+                }
+            }
+            
+            // Camera follow
+            if (viewMode === "PLANET" && targetPlanet) {
+                const worldPos = new THREE.Vector3();
+                targetPlanet.getWorldPosition(worldPos);
+                const deltaMovement = new THREE.Vector3().subVectors(worldPos, lastTargetPos);
+                camera.position.add(deltaMovement);
+                controls.target.add(deltaMovement);
+                lastTargetPos.copy(worldPos);
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+            
+            // Throttled Label Occlusion (every 5 frames)
+            if (frameCount % 5 === 0) {
+                const cameraPos = camera.position;
+                for (let i = 0; i < labelsList.length; i++) {
+                    const lblDiv = labelsList[i];
+                    const objName = lblDiv.dataset.bodyName;
+                    
+                    let targetMesh = null;
+                    if (objName === "Sun") targetMesh = sun;
+                    else if (planets[objName]) targetMesh = planets[objName];
+                    else targetMesh = activeMoons.find(m => m.config.name === objName)?.mesh;
+                    
+                    if (!targetMesh) continue;
+                    
+                    const moonConfig = moonSystemConfig.find(m => m.name === objName);
+                    
+                    if (!plutoEnabled && (objName === "Pluto" || (moonConfig && moonConfig.host === "Pluto"))) {
+                        lblDiv.classList.add('hidden-label');
+                        continue;
+                    }
+                    
+                    let isEclipsed = false;
+                    const worldPos = new THREE.Vector3();
+                    targetMesh.getWorldPosition(worldPos);
+                    const targetDist = cameraPos.distanceTo(worldPos);
+                    const rayDir = worldPos.clone().sub(cameraPos).normalize();
+                    visibilityRaycaster.set(cameraPos, rayDir);
+                    const intersects = visibilityRaycaster.intersectObjects(planetMeshes, true);
+                    
+                    for(let intx of intersects) {
+                        if (intx.distance >= targetDist - 0.5) break;
+                        // Skip hitbox meshes (named _hit_*) and ring meshes (named _ring_*)
+                        // Only actual body meshes count as occluders
+                        const hitName = intx.object.name || "";
+                        if (hitName.startsWith("_hit_") || hitName.startsWith("_ring_") || hitName === "") continue;
+                        if (hitName !== objName && hitName !== objName + "_body") {
+                            isEclipsed = true; 
+                            break;
+                        }
+                    }
+                    
+                    if (planetsData[objName] || objName === "Sun") {
+                        if (isEclipsed) lblDiv.classList.add('hidden-label');
+                        else lblDiv.classList.remove('hidden-label');
+                    } else if (moonConfig) {
+                        const hostWorld = new THREE.Vector3();
+                        if(planets[moonConfig.host]) planets[moonConfig.host].getWorldPosition(hostWorld);
+                        const hostDist = cameraPos.distanceTo(hostWorld);
+                        const hideThreshold = planetsData[moonConfig.host].size * 45.0;
+                        if (hostDist > hideThreshold) {
+                            lblDiv.classList.add('hidden-label');
+                        } else {
+                            if (isEclipsed) lblDiv.classList.add('hidden-label');
+                            else lblDiv.classList.remove('hidden-label');
+                        }
+                    }
+                }
+            }
+            
+            labelRenderer.render(scene, camera); 
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
