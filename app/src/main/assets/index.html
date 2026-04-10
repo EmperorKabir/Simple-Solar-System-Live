@@ -691,16 +691,16 @@
                 camera.position.set(worldPos.x, worldPos.y + camDist * 0.15, worldPos.z + camDist);
                 controls.target.copy(worldPos);
             } else if (isMoon) {
-                // === MOON SELECTED ===
-                // Camera placed perpendicular to the planet→moon direction, biased toward
-                // the anti-Sun side. This creates the effect of the planet on one edge
-                // and the Sun direction on the other edge.
+                // === MOON CAMERA v17 — 3-case geometric approach ===
                 //
-                // 40% outward (along planet→moon): pushes planet to the side
-                // 60% anti-Sun perpendicular: creates planet/Sun angular separation
+                // Key insight: camera placement depends on whether the planet and Sun
+                // are in the SAME or OPPOSITE half-sphere as seen from the moon.
                 //
-                // Camera distance solved analytically so planet is ~1/3 visible at FOV edge.
-                // FOV 70°. Small Y offset to stay near ecliptic plane.
+                // Let dotHS = dot(moonToHost, moonToSun):
+                //   dotHS ≈ +1: planet+sun nearly same direction (full/opposition moon) → PERPENDICULAR
+                //   dotHS ≈ -1: planet+sun opposite (new/conjunction) → bisector degenerate → PERPENDICULAR
+                //   dotHS ∈ (0, 0.8]: planet+sun same half-sphere → NEGATIVE BISECTOR (camera outer side)
+                //   dotHS ≤ 0:        planet+sun opposite halves → POSITIVE BISECTOR (standard)
                 camera.fov = 70;
                 camera.updateProjectionMatrix();
                 
@@ -711,52 +711,68 @@
                 const hostDist = worldPos.distanceTo(hostWorldPos);
                 const hostSize = planetsData[isMoon.host]?.size || 1.0;
                 
-                // Direction from planet through moon (outward), in XZ
-                const planetToMoonXZ = new THREE.Vector2(
-                    worldPos.x - hostWorldPos.x,
-                    worldPos.z - hostWorldPos.z
+                // Moon → planet and moon → sun (XZ only, ecliptic plane)
+                let moonToHostXZ = new THREE.Vector2(
+                    hostWorldPos.x - worldPos.x, hostWorldPos.z - worldPos.z
                 );
-                if (planetToMoonXZ.length() < 0.001) planetToMoonXZ.set(1, 0);
-                planetToMoonXZ.normalize();
-                
-                // Perpendicular to planet→moon in XZ (two candidates: left/right)
-                const perp1 = new THREE.Vector2(-planetToMoonXZ.y, planetToMoonXZ.x);
-                
-                // Pick the perpendicular pointing AWAY from the Sun
+                if (moonToHostXZ.length() < 0.001) moonToHostXZ.set(1, 0);
+                moonToHostXZ.normalize();
                 const moonToSunXZ = new THREE.Vector2(-worldPos.x, -worldPos.z).normalize();
-                const sunSide = perp1.dot(moonToSunXZ);
-                const antiSunPerp = sunSide > 0 ? perp1.clone().negate() : perp1.clone();
                 
-                // Detect if moon is on the Sun-side of the planet:
-                // If planetToMoon points toward Sun (dot product with moonToSun < 0,
-                // meaning planetToMoon and moonToSun are in the same general direction),
-                // the 40% outward blend would pull camera toward Sun → both on same side.
-                // Fix: flip outward → inward (toward planet), which separates them.
-                const outwardBlend = planetToMoonXZ.dot(moonToSunXZ) < -0.2 ? -0.3 : 0.4;
-                // (negative outwardBlend = inward bias = push planet further to edge)
+                // Bisector and geometry
+                const bisectorRaw = new THREE.Vector2(
+                    moonToHostXZ.x + moonToSunXZ.x, moonToHostXZ.y + moonToSunXZ.y
+                );
+                const bisectorLen = bisectorRaw.length();
+                const dotHS = moonToHostXZ.dot(moonToSunXZ);
                 
-                const finalDirXZ = new THREE.Vector2(
-                    planetToMoonXZ.x * outwardBlend + antiSunPerp.x * 0.6,
-                    planetToMoonXZ.y * outwardBlend + antiSunPerp.y * 0.6
-                ).normalize();
+                // Anti-sun perpendicular (used in CASE 1)
+                const planetToMoonXZ = moonToHostXZ.clone().negate();
+                const perp1 = new THREE.Vector2(-planetToMoonXZ.y, planetToMoonXZ.x);
+                const antiSunPerp = perp1.dot(moonToSunXZ) > 0 ? perp1.clone().negate() : perp1.clone();
                 
-                // Camera distance: solve analytically so the host planet's center sits
-                // at (halfFOV + angularRadius/3) from view centre → planet ~1/3 visible.
                 const halfFOV_rad = 35.0 * Math.PI / 180.0;
                 const angRadius = Math.atan2(hostSize, hostDist);
                 const targetAngle = halfFOV_rad + angRadius / 3.0;
                 
-                // When on Sun-side (flipped outward), camera is between moon and planet.
-                // Use pure perpendicular framing: camDist = hostDist * sin(half_sep) / tan(target)
-                // When outpard blend is normal: normOut=0.555, normPerp=0.832
-                const normOut = Math.abs(outwardBlend) / Math.sqrt(outwardBlend*outwardBlend + 0.36);
-                const normPerp = 0.6 / Math.sqrt(outwardBlend*outwardBlend + 0.36);
+                let finalDirXZ, camDist;
                 
-                let camDist = (hostDist * normPerp) / Math.tan(targetAngle) - hostDist * normOut * Math.sign(outwardBlend);
+                if (bisectorLen < 0.15 || dotHS > 0.8) {
+                    // CASE 1 — PERPENDICULAR
+                    // New moon: bisector ≈ 0 (planet+sun antiparallel from moon).
+                    // Full moon: dotHS > 0.8, bisector valid but pos-bisector puts camera
+                    //            at planet position hiding the Sun behind camera.
+                    // Fix: camera perpendicular to planet→moon, anti-Sun bias.
+                    // Analytically: planet at targetAngle → camDist = hostDist/tan(targetAngle).
+                    finalDirXZ = antiSunPerp.clone();
+                    camDist = hostDist / Math.tan(targetAngle);
+                    
+                } else if (dotHS > 0) {
+                    // CASE 2 — NEGATIVE BISECTOR (outer moon)
+                    // Planet+sun are in SAME half-sphere from moon (e.g. Callisto at opposition,
+                    // Io with Sun+Jupiter both inward). Positive bisector hides Sun behind camera.
+                    // Solution: camera on OUTER side (−bisector from moon), looks inward.
+                    // Analytically: planet+sun perpendicular components are constant w.r.t. camDist,
+                    // and both have depth > 0 for all camDist since we look toward them.
+                    // Jupiter appears at most halfAngle=acos(dotHS)/2 off-center (geometric limit).
+                    finalDirXZ = bisectorRaw.clone().normalize().negate();
+                    camDist = Math.max(isMoon.size * 6.0, hostDist * 0.25);
+                    
+                } else {
+                    // CASE 3 — POSITIVE BISECTOR (standard)
+                    // Planet+sun in opposite half-spheres from moon.
+                    // Camera along bisector: planet one edge, sun other edge.
+                    // Analytically solve camDist so planet center at targetAngle from view axis.
+                    finalDirXZ = bisectorRaw.clone().normalize();
+                    const cosHalf = moonToHostXZ.dot(finalDirXZ);
+                    const halfAngle = Math.acos(Math.max(-1, Math.min(1, cosHalf)));
+                    camDist = hostDist * Math.cos(halfAngle)
+                            + hostDist * Math.sin(halfAngle) / Math.tan(targetAngle);
+                }
+                
                 camDist = Math.max(camDist, isMoon.size * 4.0);
-                camDist = Math.max(camDist, hostDist * 0.2);
+                camDist = Math.max(camDist, hostDist * 0.15);
                 
-                // Small Y offset keeps camera near ecliptic plane
                 camera.position.set(
                     worldPos.x + finalDirXZ.x * camDist,
                     camDist * 0.02,
