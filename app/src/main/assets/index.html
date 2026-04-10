@@ -679,14 +679,12 @@
                 controls.target.copy(worldPos);
             } else if (isMoon) {
                 // === MOON SELECTED ===
-                // Bisector approach in the ecliptic plane (XZ).
-                //
-                // Compute directions from the moon to the planet and the Sun,
-                // projected to the XZ (ecliptic) plane. The bisector of these
-                // two directions points "between" the planet and Sun.
-                // Camera goes on the OPPOSITE side of the bisector, so when
-                // looking at the moon, the planet is on one side and the Sun
-                // is on the other (they straddle the view center symmetrically).
+                // Camera on the OUTWARD side of the moon from its host planet,
+                // with the look-at target shifted toward the Sun. This pans
+                // the view so that:
+                //   - The parent planet is visible on one side (behind the moon)
+                //   - The Sun/Sun-glow is visible on the other side
+                //   - The moon is prominent but slightly offset from center
                 //
                 // Camera stays near y=0 (ecliptic plane).
                 const hostPivot = planets[isMoon.host];
@@ -695,48 +693,38 @@
                 
                 const hostDist = worldPos.distanceTo(hostWorldPos);
                 
-                // Moon→Planet direction in XZ plane
-                const moonToHostXZ = new THREE.Vector2(
-                    hostWorldPos.x - worldPos.x,
-                    hostWorldPos.z - worldPos.z
-                ).normalize();
-                
-                // Moon→Sun direction in XZ plane (Sun is always at origin)
-                const moonToSunXZ = new THREE.Vector2(
-                    -worldPos.x,
-                    -worldPos.z
-                ).normalize();
-                
-                // Bisector: average of the two normalized directions
-                const bisectorXZ = new THREE.Vector2()
-                    .addVectors(moonToHostXZ, moonToSunXZ);
-                
-                if (bisectorXZ.length() < 0.001) {
-                    // Planet and Sun are exactly opposite from moon (extremely rare).
-                    // Use perpendicular to moonToHost as fallback.
-                    bisectorXZ.set(-moonToHostXZ.y, moonToHostXZ.x);
+                // Direction from planet through moon (outward from planet)
+                const planetToMoon3D = new THREE.Vector3().subVectors(worldPos, hostWorldPos);
+                // Project to ecliptic plane (XZ) for camera direction
+                const camDirXZ = new THREE.Vector2(planetToMoon3D.x, planetToMoon3D.z);
+                if (camDirXZ.length() < 0.001) {
+                    camDirXZ.set(1, 0);
                 }
-                bisectorXZ.normalize();
+                camDirXZ.normalize();
                 
-                // Camera on the opposite side from the bisector
-                const camDirXZ = bisectorXZ.clone().negate();
+                // Camera distance: zoom out more for breathing room
+                let camDist = hostDist * 3.0;
+                camDist = Math.max(camDist, isMoon.size * 20.0);
+                camDist = Math.min(camDist, hostDist * 6.0);
                 
-                // Camera distance: far enough that both planet and Sun
-                // are within the FOV (~45°). The planet is at hostDist from
-                // the moon; at camDist behind, the planet appears at:
-                //   angle ≈ atan(hostDist * sin(halfAngle) / camDist)
-                // We want this < ~18° (within 22.5° half-FOV with margin).
-                let camDist = hostDist * 2.0;
-                camDist = Math.max(camDist, isMoon.size * 15.0);
-                camDist = Math.min(camDist, hostDist * 5.0);
-                
-                // Position camera in ecliptic plane
+                // Position camera outward from planet through moon in ecliptic plane
                 camera.position.set(
                     worldPos.x + camDirXZ.x * camDist,
                     camDist * 0.04, // very slight elevation above ecliptic
                     worldPos.z + camDirXZ.y * camDist
                 );
-                controls.target.copy(worldPos);
+                
+                // Shift the look-at target toward the Sun.
+                // This pans the camera view SO that the planet (behind the moon)
+                // shifts to one side of the frame, and the Sun-ward direction
+                // gets more viewport space on the other side.
+                // The shift amount scales with hostDist so it works at all scales.
+                const moonToSun3D = new THREE.Vector3(-worldPos.x, 0, -worldPos.z).normalize();
+                const lookAt = worldPos.clone().add(
+                    moonToSun3D.multiplyScalar(hostDist * 1.2)
+                );
+                lookAt.y = worldPos.y * 0.3; // keep near ecliptic
+                controls.target.copy(lookAt);
             } else {
                 // === PLANET SELECTED ===
                 // Position camera on the opposite side from the Sun,
