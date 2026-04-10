@@ -221,42 +221,48 @@
         // The Moon (Earth's) is special: it orbits in the ecliptic plane (~5.14° inclination)
         // NOT in Earth's equatorial plane with other moons' offset by host obliquity.
         
+        // Moon distances are proportional to real semi-major axes within each system.
+        // Each system has a base distance for the innermost moon; others scale by SMA ratio.
+        // This ensures correct relative spacing (e.g., Callisto 4.46× farther than Io).
+        // Some very distant moons (Titan, Iapetus) are capped to prevent visual overflow.
         const moonSystemConfig = [
             // Earth — Moon orbits near the ecliptic, handled specially
             { name: "Moon", host: "Earth", p: 27.32166, dist: 2.0, size: 0.27, irregular: false, texName: "Moon",
               L0: 218.32, nRate: 13.17639648, inclination: 5.145, node0: 125.04, nodeRate: -0.05295386,
               specialOrbit: "ecliptic" },
-            // Mars
+            // Mars — Phobos 9376km, Deimos 23460km (ratio 2.50)
             { name: "Phobos", host: "Mars", p: 0.31891, dist: 0.9, size: 0.05, irregular: true, texName: "Phobos", L0: 35.06 },
-            { name: "Deimos", host: "Mars", p: 1.26244, dist: 1.3, size: 0.04, irregular: true, texName: "Deimos", L0: 162.0 },
+            { name: "Deimos", host: "Mars", p: 1.26244, dist: 2.25, size: 0.04, irregular: true, texName: "Deimos", L0: 162.0 },
             // Jupiter — Galilean moons (Lieske 1998 L0 at J2000)
-            { name: "Io", host: "Jupiter", p: 1.769138, dist: 3.5, size: 0.13, irregular: false, texName: "Io", L0: 106.07 },
-            { name: "Europa", host: "Jupiter", p: 3.551181, dist: 4.5, size: 0.11, irregular: false, texName: "Europa", L0: 175.73 },
-            { name: "Ganymede", host: "Jupiter", p: 7.154553, dist: 5.5, size: 0.18, irregular: false, texName: "Ganymede", L0: 120.56 },
-            { name: "Callisto", host: "Jupiter", p: 16.68902, dist: 6.5, size: 0.16, irregular: false, texName: "Callisto", L0: 84.44 },
+            // SMA ratios: Io=1.00, Europa=1.59, Ganymede=2.54, Callisto=4.46
+            { name: "Io", host: "Jupiter", p: 1.769138, dist: 2.5, size: 0.13, irregular: false, texName: "Io", L0: 106.07 },
+            { name: "Europa", host: "Jupiter", p: 3.551181, dist: 3.98, size: 0.11, irregular: false, texName: "Europa", L0: 175.73 },
+            { name: "Ganymede", host: "Jupiter", p: 7.154553, dist: 6.35, size: 0.18, irregular: false, texName: "Ganymede", L0: 120.56 },
+            { name: "Callisto", host: "Jupiter", p: 16.68902, dist: 11.16, size: 0.16, irregular: false, texName: "Callisto", L0: 84.44 },
             // Saturn — Major moons
-            { name: "Mimas", host: "Saturn", p: 0.94242, dist: 5.5, size: 0.08, irregular: false, texName: "Mimas", L0: 14.0 },
-            { name: "Enceladus", host: "Saturn", p: 1.37022, dist: 6.0, size: 0.09, irregular: false, texName: "Enceladus", L0: 211.0 },
-            { name: "Tethys", host: "Saturn", p: 1.88780, dist: 6.5, size: 0.10, irregular: false, texName: "Tethys", L0: 189.0 },
-            { name: "Dione", host: "Saturn", p: 2.73692, dist: 7.0, size: 0.10, irregular: false, texName: "Dione", L0: 322.0 },
-            { name: "Rhea", host: "Saturn", p: 4.51750, dist: 7.5, size: 0.11, irregular: false, texName: "Rhea", L0: 351.0 },
-            { name: "Titan", host: "Saturn", p: 15.94542, dist: 8.5, size: 0.20, irregular: false, texName: "Titan", L0: 186.0 },
-            { name: "Iapetus", host: "Saturn", p: 79.3302, dist: 9.5, size: 0.10, irregular: false, texName: "Iapetus", L0: 260.0 },
-            // Uranus
-            { name: "Miranda", host: "Uranus", p: 1.41348, dist: 2.8, size: 0.08, irregular: true, texName: "Miranda", L0: 120.0 },
-            { name: "Ariel", host: "Uranus", p: 2.52038, dist: 3.3, size: 0.10, irregular: false, texName: "Ariel", L0: 14.8 },
-            { name: "Umbriel", host: "Uranus", p: 4.14418, dist: 3.8, size: 0.10, irregular: false, texName: "Umbriel", L0: 108.9 },
-            { name: "Titania", host: "Uranus", p: 8.70588, dist: 4.5, size: 0.11, irregular: false, texName: "Titania", L0: 78.4 },
-            { name: "Oberon", host: "Uranus", p: 13.46324, dist: 5.2, size: 0.11, irregular: false, texName: "Oberon", L0: 105.1 },
-            // Neptune
-            { name: "Proteus", host: "Neptune", p: 1.12231, dist: 3.3, size: 0.08, irregular: true, texName: "Proteus", L0: 0.0 },
-            { name: "Triton", host: "Neptune", p: -5.87685, dist: 4.5, size: 0.15, irregular: false, texName: "Triton", L0: 264.78 },
-            // Pluto
+            // SMA ratios from Mimas: Enc=1.28, Teth=1.59, Dio=2.03, Rhe=2.84, Tit=6.59, Iap=19.19
+            { name: "Mimas", host: "Saturn", p: 0.94242, dist: 3.5, size: 0.08, irregular: false, texName: "Mimas", L0: 14.0 },
+            { name: "Enceladus", host: "Saturn", p: 1.37022, dist: 4.49, size: 0.09, irregular: false, texName: "Enceladus", L0: 211.0 },
+            { name: "Tethys", host: "Saturn", p: 1.88780, dist: 5.56, size: 0.10, irregular: false, texName: "Tethys", L0: 189.0 },
+            { name: "Dione", host: "Saturn", p: 2.73692, dist: 7.12, size: 0.10, irregular: false, texName: "Dione", L0: 322.0 },
+            { name: "Rhea", host: "Saturn", p: 4.51750, dist: 9.94, size: 0.11, irregular: false, texName: "Rhea", L0: 351.0 },
+            { name: "Titan", host: "Saturn", p: 15.94542, dist: 14.0, size: 0.20, irregular: false, texName: "Titan", L0: 186.0 },
+            { name: "Iapetus", host: "Saturn", p: 79.3302, dist: 16.0, size: 0.10, irregular: false, texName: "Iapetus", L0: 260.0 },
+            // Uranus — SMA ratios from Miranda: Ari=1.47, Umb=2.05, Tit=3.36, Obe=4.49
+            { name: "Miranda", host: "Uranus", p: 1.41348, dist: 2.5, size: 0.08, irregular: true, texName: "Miranda", L0: 120.0 },
+            { name: "Ariel", host: "Uranus", p: 2.52038, dist: 3.67, size: 0.10, irregular: false, texName: "Ariel", L0: 14.8 },
+            { name: "Umbriel", host: "Uranus", p: 4.14418, dist: 5.12, size: 0.10, irregular: false, texName: "Umbriel", L0: 108.9 },
+            { name: "Titania", host: "Uranus", p: 8.70588, dist: 8.4, size: 0.11, irregular: false, texName: "Titania", L0: 78.4 },
+            { name: "Oberon", host: "Uranus", p: 13.46324, dist: 11.23, size: 0.11, irregular: false, texName: "Oberon", L0: 105.1 },
+            // Neptune — Proteus 117647km, Triton 354759km (ratio 3.02)
+            { name: "Proteus", host: "Neptune", p: 1.12231, dist: 3.0, size: 0.08, irregular: true, texName: "Proteus", L0: 0.0 },
+            { name: "Triton", host: "Neptune", p: -5.87685, dist: 9.05, size: 0.15, irregular: false, texName: "Triton", L0: 264.78 },
+            // Pluto — SMA ratios from Charon: Styx=2.18, Nix=2.49, Kerb=2.95, Hyd=3.30
             { name: "Charon", host: "Pluto", p: 6.38723, dist: 1.8, size: 0.12, irregular: false, texName: "Charon", L0: 282.0 },
-            { name: "Styx", host: "Pluto", p: 20.16155, dist: 2.3, size: 0.03, irregular: true, texName: "Styx", L0: 0.0 },
-            { name: "Nix", host: "Pluto", p: 24.85463, dist: 3.0, size: 0.04, irregular: true, texName: "Nix", L0: 0.0 },
-            { name: "Kerberos", host: "Pluto", p: 32.16756, dist: 3.6, size: 0.03, irregular: true, texName: "Kerberos", L0: 0.0 },
-            { name: "Hydra", host: "Pluto", p: 38.20177, dist: 4.2, size: 0.04, irregular: true, texName: "Hydra", L0: 0.0 }
+            { name: "Styx", host: "Pluto", p: 20.16155, dist: 3.92, size: 0.03, irregular: true, texName: "Styx", L0: 0.0 },
+            { name: "Nix", host: "Pluto", p: 24.85463, dist: 4.47, size: 0.04, irregular: true, texName: "Nix", L0: 0.0 },
+            { name: "Kerberos", host: "Pluto", p: 32.16756, dist: 5.31, size: 0.03, irregular: true, texName: "Kerberos", L0: 0.0 },
+            { name: "Hydra", host: "Pluto", p: 38.20177, dist: 5.95, size: 0.04, irregular: true, texName: "Hydra", L0: 0.0 }
         ];
 
         // ============================================================
@@ -449,24 +455,17 @@
             }
             groupPivot.add(bodyMesh);
 
-            // Click hitbox — enlarged for easy tapping on mobile.
+            // Click hitbox — base geometry at 1× body size.
+            // Dynamically scaled each frame based on camera distance (see animation loop).
             // Uses _hit_ prefix so label occlusion raycaster skips it.
-            // Cap hitbox radius so it doesn't extend past the nearest moon's orbit.
-            let hitRadius = data.size * 2.0;
-            const hostMoons = moonSystemConfig.filter(m => m.host === name);
-            if (hostMoons.length > 0) {
-                const nearestMoonDist = Math.min(...hostMoons.map(m => m.dist));
-                // Don't let hitbox exceed 80% of nearest moon orbit
-                hitRadius = Math.min(hitRadius, nearestMoonDist * 0.8);
-            }
-            // Ensure hitbox is always at least 1.5x body size
-            hitRadius = Math.max(hitRadius, data.size * 1.5);
             const hitMesh = new THREE.Mesh(
-                new THREE.SphereGeometry(hitRadius, 16, 16),
+                new THREE.SphereGeometry(data.size, 16, 16),
                 new THREE.MeshBasicMaterial({visible: false})
             );
             hitMesh.name = "_hit_" + name;
             hitMesh.userData.bodyName = name;
+            hitMesh.userData.baseHitRadius = data.size; // store for dynamic scaling
+            hitMesh.userData.isPlanetHit = true;
             groupPivot.add(hitMesh);
 
             // pivot: positioned at orbital location
@@ -590,11 +589,13 @@
             mMesh.add(createLabel(mc.name, mc.size));
             
             const mHit = new THREE.Mesh(
-                new THREE.SphereGeometry(mc.size * 2.0, 16, 16),
+                new THREE.SphereGeometry(mc.size, 16, 16),
                 new THREE.MeshBasicMaterial({visible: false})
             );
             mHit.name = "_hit_" + mc.name;
             mHit.userData.bodyName = mc.name;
+            mHit.userData.baseHitRadius = mc.size; // store for dynamic scaling
+            mHit.userData.isMoonHit = true;
             mMesh.add(mHit);
             
             if (mc.specialOrbit === "ecliptic") {
@@ -678,50 +679,42 @@
                 controls.target.copy(worldPos);
             } else if (isMoon) {
                 // === MOON SELECTED ===
-                // Camera shows: moon in foreground, parent planet ~1/3 on one side,
-                // Sun visible on the opposite side.
+                // Camera stays in the ecliptic plane (y ≈ 0) and positions on the
+                // outward side of the moon (away from the Sun). Looking inward,
+                // the parent planet appears on one side and the Sun on the other.
                 //
-                // Approach: Position camera behind the moon (away from Sun AND planet).
-                // The look-at target is offset toward the midpoint of planet & Sun, so both
-                // appear in the frustum. The planet is close (appears large), the Sun is far
-                // (appears smaller but visible due to its glow).
+                // The ecliptic plane in scene coords is the XZ plane (y=0).
+                // We project all positions to XZ to compute the camera direction.
                 const hostPivot = planets[isMoon.host];
                 const hostWorldPos = new THREE.Vector3();
                 if (hostPivot) hostPivot.getWorldPosition(hostWorldPos);
                 
                 const sunPos = new THREE.Vector3(0, 0, 0);
                 const hostDist = worldPos.distanceTo(hostWorldPos);
-                const hostBodySize = planetsData[isMoon.host]?.size || 1.0;
-
-                // Direction from moon toward the Sun (the Sun is always at origin)
-                const moonToSun = sunPos.clone().sub(worldPos).normalize();
-                // Direction from moon toward host planet
-                const moonToHost = hostWorldPos.clone().sub(worldPos).normalize();
                 
-                // Bisector: average direction between moonToHost and moonToSun
-                // The camera will look roughly along this bisector so both are in frame
-                const bisector = moonToHost.clone().add(moonToSun).normalize();
-                if (bisector.lengthSq() < 0.001) bisector.copy(moonToSun); // fallback if opposite
+                // Flatten to XZ plane (ecliptic) for direction computation
+                const moonXZ = new THREE.Vector2(worldPos.x, worldPos.z);
+                const hostXZ = new THREE.Vector2(hostWorldPos.x, hostWorldPos.z);
+                const sunXZ = new THREE.Vector2(0, 0);
                 
-                // Camera positioned on the opposite side of the moon from the bisector
-                const camDirection = bisector.clone().negate();
+                // Direction from Sun through planet to moon (outward radial)
+                const sunToMoonXZ = new THREE.Vector2().subVectors(moonXZ, sunXZ).normalize();
                 
-                // Camera distance: sized so planet fills ~1/3 of one side
-                // The planet is at hostDist from the moon. If the camera is at camDist
-                // behind the moon, the angle to the planet is atan(hostDist / camDist).
-                // We want this angle < FOV/2 so the planet is in frame.
-                // Set camDist so planet is ~60% from center toward the edge:
-                const vFOVrad = camera.fov * Math.PI / 180;
-                const hFOVrad = 2 * Math.atan(Math.tan(vFOVrad / 2) * camera.aspect);
-                const activeFOV = Math.max(vFOVrad, hFOVrad);
-                // Planet at 60% of half-FOV from center = 30% of full FOV
-                const targetAngle = activeFOV * 0.30;
-                let camDist = hostDist / Math.tan(targetAngle);
-                camDist = Math.max(camDist, isMoon.size * 10.0);
-                camDist = Math.min(camDist, hostDist * 6.0);
+                // Camera goes on the outward side of the moon (away from Sun)
+                // This means: along sunToMoon direction, past the moon
+                const camDirXZ = sunToMoonXZ.clone(); // outward from Sun
                 
-                camera.position.copy(worldPos).add(camDirection.clone().multiplyScalar(camDist));
-                camera.position.y += camDist * 0.05; // subtle elevation
+                // Camera distance: far enough to see the host planet at ~edge of frame
+                let camDist = hostDist * 2.5;
+                camDist = Math.max(camDist, isMoon.size * 12.0);
+                camDist = Math.min(camDist, hostDist * 5.0);
+                
+                // Build camera position in 3D — stay in ecliptic plane
+                camera.position.set(
+                    worldPos.x + camDirXZ.x * camDist,
+                    worldPos.y * 0.3 + camDist * 0.03, // near ecliptic with very slight elevation
+                    worldPos.z + camDirXZ.y * camDist
+                );
                 controls.target.copy(worldPos);
             } else {
                 // === PLANET SELECTED ===
@@ -993,6 +986,44 @@
                     const L = ((mc.config.L0 + (360.0 / mc.config.p) * dNow) % 360 + 360) % 360;
                     const r = L * Math.PI / 180.0;
                     mc.mesh.position.set(mc.config.dist * Math.cos(r), 0, mc.config.dist * Math.sin(r));
+                }
+            }
+            
+            // Dynamic hitbox scaling — scale hitbox mesh based on camera distance.
+            // At galaxy view (far), hitboxes are larger (2.5×) for easy tapping.
+            // At planet close-up (near), hitboxes shrink to 1.0× to prevent overlap.
+            // Throttled to every 3 frames for performance.
+            if (frameCount % 3 === 0) {
+                const camOriginDist = camera.position.length(); // distance from origin
+                // Interpolation: at distance > 60, scale = 2.5; at distance < 8, scale = 1.0
+                const farDist = 60.0;
+                const nearDist = 8.0;
+                const farScale = 2.5;
+                const nearScale = 1.0;
+                const t = Math.max(0, Math.min(1, (camOriginDist - nearDist) / (farDist - nearDist)));
+                const hitScale = nearScale + t * (farScale - nearScale);
+                
+                for (const mesh of planetMeshes) {
+                    // Traverse children to find hitbox meshes
+                    mesh.traverse((child) => {
+                        if (child.userData && child.userData.baseHitRadius) {
+                            let scale = hitScale;
+                            // Cap planet hitboxes to not exceed nearest moon orbit
+                            if (child.userData.isPlanetHit) {
+                                const pName = child.userData.bodyName;
+                                const moons = moonSystemConfig.filter(m => m.host === pName);
+                                if (moons.length > 0) {
+                                    const nearestMoonDist = Math.min(...moons.map(m => m.dist));
+                                    const maxRadius = nearestMoonDist * 0.8;
+                                    const scaledRadius = child.userData.baseHitRadius * scale;
+                                    if (scaledRadius > maxRadius) {
+                                        scale = maxRadius / child.userData.baseHitRadius;
+                                    }
+                                }
+                            }
+                            child.scale.set(scale, scale, scale);
+                        }
+                    });
                 }
             }
             
