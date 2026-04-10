@@ -235,10 +235,10 @@
             { name: "Deimos", host: "Mars", p: 1.26244, dist: 2.25, size: 0.04, irregular: true, texName: "Deimos", L0: 162.0 },
             // Jupiter — Galilean moons (Lieske 1998 L0 at J2000)
             // SMA ratios: Io=1.00, Europa=1.59, Ganymede=2.54, Callisto=4.46
-            { name: "Io", host: "Jupiter", p: 1.769138, dist: 2.5, size: 0.13, irregular: false, texName: "Io", L0: 106.07 },
-            { name: "Europa", host: "Jupiter", p: 3.551181, dist: 3.98, size: 0.11, irregular: false, texName: "Europa", L0: 175.73 },
-            { name: "Ganymede", host: "Jupiter", p: 7.154553, dist: 6.35, size: 0.18, irregular: false, texName: "Ganymede", L0: 120.56 },
-            { name: "Callisto", host: "Jupiter", p: 16.68902, dist: 11.16, size: 0.16, irregular: false, texName: "Callisto", L0: 84.44 },
+            { name: "Io", host: "Jupiter", p: 1.769138, dist: 2.5, size: 0.13, irregular: false, texName: "Io", L0: 106.07, galilean: true },
+            { name: "Europa", host: "Jupiter", p: 3.551181, dist: 3.98, size: 0.11, irregular: false, texName: "Europa", L0: 175.73, galilean: true },
+            { name: "Ganymede", host: "Jupiter", p: 7.154553, dist: 6.35, size: 0.18, irregular: false, texName: "Ganymede", L0: 120.56, galilean: true },
+            { name: "Callisto", host: "Jupiter", p: 16.68902, dist: 11.16, size: 0.16, irregular: false, texName: "Callisto", L0: 84.44, galilean: true },
             // Saturn — Major moons
             // SMA ratios from Mimas: Enc=1.28, Teth=1.59, Dio=2.03, Rhe=2.84, Tit=6.59, Iap=19.19
             { name: "Mimas", host: "Saturn", p: 0.94242, dist: 3.5, size: 0.08, irregular: false, texName: "Mimas", L0: 14.0 },
@@ -1019,6 +1019,70 @@
                     // But the Moon mesh is a child of earthPivot (which is at Earth's position)
                     // so these are relative to Earth
                     mc.mesh.position.set(x_ecl, z_ecl, -y_ecl);
+                    
+                } else if (mc.config.host === "Jupiter" && mc.config.galilean) {
+                    // === GALILEAN MOONS — Lieske E5-based perturbation model ===
+                    // Mean longitudes (all in degrees)
+                    const n1 = 203.48895579;  // Io mean motion (deg/day)
+                    const n2 = 101.37472473;  // Europa
+                    const n3 =  50.31760920;  // Ganymede
+                    const n4 =  21.57107117;  // Callisto
+                    
+                    const l1 = ((106.07 + n1 * dNow) % 360 + 360) % 360;
+                    const l2 = ((175.73 + n2 * dNow) % 360 + 360) % 360;
+                    const l3 = ((120.56 + n3 * dNow) % 360 + 360) % 360;
+                    const l4 = (( 84.44 + n4 * dNow) % 360 + 360) % 360;
+                    
+                    // Longitude of perijove (deg)
+                    const pi1 = (( 97.0881 + 0.16138586 * dNow) % 360 + 360) % 360;
+                    const pi2 = ((154.8663 + 0.04726307 * dNow) % 360 + 360) % 360;
+                    const pi3 = ((188.1840 + 0.00712734 * dNow) % 360 + 360) % 360;
+                    const pi4 = ((335.2868 + 0.00184000 * dNow) % 360 + 360) % 360;
+                    
+                    // Laplace resonance argument: Φ = l1 - 3*l2 + 2*l3 ≈ 180° + libration
+                    const phi_lib = l1 - 3*l2 + 2*l3;
+                    const phi_rad = phi_lib * Math.PI / 180.0;
+                    
+                    const toRad = Math.PI / 180.0;
+                    let trueLon;
+                    
+                    if (mc.config.name === "Io") {
+                        // Eccentricity: e = 0.0041
+                        // Equation of center + perturbations
+                        const M = (l1 - pi1) * toRad;
+                        const eqCenter = 2 * 0.0041 * Math.sin(M) * 180 / Math.PI;
+                        // Perturbation from Europa (largest term: ~0.47° amplitude)
+                        const pert = -0.47 * Math.sin(2*(l1 - l2) * toRad)
+                                     + 0.10 * Math.sin(2*(l1 - l3) * toRad)
+                                     + 0.07 * Math.sin(phi_rad);
+                        trueLon = l1 + eqCenter + pert;
+                    } else if (mc.config.name === "Europa") {
+                        const M = (l2 - pi2) * toRad;
+                        const eqCenter = 2 * 0.0094 * Math.sin(M) * 180 / Math.PI;
+                        // Perturbation from Io and Ganymede
+                        const pert = 1.07 * Math.sin(2*(l2 - l3) * toRad)
+                                     - 0.10 * Math.sin(2*(l1 - l2) * toRad)
+                                     + 0.17 * Math.sin(phi_rad);
+                        trueLon = l2 + eqCenter + pert;
+                    } else if (mc.config.name === "Ganymede") {
+                        const M = (l3 - pi3) * toRad;
+                        const eqCenter = 2 * 0.0013 * Math.sin(M) * 180 / Math.PI;
+                        // Perturbation from Europa (largest: ~0.33°)
+                        const pert = -0.33 * Math.sin(2*(l2 - l3) * toRad)
+                                     + 0.12 * Math.sin(phi_rad)
+                                     - 0.08 * Math.sin(2*(l3 - l4) * toRad);
+                        trueLon = l3 + eqCenter + pert;
+                    } else { // Callisto
+                        const M = (l4 - pi4) * toRad;
+                        const eqCenter = 2 * 0.0074 * Math.sin(M) * 180 / Math.PI;
+                        // Perturbation from Ganymede
+                        const pert = 0.84 * Math.sin(2*(l3 - l4) * toRad)
+                                     + 0.06 * Math.sin(3*(l3 - l4) * toRad);
+                        trueLon = l4 + eqCenter + pert;
+                    }
+                    
+                    const r = ((trueLon % 360 + 360) % 360) * toRad;
+                    mc.mesh.position.set(mc.config.dist * Math.cos(r), 0, mc.config.dist * Math.sin(r));
                     
                 } else if (planets[mc.config.host]) {
                     // Standard moons: orbit in host's equatorial plane (inside groupPivot)
