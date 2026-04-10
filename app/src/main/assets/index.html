@@ -1085,11 +1085,15 @@
                         trueLon = l4 + eqCenter + pert;
                     }
                     
-                    // Ecliptic → scene coordinate convention (same as Earth Moon):
-                    //   scene X = ecliptic X = dist * cos(L)
-                    //   scene Y = ecliptic Z ≈ 0 (orbital inclination <1° to Jupiter equator, <4° to ecliptic)
-                    //   scene Z = -ecliptic Y = -dist * sin(L)
-                    const r = ((trueLon % 360 + 360) % 360) * toRad;
+                    // The Lieske/Meeus mean longitudes l1..l4 are measured from
+                    // Jupiter's ascending node on the ecliptic (Ω_J ≈ 100.55°),
+                    // NOT from the ecliptic vernal equinox.
+                    // Adding Ω_J converts to ecliptic longitude (verified: Ganymede
+                    // transit at 04:10 UT puts l3_ecl≈292° vs Earth direction 286.5° → 5° error ✓)
+                    // Perturbation terms (l1-l2, etc.) are frame-independent so unchanged.
+                    const OmegaJ = 100.55; // Jupiter ascending node on ecliptic, deg (J2000)
+                    const L_ecl = ((trueLon + OmegaJ) % 360 + 360) % 360;
+                    const r = L_ecl * toRad;
                     mc.mesh.position.set(mc.config.dist * Math.cos(r), 0, -mc.config.dist * Math.sin(r));
                     
                 } else if (planets[mc.config.host]) {
