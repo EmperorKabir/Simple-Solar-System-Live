@@ -682,13 +682,13 @@
                 controls.target.copy(worldPos);
             } else if (isMoon) {
                 // === MOON SELECTED ===
-                // Camera is positioned outward from the planet through the moon,
-                // BUT offset perpendicular to this direction toward the anti-Sun
-                // side. This creates angular separation: the planet appears on
-                // one side of the frame, the Sun on the other.
+                // Camera nearly perpendicular to the Sun-Planet line, on the
+                // anti-Sun side of the moon's orbit. This places:
+                //   - The parent planet partially visible at one screen edge (~1/3)
+                //   - The Sun partially visible at the opposite edge (~1/3)
+                //   - The moon prominent and large in the center
                 //
-                // FOV is widened to 70° to capture the large angular span.
-                //
+                // FOV is widened to 70° to capture the planet–Sun angular span.
                 // Camera stays near y=0 (ecliptic plane).
                 camera.fov = 70;
                 camera.updateProjectionMatrix();
@@ -699,37 +699,41 @@
                 
                 const hostDist = worldPos.distanceTo(hostWorldPos);
                 
-                // Direction from planet through moon (outward from planet), in XZ
-                const planetToMoonXZ = new THREE.Vector2(
+                // Use the Sun→Planet line (well-defined, stable) for perpendicular
+                // This is more reliable than planet→moon direction for the split
+                const sunToHostXZ = new THREE.Vector2(hostWorldPos.x, hostWorldPos.z);
+                if (sunToHostXZ.length() < 0.001) sunToHostXZ.set(1, 0);
+                sunToHostXZ.normalize();
+                
+                // Perpendicular to Sun→Planet line in XZ plane
+                const perp1 = new THREE.Vector2(-sunToHostXZ.y, sunToHostXZ.x);
+                
+                // Which perpendicular side is the moon on?
+                // moonRelToHost projected onto the perpendicular
+                const moonRelXZ = new THREE.Vector2(
                     worldPos.x - hostWorldPos.x,
                     worldPos.z - hostWorldPos.z
                 );
-                if (planetToMoonXZ.length() < 0.001) planetToMoonXZ.set(1, 0);
-                planetToMoonXZ.normalize();
+                const moonSide = moonRelXZ.dot(perp1);
                 
-                // Perpendicular to planet→moon in XZ plane (two choices)
-                const perp1 = new THREE.Vector2(-planetToMoonXZ.y, planetToMoonXZ.x);
+                // Camera goes on the same side as the moon (outward from Sun-Planet axis)
+                const camPerp = moonSide >= 0 ? perp1 : perp1.clone().negate();
                 
-                // Which perpendicular side faces TOWARD the Sun?
-                // moonToSun direction in XZ:
-                const moonToSunXZ = new THREE.Vector2(-worldPos.x, -worldPos.z).normalize();
-                const sunSide = perp1.dot(moonToSunXZ);
-                
-                // We want the camera on the ANTI-SUN side,
-                // so the Sun appears on the opposite side of the frame from the planet.
-                const antiSunPerp = sunSide > 0 ? perp1.clone().negate() : perp1.clone();
-                
-                // Mix: 40% outward (from planet through moon) + 60% perpendicular (anti-Sun)
-                // This gives ~56° offset from the outward direction
+                // Small outward bias (toward the moon's side, away from the planet)
+                // 20% outward along Sun→Planet + 80% perpendicular
                 const finalDirXZ = new THREE.Vector2(
-                    planetToMoonXZ.x * 0.4 + antiSunPerp.x * 0.6,
-                    planetToMoonXZ.y * 0.4 + antiSunPerp.y * 0.6
+                    sunToHostXZ.x * 0.2 + camPerp.x * 0.8,
+                    sunToHostXZ.y * 0.2 + camPerp.y * 0.8
                 ).normalize();
                 
-                // Camera distance: zoom out for full context
-                let camDist = hostDist * 3.0;
-                camDist = Math.max(camDist, isMoon.size * 20.0);
-                camDist = Math.min(camDist, hostDist * 6.0);
+                // Camera distance: CLOSE to the moon so it fills 30-50% of screen.
+                // At distance d, the planet center is at angle ≈ atan(hostDist/d).
+                // For the planet to be at the FOV edge (35° half-angle):
+                //   d = hostDist / tan(35°) ≈ hostDist * 1.43
+                // We want the planet CENTER slightly off-screen (1/3 visible),
+                // so use d ≈ hostDist * 1.0 (planet center at ~45° from view center).
+                let camDist = hostDist * 1.0;
+                camDist = Math.max(camDist, isMoon.size * 8.0);  // don't clip into the moon
                 
                 // Position camera
                 camera.position.set(
