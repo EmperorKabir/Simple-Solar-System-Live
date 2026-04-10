@@ -5,18 +5,14 @@ plugins {
 
 android {
     namespace = "com.livesolar.solarsystem"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.livesolar.solarsystem"
         minSdk = 31
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
-        vectorDrawables {
-            useSupportLibrary = true
-        }
     }
 
     buildTypes {
@@ -50,9 +46,6 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     // Standard Compose layout
     implementation("androidx.compose.material3:material3")
-    
-    // Jetpack Glance for the scalable widget
-    implementation("androidx.glance:glance-appwidget:1.0.0")
     
     // WebViewAssetLoader for secure local asset serving (enables ES modules in WebView)
     implementation("androidx.webkit:webkit:1.9.0")

@@ -107,8 +107,7 @@
         </div>
     </div>
     
-    <div id="bottom-layer">
-    </div>
+
 
     <script type="module">
         import * as THREE from 'three';
@@ -591,7 +590,7 @@
             mMesh.add(createLabel(mc.name, mc.size));
             
             const mHit = new THREE.Mesh(
-                new THREE.SphereGeometry(mc.size * 3.0, 16, 16),
+                new THREE.SphereGeometry(mc.size * 2.0, 16, 16),
                 new THREE.MeshBasicMaterial({visible: false})
             );
             mHit.name = "_hit_" + mc.name;
@@ -679,19 +678,50 @@
                 controls.target.copy(worldPos);
             } else if (isMoon) {
                 // === MOON SELECTED ===
-                // Position the camera so the moon is in foreground,
-                // parent planet visible behind it on one side
+                // Camera shows: moon in foreground, parent planet ~1/3 on one side,
+                // Sun visible on the opposite side.
+                //
+                // Approach: Position camera behind the moon (away from Sun AND planet).
+                // The look-at target is offset toward the midpoint of planet & Sun, so both
+                // appear in the frustum. The planet is close (appears large), the Sun is far
+                // (appears smaller but visible due to its glow).
                 const hostPivot = planets[isMoon.host];
                 const hostWorldPos = new THREE.Vector3();
                 if (hostPivot) hostPivot.getWorldPosition(hostWorldPos);
                 
-                // Direction from parent planet to moon
-                const moonFromHost = worldPos.clone().sub(hostWorldPos).normalize();
-                // Camera goes along the moon-from-host direction, past the moon,
-                // so looking back sees the moon in foreground and planet behind
-                const camDist = isMoon.size * 5.0;
-                camera.position.copy(worldPos).add(moonFromHost.clone().multiplyScalar(camDist));
-                camera.position.y += isMoon.size * 1.0; // slight elevation
+                const sunPos = new THREE.Vector3(0, 0, 0);
+                const hostDist = worldPos.distanceTo(hostWorldPos);
+                const hostBodySize = planetsData[isMoon.host]?.size || 1.0;
+
+                // Direction from moon toward the Sun (the Sun is always at origin)
+                const moonToSun = sunPos.clone().sub(worldPos).normalize();
+                // Direction from moon toward host planet
+                const moonToHost = hostWorldPos.clone().sub(worldPos).normalize();
+                
+                // Bisector: average direction between moonToHost and moonToSun
+                // The camera will look roughly along this bisector so both are in frame
+                const bisector = moonToHost.clone().add(moonToSun).normalize();
+                if (bisector.lengthSq() < 0.001) bisector.copy(moonToSun); // fallback if opposite
+                
+                // Camera positioned on the opposite side of the moon from the bisector
+                const camDirection = bisector.clone().negate();
+                
+                // Camera distance: sized so planet fills ~1/3 of one side
+                // The planet is at hostDist from the moon. If the camera is at camDist
+                // behind the moon, the angle to the planet is atan(hostDist / camDist).
+                // We want this angle < FOV/2 so the planet is in frame.
+                // Set camDist so planet is ~60% from center toward the edge:
+                const vFOVrad = camera.fov * Math.PI / 180;
+                const hFOVrad = 2 * Math.atan(Math.tan(vFOVrad / 2) * camera.aspect);
+                const activeFOV = Math.max(vFOVrad, hFOVrad);
+                // Planet at 60% of half-FOV from center = 30% of full FOV
+                const targetAngle = activeFOV * 0.30;
+                let camDist = hostDist / Math.tan(targetAngle);
+                camDist = Math.max(camDist, isMoon.size * 10.0);
+                camDist = Math.min(camDist, hostDist * 6.0);
+                
+                camera.position.copy(worldPos).add(camDirection.clone().multiplyScalar(camDist));
+                camera.position.y += camDist * 0.05; // subtle elevation
                 controls.target.copy(worldPos);
             } else {
                 // === PLANET SELECTED ===
@@ -785,11 +815,26 @@
                         }
                         if (bodyName) {
                             if (activeMoons.find(m => m.config.name === bodyName)) {
-                                moonHit = activeMoons.find(m => m.config.name === bodyName).mesh;
-                                break;
+                                if (!moonHit) moonHit = activeMoons.find(m => m.config.name === bodyName).mesh;
                             } else if (!planetHit) {
                                 if (bodyName === "Sun") planetHit = sun;
                                 else planetHit = planets[bodyName];
+                            }
+                        }
+                    }
+                    // Distance-based priority: in galaxy view (camera far from any planet),
+                    // prefer planets over moons to prevent moon hitboxes stealing clicks
+                    if (moonHit && planetHit) {
+                        const moonConfig = moonSystemConfig.find(m => m.name === moonHit.name);
+                        if (moonConfig && moonConfig.host === planetHit.name) {
+                            // Moon belongs to this planet — check if camera is far away
+                            const planetWorld = new THREE.Vector3();
+                            planetHit.getWorldPosition(planetWorld);
+                            const camDistToPlanet = camera.position.distanceTo(planetWorld);
+                            const bodySize = planetsData[planetHit.name]?.size || 1.0;
+                            // If camera is more than 20x body size away, prefer the planet
+                            if (camDistToPlanet > bodySize * 20.0) {
+                                moonHit = null;
                             }
                         }
                     }
@@ -848,6 +893,8 @@
         // Set initial camera to the same dynamic zoom as reset view
         calcResetView();
         statusTxt.innerText = "Solar System";
+        document.getElementById("hud-telemetry").style.display = "none";
+        document.getElementById("nav-dropdown").selectedIndex = 0;
 
         document.getElementById("reset-btn").addEventListener("click", (e) => {
             e.stopPropagation();
