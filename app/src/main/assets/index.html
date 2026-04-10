@@ -679,41 +679,38 @@
                 controls.target.copy(worldPos);
             } else if (isMoon) {
                 // === MOON SELECTED ===
-                // Camera stays in the ecliptic plane (y ≈ 0) and positions on the
-                // outward side of the moon (away from the Sun). Looking inward,
-                // the parent planet appears on one side and the Sun on the other.
+                // Camera stays in the ecliptic plane (y ≈ 0) and positions
+                // perpendicular to the Sun-Planet line, so from the camera's view:
+                //   - The parent planet appears on one side of the frame
+                //   - The Sun appears on the opposite side
+                //   - The moon is centered in the foreground
                 //
-                // The ecliptic plane in scene coords is the XZ plane (y=0).
-                // We project all positions to XZ to compute the camera direction.
+                // Scene ecliptic plane = XZ plane (y=0).
                 const hostPivot = planets[isMoon.host];
                 const hostWorldPos = new THREE.Vector3();
                 if (hostPivot) hostPivot.getWorldPosition(hostWorldPos);
                 
-                const sunPos = new THREE.Vector3(0, 0, 0);
                 const hostDist = worldPos.distanceTo(hostWorldPos);
                 
-                // Flatten to XZ plane (ecliptic) for direction computation
-                const moonXZ = new THREE.Vector2(worldPos.x, worldPos.z);
+                // Sun-to-planet direction in XZ plane
                 const hostXZ = new THREE.Vector2(hostWorldPos.x, hostWorldPos.z);
-                const sunXZ = new THREE.Vector2(0, 0);
+                const sunToHostXZ = hostXZ.clone().normalize();
                 
-                // Direction from Sun through planet to moon (outward radial)
-                const sunToMoonXZ = new THREE.Vector2().subVectors(moonXZ, sunXZ).normalize();
+                // Perpendicular to Sun-Planet line in XZ plane (rotated 90°)
+                // This direction is in the ecliptic plane and faces so that
+                // the planet is to the left and the Sun is to the right (or vice versa)
+                const perpXZ = new THREE.Vector2(-sunToHostXZ.y, sunToHostXZ.x);
                 
-                // Camera goes on the outward side of the moon (away from Sun)
-                // This means: along sunToMoon direction, past the moon
-                const camDirXZ = sunToMoonXZ.clone(); // outward from Sun
-                
-                // Camera distance: far enough to see the host planet at ~edge of frame
+                // Camera distance: far enough to see the host planet partially
                 let camDist = hostDist * 2.5;
                 camDist = Math.max(camDist, isMoon.size * 12.0);
                 camDist = Math.min(camDist, hostDist * 5.0);
                 
-                // Build camera position in 3D — stay in ecliptic plane
+                // Build camera position in 3D — perpendicular in ecliptic plane
                 camera.position.set(
-                    worldPos.x + camDirXZ.x * camDist,
-                    worldPos.y * 0.3 + camDist * 0.03, // near ecliptic with very slight elevation
-                    worldPos.z + camDirXZ.y * camDist
+                    worldPos.x + perpXZ.x * camDist,
+                    worldPos.y * 0.2 + camDist * 0.03, // near ecliptic with very slight elevation
+                    worldPos.z + perpXZ.y * camDist
                 );
                 controls.target.copy(worldPos);
             } else {
