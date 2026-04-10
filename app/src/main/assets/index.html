@@ -683,13 +683,12 @@
             } else if (isMoon) {
                 // === MOON SELECTED ===
                 // Camera perpendicular to the planet→moon direction, offset
-                // toward the anti-Sun side. This creates angular separation:
-                //   - The parent planet on one side of the frame
-                //   - The Sun on the opposite side
-                //   - The moon prominent in the center
+                // toward the anti-Sun side. Precise geometry ensures:
+                //   - Host planet ~1/3 visible at one screen edge
+                //   - Sun direction visible on the opposite side
+                //   - Moon prominent in center
                 //
-                // FOV is widened to 70° to capture the planet–Sun angular span.
-                // Camera stays near y=0 (ecliptic plane).
+                // FOV widened to 70°. Camera near y=0 (ecliptic plane).
                 camera.fov = 70;
                 camera.updateProjectionMatrix();
                 
@@ -698,8 +697,9 @@
                 if (hostPivot) hostPivot.getWorldPosition(hostWorldPos);
                 
                 const hostDist = worldPos.distanceTo(hostWorldPos);
+                const hostSize = planetsData[isMoon.host]?.size || 1.0;
                 
-                // Direction from planet through moon (outward from planet), in XZ
+                // Direction from planet through moon (outward), in XZ
                 const planetToMoonXZ = new THREE.Vector2(
                     worldPos.x - hostWorldPos.x,
                     worldPos.z - hostWorldPos.z
@@ -714,20 +714,56 @@
                 const moonToSunXZ = new THREE.Vector2(-worldPos.x, -worldPos.z).normalize();
                 const sunSide = perp1.dot(moonToSunXZ);
                 
-                // Camera on the ANTI-SUN side so Sun appears opposite from planet
+                // Camera on the ANTI-SUN side
                 const antiSunPerp = sunSide > 0 ? perp1.clone().negate() : perp1.clone();
                 
-                // Mix: 30% outward + 70% perpendicular (anti-Sun)
+                // Mix: 40% outward + 60% perpendicular (anti-Sun)
+                const outFrac = 0.4, perpFrac = 0.6;
+                const mixLen = Math.sqrt(outFrac*outFrac + perpFrac*perpFrac);
+                const normOut = outFrac / mixLen;   // 0.555
+                const normPerp = perpFrac / mixLen;  // 0.832
+                
                 const finalDirXZ = new THREE.Vector2(
-                    planetToMoonXZ.x * 0.3 + antiSunPerp.x * 0.7,
-                    planetToMoonXZ.y * 0.3 + antiSunPerp.y * 0.7
+                    planetToMoonXZ.x * outFrac + antiSunPerp.x * perpFrac,
+                    planetToMoonXZ.y * outFrac + antiSunPerp.y * perpFrac
                 ).normalize();
                 
-                // Camera distance: closer than v9 (3.0) to match user's reference views
-                // where planet and Sun are partially cut off at screen edges.
-                let camDist = hostDist * 1.8;
-                camDist = Math.max(camDist, isMoon.size * 12.0);
-                camDist = Math.min(camDist, hostDist * 4.0);
+                // ---- Compute camDist so planet is ~1/3 visible at FOV edge ----
+                // From the camera at distance camDist along finalDir from the moon,
+                // the planet center is at angle α from the view center.
+                //
+                // For the planet to be 1/3 visible (near edge at FOV boundary):
+                //   α = halfFOV + angularRadius/3
+                //
+                // The planet center angle α satisfies:
+                //   cos(α) = (normOut * hostDist + camDist) / 
+                //            sqrt((hostDist + normOut*camDist)² + (normPerp*camDist)²)
+                //
+                // We solve for camDist numerically with a few Newton iterations.
+                const halfFOV = 35.0 * Math.PI / 180.0; // 35° in radians
+                
+                // Initial guess
+                let camDist = hostDist * 1.5;
+                for (let iter = 0; iter < 8; iter++) {
+                    const Dx = hostDist + normOut * camDist;
+                    const Dy = normPerp * camDist;
+                    const D = Math.sqrt(Dx*Dx + Dy*Dy);
+                    const angRad = Math.atan(hostSize / D);
+                    const targetAlpha = halfFOV + angRad / 3.0;
+                    const cosTarget = Math.cos(targetAlpha);
+                    
+                    // Current cos(alpha)
+                    const dotVal = normOut * hostDist + camDist;
+                    const cosAlpha = dotVal / D;
+                    
+                    // Adjust camDist: if cosAlpha > cosTarget, alpha is too small
+                    // (planet too much in view), so decrease camDist
+                    // Simple bisection-like step
+                    const err = cosAlpha - cosTarget;
+                    camDist *= (1.0 - err * 0.5);
+                    camDist = Math.max(camDist, isMoon.size * 5.0);
+                }
+                camDist = Math.max(camDist, isMoon.size * 5.0);
                 
                 // Position camera
                 camera.position.set(
