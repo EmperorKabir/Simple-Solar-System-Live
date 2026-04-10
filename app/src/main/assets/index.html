@@ -606,6 +606,16 @@
                 if (earthPivot) {
                     earthPivot.add(mMesh);
                 }
+            } else if (mc.galilean) {
+                // Galilean moons: Lieske longitudes are ECLIPTIC longitudes (Sun-centred,
+                // from vernal equinox). Must attach to the un-tilted orbital pivot
+                // (planets['Jupiter']), NOT to the obliquity-tilted groupPivot.
+                // Coordinate mapping same as Earth Moon: (cos L, 0, -sin L).
+                if (planets[mc.host]) {
+                    planets[mc.host].add(mMesh);
+                } else {
+                    scene.add(mMesh);
+                }
             } else {
                 // All other moons: orbit in their host's equatorial plane (inside groupPivot/tilt group)
                 const hostPlanet = planetsData[mc.host];
@@ -1086,8 +1096,12 @@
                         trueLon = l4 + eqCenter + pert;
                     }
                     
+                    // Ecliptic → scene coordinate convention (same as Earth Moon):
+                    //   scene X = ecliptic X = dist * cos(L)
+                    //   scene Y = ecliptic Z ≈ 0 (orbital inclination <1° to Jupiter equator, <4° to ecliptic)
+                    //   scene Z = -ecliptic Y = -dist * sin(L)
                     const r = ((trueLon % 360 + 360) % 360) * toRad;
-                    mc.mesh.position.set(mc.config.dist * Math.cos(r), 0, mc.config.dist * Math.sin(r));
+                    mc.mesh.position.set(mc.config.dist * Math.cos(r), 0, -mc.config.dist * Math.sin(r));
                     
                 } else if (planets[mc.config.host]) {
                     // Standard moons: orbit in host's equatorial plane (inside groupPivot)
