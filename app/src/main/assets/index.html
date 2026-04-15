@@ -115,6 +115,15 @@
         import { CSS2DRenderer, CSS2DObject } from 'three/addons/CSS2DRenderer.js';
 
         // ============================================================
+        // Offline Orbital Mechanics Modules (Stages 6–8)
+        // All dynamic position requests are routed through these local
+        // classes. No network calls — pure offline computation.
+        // ============================================================
+        import { dateToJulianDate, julianDateToJ2000Days, getCurrentJ2000Days, getGMST, getSunRA } from './js/OrbitalTimeUtils.js';
+        import { eclipticToScene, normalizeToVisualDistance, eclipticToVisualScene } from './js/CoordinateTransformer.js';
+        import { computePlanetPosition, computeMoonPosition, computeBodyRotation, computeSunRotation } from './js/OrbitalEngine.js';
+
+        // ============================================================
         // 1. Core WebGL Engine Setup
         // ============================================================
         const scene = new THREE.Scene();
@@ -665,10 +674,8 @@
         sun.add(createLabel("Sun", sunVisualRadius));
         planetMeshes.push(sun);
 
-        // Compute initial Julian date
-        const currentDateInit = new Date();
-        const jdInit = currentDateInit.getTime() / 86400000.0 + 2440587.5;
-        const dInit = jdInit - 2451545.0;
+        // Compute initial Julian date via offline OrbitalTimeUtils
+        const dInit = getCurrentJ2000Days();
 
         // Store references for Earth's special Moon handling
         let earthPivot = null;
@@ -1239,157 +1246,24 @@
         function animate() {
             requestAnimationFrame(animate);
             frameCount++;
-            const now = new Date();
-            const dNow = (now.getTime() / 86400000.0 + 2440587.5) - 2451545.0;
+            // Time query routed through offline OrbitalTimeUtils
+            const dNow = getCurrentJ2000Days();
 
             // Update planet positions and rotations
+            // Planet positions and rotations — all routed through offline OrbitalEngine
             for (const [key, data] of Object.entries(planetsData)) {
                 planets[key].position.copy(getOrbitPositionFast(data, dNow, false));
-                
-                if (data.useGMST) {
-                    // === EARTH ROTATION ===
-                    // Use GMST (Greenwich Mean Sidereal Time) for Earth's rotation.
-                    // GMST gives the angle of Greenwich relative to the vernal equinox (stars).
-                    // Combined with the Sun's position in the scene, this naturally produces
-                    // correct day/night: the lit hemisphere faces the Sun at origin.
-                    //
-                    // Three.js SphereGeometry: U=0.5 (texture center) maps to +X at rotation.y=0.
-                    // Standard Earth textures have Greenwich (0° lon) at image center.
-                    // So at rotation.y=0, Greenwich faces +X.
-                    //
-                    // GMST tells us the hour angle of the vernal equinox at Greenwich.
-                    // The vernal equinox direction in the scene is +X (ecliptic longitude 0°).
-                    // But the groupPivot rotates body +X by poleLon=90° in ecliptic longitude.
-                    // So we need: rotation.y = GMST_rad - poleLon_correction
-                    // poleLon=90° shifts the body's reference by 90°, so subtract 90°.
-                    
-                    const gmst_deg = getGMST(dNow);
-                    // Correction: groupPivot rotates +X by 90° ecliptic longitude (poleLon=90°)
-                    // So body rotation.y = GMST - 90° to compensate for this shift.
-                    // Additional: the texture image center (Greenwich) is at +X = 0° body rotation,
-                    // but we need it at GMST angle. So rotation.y = (GMST - 90)° in radians.
-                    data.bodyMesh.rotation.y = (gmst_deg - 90.0) * Math.PI / 180.0;
-                } else {
-                    // All other planets: use IAU W = W0 + Wd * d formula
-                    // The bodyMesh is inside groupPivot which has poleLon rotation applied.
-                    // W gives the prime meridian angle from the ascending node of the body's
-                    // equator on the ICRF equator. The poleLon rotation of the groupPivot
-                    // aligns the body's reference frame, so there's a poleLon shift to correct.
-                    //
-                    // For planets other than Earth, the poleLon is chosen to match IAU pole RA/Dec,
-                    // and the ascending node direction in the equatorial plane aligns accordingly.
-                    // The texOffset corrects for the texture's own alignment.
-                    const W = ((data.W0 + data.Wd * dNow) % 360 + 360) % 360;
-                    data.bodyMesh.rotation.y = (W + (data.texOffset || 0)) * Math.PI / 180.0;
-                }
+                data.bodyMesh.rotation.y = computeBodyRotation(data, dNow);
             }
 
-            // Sun rotation (sidereal period ~25.38 days at equator = 14.184 deg/day)
-            const sunW = ((284.95 + 14.184 * dNow) % 360 + 360) % 360;
-            sun.rotation.y = sunW * Math.PI / 180.0;
+            // Sun rotation — routed through offline OrbitalEngine
+            sun.rotation.y = computeSunRotation(dNow);
             
-            // Update moon positions
+            // Moon positions — all routed through offline OrbitalEngine
             for (const mc of activeMoons) {
-                if (mc.config.specialOrbit === "ecliptic") {
-                    // === EARTH'S MOON — Ecliptic plane orbit ===
-                    // Mean longitude with proper rate
-                    const L = ((mc.config.L0 + mc.config.nRate * dNow) % 360 + 360) % 360;
-                    const L_rad = L * Math.PI / 180.0;
-                    
-                    // Ascending node regresses ~18.6 year cycle
-                    const node = ((mc.config.node0 + mc.config.nodeRate * dNow) % 360 + 360) % 360;
-                    const node_rad = node * Math.PI / 180.0;
-                    const inc_rad = mc.config.inclination * Math.PI / 180.0;
-
-                    // Position in ecliptic coordinates
-                    // The Moon's argument from the ascending node
-                    const u = L_rad - node_rad;
-                    const x_ecl = mc.config.dist * (Math.cos(node_rad)*Math.cos(u) - Math.sin(node_rad)*Math.sin(u)*Math.cos(inc_rad));
-                    const y_ecl = mc.config.dist * (Math.sin(node_rad)*Math.cos(u) + Math.cos(node_rad)*Math.sin(u)*Math.cos(inc_rad));
-                    const z_ecl = mc.config.dist * Math.sin(u) * Math.sin(inc_rad);
-
-                    // Scene coords: x=x_ecl, y=z_ecl, z=-y_ecl
-                    // But the Moon mesh is a child of earthPivot (which is at Earth's position)
-                    // so these are relative to Earth
-                    mc.mesh.position.set(x_ecl, z_ecl, -y_ecl);
-                    
-                } else if (mc.config.host === "Jupiter" && mc.config.galilean) {
-                    // === GALILEAN MOONS — Lieske E5-based perturbation model ===
-                    // Mean longitudes (all in degrees)
-                    const n1 = 203.48895579;  // Io mean motion (deg/day)
-                    const n2 = 101.37472473;  // Europa
-                    const n3 =  50.31760920;  // Ganymede
-                    const n4 =  21.57107117;  // Callisto
-                    
-                    const l1 = ((106.07 + n1 * dNow) % 360 + 360) % 360;
-                    const l2 = ((175.73 + n2 * dNow) % 360 + 360) % 360;
-                    const l3 = ((120.56 + n3 * dNow) % 360 + 360) % 360;
-                    const l4 = (( 84.44 + n4 * dNow) % 360 + 360) % 360;
-                    
-                    // Longitude of perijove (deg)
-                    const pi1 = (( 97.0881 + 0.16138586 * dNow) % 360 + 360) % 360;
-                    const pi2 = ((154.8663 + 0.04726307 * dNow) % 360 + 360) % 360;
-                    const pi3 = ((188.1840 + 0.00712734 * dNow) % 360 + 360) % 360;
-                    const pi4 = ((335.2868 + 0.00184000 * dNow) % 360 + 360) % 360;
-                    
-                    // Laplace resonance argument: Φ = l1 - 3*l2 + 2*l3 ≈ 180° + libration
-                    const phi_lib = l1 - 3*l2 + 2*l3;
-                    const phi_rad = phi_lib * Math.PI / 180.0;
-                    
-                    const toRad = Math.PI / 180.0;
-                    let trueLon;
-                    
-                    if (mc.config.name === "Io") {
-                        // Eccentricity: e = 0.0041
-                        // Equation of center + perturbations
-                        const M = (l1 - pi1) * toRad;
-                        const eqCenter = 2 * 0.0041 * Math.sin(M) * 180 / Math.PI;
-                        // Perturbation from Europa (largest term: ~0.47° amplitude)
-                        const pert = -0.47 * Math.sin(2*(l1 - l2) * toRad)
-                                     + 0.10 * Math.sin(2*(l1 - l3) * toRad)
-                                     + 0.07 * Math.sin(phi_rad);
-                        trueLon = l1 + eqCenter + pert;
-                    } else if (mc.config.name === "Europa") {
-                        const M = (l2 - pi2) * toRad;
-                        const eqCenter = 2 * 0.0094 * Math.sin(M) * 180 / Math.PI;
-                        // Perturbation from Io and Ganymede
-                        const pert = 1.07 * Math.sin(2*(l2 - l3) * toRad)
-                                     - 0.10 * Math.sin(2*(l1 - l2) * toRad)
-                                     + 0.17 * Math.sin(phi_rad);
-                        trueLon = l2 + eqCenter + pert;
-                    } else if (mc.config.name === "Ganymede") {
-                        const M = (l3 - pi3) * toRad;
-                        const eqCenter = 2 * 0.0013 * Math.sin(M) * 180 / Math.PI;
-                        // Perturbation from Europa (largest: ~0.33°)
-                        const pert = -0.33 * Math.sin(2*(l2 - l3) * toRad)
-                                     + 0.12 * Math.sin(phi_rad)
-                                     - 0.08 * Math.sin(2*(l3 - l4) * toRad);
-                        trueLon = l3 + eqCenter + pert;
-                    } else { // Callisto
-                        const M = (l4 - pi4) * toRad;
-                        const eqCenter = 2 * 0.0074 * Math.sin(M) * 180 / Math.PI;
-                        // Perturbation from Ganymede
-                        const pert = 0.84 * Math.sin(2*(l3 - l4) * toRad)
-                                     + 0.06 * Math.sin(3*(l3 - l4) * toRad);
-                        trueLon = l4 + eqCenter + pert;
-                    }
-                    
-                    // The Lieske/Meeus mean longitudes l1..l4 are measured from
-                    // Jupiter's ascending node on the ecliptic (Ω_J ≈ 100.55°),
-                    // NOT from the ecliptic vernal equinox.
-                    // Adding Ω_J converts to ecliptic longitude (verified: Ganymede
-                    // transit at 04:10 UT puts l3_ecl≈292° vs Earth direction 286.5° → 5° error ✓)
-                    // Perturbation terms (l1-l2, etc.) are frame-independent so unchanged.
-                    const OmegaJ = 100.55; // Jupiter ascending node on ecliptic, deg (J2000)
-                    const L_ecl = ((trueLon + OmegaJ) % 360 + 360) % 360;
-                    const r = L_ecl * toRad;
-                    mc.mesh.position.set(mc.config.dist * Math.cos(r), 0, -mc.config.dist * Math.sin(r));
-                    
-                } else if (planets[mc.config.host]) {
-                    // Standard moons: orbit in host's equatorial plane (inside groupPivot)
-                    const L = ((mc.config.L0 + (360.0 / mc.config.p) * dNow) % 360 + 360) % 360;
-                    const r = L * Math.PI / 180.0;
-                    mc.mesh.position.set(mc.config.dist * Math.cos(r), 0, mc.config.dist * Math.sin(r));
+                if (planets[mc.config.host] || mc.config.specialOrbit === "ecliptic") {
+                    const pos = computeMoonPosition(mc.config, dNow);
+                    mc.mesh.position.set(pos.x, pos.y, pos.z);
                 }
             }
             
