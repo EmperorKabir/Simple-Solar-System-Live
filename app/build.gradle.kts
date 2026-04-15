@@ -50,5 +50,10 @@ dependencies {
     
     // WebViewAssetLoader for secure local asset serving (enables ES modules in WebView)
     implementation("androidx.webkit:webkit:1.12.1")
+
+    // JUnit 5 — Stage 13 TDD Validation Suite
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
 }
 
