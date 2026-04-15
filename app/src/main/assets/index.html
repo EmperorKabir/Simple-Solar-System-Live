@@ -767,10 +767,9 @@
 
             if (name === "Saturn") {
                 // Saturn rings: D ring inner ~1.11 Rs, A ring outer ~2.27 Rs
-                // Planet visual size=1.4 (radius), so rings at ~1.72 to ~3.18 scene units
-                // Inner radius slightly above planet surface for visual clarity
-                const satRingInner = 1.72;
-                const satRingOuter = 3.18;
+                // Scale relative to computed planet visual radius (data.size)
+                const satRingInner = data.size * 1.23;  // D ring inner ratio
+                const satRingOuter = data.size * 2.27;  // A ring outer ratio
                 const ringGeom = new THREE.RingGeometry(satRingInner, satRingOuter, 64);
                 const pos = ringGeom.attributes.position;
                 const uv = ringGeom.attributes.uv;
@@ -785,15 +784,17 @@
                 ringMesh.name = "_ring_Saturn";
                 groupPivot.add(ringMesh);
             } else if (name === "Uranus") {
-                // Uranus epsilon ring at ~1.96 Ru, visual: planet size=1.1
-                // Narrow ring system, keep thin. Miranda at 2.8 — ring outer must be < 2.8
-                const uRing = createProceduralRingGeometry(1.65, 2.2, 0.45, 0xaabbff);
+                // Uranus epsilon ring at ~1.96 Ru — scale relative to computed radius
+                const uRingInner = data.size * 1.50;
+                const uRingOuter = data.size * 2.00;
+                const uRing = createProceduralRingGeometry(uRingInner, uRingOuter, 0.45, 0xaabbff);
                 uRing.name = "_ring_Uranus";
                 groupPivot.add(uRing);
             } else if (name === "Neptune") {
-                // Neptune Adams ring at ~2.54 Rn. Visual: planet size=1.05
-                // Proteus at 3.3 — ring outer must be < 3.3
-                const nRing = createProceduralRingGeometry(1.87, 2.8, 0.2, 0x88bbcc);
+                // Neptune Adams ring at ~2.54 Rn — scale relative to computed radius
+                const nRingInner = data.size * 1.78;
+                const nRingOuter = data.size * 2.67;
+                const nRing = createProceduralRingGeometry(nRingInner, nRingOuter, 0.2, 0x88bbcc);
                 nRing.name = "_ring_Neptune";
                 groupPivot.add(nRing);
             }
