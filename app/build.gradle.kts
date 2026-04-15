@@ -52,10 +52,3 @@ dependencies {
     implementation("androidx.webkit:webkit:1.12.1")
 }
 
-// Sync Cache
-// New Sync Trigger
-// Isolation Sync Trigger
-// Isolation Sync Trigger
-// VSCode IDE Server Restart Trigger
-// Final Java Process Restart Sync
-// Flush Language Server Cache
