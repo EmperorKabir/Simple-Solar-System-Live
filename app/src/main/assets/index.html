@@ -476,6 +476,18 @@
         }
 
         // ============================================================
+        // Orbital Position Adapter
+        // ============================================================
+        // Thin wrapper bridging the old getOrbitPositionFast call sites to the
+        // offline OrbitalEngine module. Returns THREE.Vector3 for scene compat.
+        // All actual computation is delegated to computePlanetPosition() which
+        // solves Kepler's equation and transforms coordinates offline.
+        function getOrbitPositionFast(elements, daysSinceJ2000, isRingPoint = false) {
+            const pos = computePlanetPosition(elements, daysSinceJ2000, isRingPoint);
+            return new THREE.Vector3(pos.x, pos.y, pos.z);
+        }
+
+        // ============================================================
         // 4. Moon System Configuration
         // ============================================================
         // p = orbital period in Earth days (negative = retrograde orbit)
