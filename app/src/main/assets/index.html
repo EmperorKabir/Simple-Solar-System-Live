@@ -179,6 +179,65 @@
         //   image was authored (some textures have the PM at image center, others offset).
         //   Three.js SphereGeometry maps U=0.5 (texture center) to the +X axis.
         
+        // ============================================================
+        // 4. Moon System Configuration (MUST be defined before VisualScaleEngine)
+        // ============================================================
+        // p = orbital period in Earth days (negative = retrograde orbit)
+        // dist = visual distance from host (scene units, NOT physical)
+        // L0 = mean longitude at J2000 epoch (degrees)
+        //   - Galilean moons: from Lieske (1998) ephemeris theory
+        //   - Saturn moons: from TASS/SAT ephemerides
+        //   - Uranian moons: from Laskar & Jacobson
+        //   - Earth Moon: from Meeus (L0 = 218.32°)
+        //   - Others: approximate values
+        // 
+        // The Moon (Earth's) is special: it orbits in the ecliptic plane (~5.14° inclination)
+        // NOT in Earth's equatorial plane with other moons' offset by host obliquity.
+        
+        // Moon distances are proportional to real semi-major axes within each system.
+        // Each system has a base distance for the innermost moon; others scale by SMA ratio.
+        // This ensures correct relative spacing (e.g., Callisto 4.46× farther than Io).
+        // Some very distant moons (Titan, Iapetus) are capped to prevent visual overflow.
+        const moonSystemConfig = [
+            // Earth — Moon orbits near the ecliptic, handled specially
+            { name: "Moon", host: "Earth", p: 27.32166, dist: 2.0, size: 0.27, irregular: false, texName: "Moon",
+              L0: 218.32, nRate: 13.17639648, inclination: 5.145, node0: 125.04, nodeRate: -0.05295386,
+              specialOrbit: "ecliptic" },
+            // Mars — Phobos 9376km, Deimos 23460km (ratio 2.50)
+            { name: "Phobos", host: "Mars", p: 0.31891, dist: 0.9, size: 0.05, irregular: true, texName: "Phobos", L0: 35.06 },
+            { name: "Deimos", host: "Mars", p: 1.26244, dist: 2.25, size: 0.04, irregular: true, texName: "Deimos", L0: 162.0 },
+            // Jupiter — Galilean moons (Lieske 1998 L0 at J2000)
+            // SMA ratios: Io=1.00, Europa=1.59, Ganymede=2.54, Callisto=4.46
+            { name: "Io", host: "Jupiter", p: 1.769138, dist: 2.5, size: 0.13, irregular: false, texName: "Io", L0: 106.07, galilean: true },
+            { name: "Europa", host: "Jupiter", p: 3.551181, dist: 3.98, size: 0.11, irregular: false, texName: "Europa", L0: 175.73, galilean: true },
+            { name: "Ganymede", host: "Jupiter", p: 7.154553, dist: 6.35, size: 0.18, irregular: false, texName: "Ganymede", L0: 120.56, galilean: true },
+            { name: "Callisto", host: "Jupiter", p: 16.68902, dist: 11.16, size: 0.16, irregular: false, texName: "Callisto", L0: 84.44, galilean: true },
+            // Saturn — Major moons
+            // SMA ratios from Mimas: Enc=1.28, Teth=1.59, Dio=2.03, Rhe=2.84, Tit=6.59, Iap=19.19
+            { name: "Mimas", host: "Saturn", p: 0.94242, dist: 3.5, size: 0.08, irregular: false, texName: "Mimas", L0: 14.0 },
+            { name: "Enceladus", host: "Saturn", p: 1.37022, dist: 4.49, size: 0.09, irregular: false, texName: "Enceladus", L0: 211.0 },
+            { name: "Tethys", host: "Saturn", p: 1.88780, dist: 5.56, size: 0.10, irregular: false, texName: "Tethys", L0: 189.0 },
+            { name: "Dione", host: "Saturn", p: 2.73692, dist: 7.12, size: 0.10, irregular: false, texName: "Dione", L0: 322.0 },
+            { name: "Rhea", host: "Saturn", p: 4.51750, dist: 9.94, size: 0.11, irregular: false, texName: "Rhea", L0: 351.0 },
+            { name: "Titan", host: "Saturn", p: 15.94542, dist: 14.0, size: 0.20, irregular: false, texName: "Titan", L0: 186.0 },
+            { name: "Iapetus", host: "Saturn", p: 79.3302, dist: 16.0, size: 0.10, irregular: false, texName: "Iapetus", L0: 260.0 },
+            // Uranus — SMA ratios from Miranda: Ari=1.47, Umb=2.05, Tit=3.36, Obe=4.49
+            { name: "Miranda", host: "Uranus", p: 1.41348, dist: 2.5, size: 0.08, irregular: true, texName: "Miranda", L0: 120.0 },
+            { name: "Ariel", host: "Uranus", p: 2.52038, dist: 3.67, size: 0.10, irregular: false, texName: "Ariel", L0: 14.8 },
+            { name: "Umbriel", host: "Uranus", p: 4.14418, dist: 5.12, size: 0.10, irregular: false, texName: "Umbriel", L0: 108.9 },
+            { name: "Titania", host: "Uranus", p: 8.70588, dist: 8.4, size: 0.11, irregular: false, texName: "Titania", L0: 78.4 },
+            { name: "Oberon", host: "Uranus", p: 13.46324, dist: 11.23, size: 0.11, irregular: false, texName: "Oberon", L0: 105.1 },
+            // Neptune — Proteus 117647km, Triton 354759km (ratio 3.02)
+            { name: "Proteus", host: "Neptune", p: 1.12231, dist: 3.0, size: 0.08, irregular: true, texName: "Proteus", L0: 0.0 },
+            { name: "Triton", host: "Neptune", p: -5.87685, dist: 9.05, size: 0.15, irregular: false, texName: "Triton", L0: 264.78 },
+            // Pluto — SMA ratios from Charon: Styx=2.18, Nix=2.49, Kerb=2.95, Hyd=3.30
+            { name: "Charon", host: "Pluto", p: 6.38723, dist: 1.8, size: 0.12, irregular: false, texName: "Charon", L0: 282.0 },
+            { name: "Styx", host: "Pluto", p: 20.16155, dist: 3.92, size: 0.03, irregular: true, texName: "Styx", L0: 0.0 },
+            { name: "Nix", host: "Pluto", p: 24.85463, dist: 4.47, size: 0.04, irregular: true, texName: "Nix", L0: 0.0 },
+            { name: "Kerberos", host: "Pluto", p: 32.16756, dist: 5.31, size: 0.03, irregular: true, texName: "Kerberos", L0: 0.0 },
+            { name: "Hydra", host: "Pluto", p: 38.20177, dist: 5.95, size: 0.04, irregular: true, texName: "Hydra", L0: 0.0 }
+        ];
+
         const rawPlanetsData = {
             Mercury: { order: 1, a: 0.3871, e: 0.2056, i: 7.00, L: 252.25, w: 77.45, node: 48.33, n: 4.0923344, period: 0.240846, size: 0.35,
                 rotPeriod: 58.6, obliquity: 0.034, W0: 329.5469, Wd: 6.1385025, poleLon: 281.01, texOffset: 0.0 },
@@ -487,64 +546,7 @@
             return new THREE.Vector3(pos.x, pos.y, pos.z);
         }
 
-        // ============================================================
-        // 4. Moon System Configuration
-        // ============================================================
-        // p = orbital period in Earth days (negative = retrograde orbit)
-        // dist = visual distance from host (scene units, NOT physical)
-        // L0 = mean longitude at J2000 epoch (degrees)
-        //   - Galilean moons: from Lieske (1998) ephemeris theory
-        //   - Saturn moons: from TASS/SAT ephemerides
-        //   - Uranian moons: from Laskar & Jacobson
-        //   - Earth Moon: from Meeus (L0 = 218.32°)
-        //   - Others: approximate values
-        // 
-        // The Moon (Earth's) is special: it orbits in the ecliptic plane (~5.14° inclination)
-        // NOT in Earth's equatorial plane with other moons' offset by host obliquity.
-        
-        // Moon distances are proportional to real semi-major axes within each system.
-        // Each system has a base distance for the innermost moon; others scale by SMA ratio.
-        // This ensures correct relative spacing (e.g., Callisto 4.46× farther than Io).
-        // Some very distant moons (Titan, Iapetus) are capped to prevent visual overflow.
-        const moonSystemConfig = [
-            // Earth — Moon orbits near the ecliptic, handled specially
-            { name: "Moon", host: "Earth", p: 27.32166, dist: 2.0, size: 0.27, irregular: false, texName: "Moon",
-              L0: 218.32, nRate: 13.17639648, inclination: 5.145, node0: 125.04, nodeRate: -0.05295386,
-              specialOrbit: "ecliptic" },
-            // Mars — Phobos 9376km, Deimos 23460km (ratio 2.50)
-            { name: "Phobos", host: "Mars", p: 0.31891, dist: 0.9, size: 0.05, irregular: true, texName: "Phobos", L0: 35.06 },
-            { name: "Deimos", host: "Mars", p: 1.26244, dist: 2.25, size: 0.04, irregular: true, texName: "Deimos", L0: 162.0 },
-            // Jupiter — Galilean moons (Lieske 1998 L0 at J2000)
-            // SMA ratios: Io=1.00, Europa=1.59, Ganymede=2.54, Callisto=4.46
-            { name: "Io", host: "Jupiter", p: 1.769138, dist: 2.5, size: 0.13, irregular: false, texName: "Io", L0: 106.07, galilean: true },
-            { name: "Europa", host: "Jupiter", p: 3.551181, dist: 3.98, size: 0.11, irregular: false, texName: "Europa", L0: 175.73, galilean: true },
-            { name: "Ganymede", host: "Jupiter", p: 7.154553, dist: 6.35, size: 0.18, irregular: false, texName: "Ganymede", L0: 120.56, galilean: true },
-            { name: "Callisto", host: "Jupiter", p: 16.68902, dist: 11.16, size: 0.16, irregular: false, texName: "Callisto", L0: 84.44, galilean: true },
-            // Saturn — Major moons
-            // SMA ratios from Mimas: Enc=1.28, Teth=1.59, Dio=2.03, Rhe=2.84, Tit=6.59, Iap=19.19
-            { name: "Mimas", host: "Saturn", p: 0.94242, dist: 3.5, size: 0.08, irregular: false, texName: "Mimas", L0: 14.0 },
-            { name: "Enceladus", host: "Saturn", p: 1.37022, dist: 4.49, size: 0.09, irregular: false, texName: "Enceladus", L0: 211.0 },
-            { name: "Tethys", host: "Saturn", p: 1.88780, dist: 5.56, size: 0.10, irregular: false, texName: "Tethys", L0: 189.0 },
-            { name: "Dione", host: "Saturn", p: 2.73692, dist: 7.12, size: 0.10, irregular: false, texName: "Dione", L0: 322.0 },
-            { name: "Rhea", host: "Saturn", p: 4.51750, dist: 9.94, size: 0.11, irregular: false, texName: "Rhea", L0: 351.0 },
-            { name: "Titan", host: "Saturn", p: 15.94542, dist: 14.0, size: 0.20, irregular: false, texName: "Titan", L0: 186.0 },
-            { name: "Iapetus", host: "Saturn", p: 79.3302, dist: 16.0, size: 0.10, irregular: false, texName: "Iapetus", L0: 260.0 },
-            // Uranus — SMA ratios from Miranda: Ari=1.47, Umb=2.05, Tit=3.36, Obe=4.49
-            { name: "Miranda", host: "Uranus", p: 1.41348, dist: 2.5, size: 0.08, irregular: true, texName: "Miranda", L0: 120.0 },
-            { name: "Ariel", host: "Uranus", p: 2.52038, dist: 3.67, size: 0.10, irregular: false, texName: "Ariel", L0: 14.8 },
-            { name: "Umbriel", host: "Uranus", p: 4.14418, dist: 5.12, size: 0.10, irregular: false, texName: "Umbriel", L0: 108.9 },
-            { name: "Titania", host: "Uranus", p: 8.70588, dist: 8.4, size: 0.11, irregular: false, texName: "Titania", L0: 78.4 },
-            { name: "Oberon", host: "Uranus", p: 13.46324, dist: 11.23, size: 0.11, irregular: false, texName: "Oberon", L0: 105.1 },
-            // Neptune — Proteus 117647km, Triton 354759km (ratio 3.02)
-            { name: "Proteus", host: "Neptune", p: 1.12231, dist: 3.0, size: 0.08, irregular: true, texName: "Proteus", L0: 0.0 },
-            { name: "Triton", host: "Neptune", p: -5.87685, dist: 9.05, size: 0.15, irregular: false, texName: "Triton", L0: 264.78 },
-            // Pluto — SMA ratios from Charon: Styx=2.18, Nix=2.49, Kerb=2.95, Hyd=3.30
-            { name: "Charon", host: "Pluto", p: 6.38723, dist: 1.8, size: 0.12, irregular: false, texName: "Charon", L0: 282.0 },
-            { name: "Styx", host: "Pluto", p: 20.16155, dist: 3.92, size: 0.03, irregular: true, texName: "Styx", L0: 0.0 },
-            { name: "Nix", host: "Pluto", p: 24.85463, dist: 4.47, size: 0.04, irregular: true, texName: "Nix", L0: 0.0 },
-            { name: "Kerberos", host: "Pluto", p: 32.16756, dist: 5.31, size: 0.03, irregular: true, texName: "Kerberos", L0: 0.0 },
-            { name: "Hydra", host: "Pluto", p: 38.20177, dist: 5.95, size: 0.04, irregular: true, texName: "Hydra", L0: 0.0 }
-        ];
+        // (moonSystemConfig already defined above, before VisualScaleEngine)
 
         // ============================================================
         // 5. Texture Loading — All local files
@@ -605,55 +607,13 @@
         }
 
         // ============================================================
-        // 6. Astronomical Position Calculations
-        // @DEPRECATED — Will be replaced by OrbitalEngine.computePosition() (Sub-Agent 2)
+        // 6–7. REMOVED: Deprecated inline getOrbitPositionFast / getSunRA / getGMST
+        // All position/rotation computation now routed through:
+        //   - OrbitalEngine.computePlanetPosition() (imported above)
+        //   - OrbitalTimeUtils.getGMST / getSunRA   (imported above)
+        // The adapter function getOrbitPositionFast() at §Orbital Position Adapter
+        // bridges old call-sites to the new module.
         // ============================================================
-        
-        // Compute heliocentric ecliptic position, then map to visual scene coords
-        // Scene mapping: x_scene = x_ecliptic, y_scene = z_ecliptic, z_scene = -y_ecliptic
-        // This places the ecliptic in the XZ plane with north pole at +Y
-        function getOrbitPositionFast(elements, daysSinceJ2000, isRingPoint = false) {
-            let M = isRingPoint ? (daysSinceJ2000 * elements.n) : (elements.L - elements.w + elements.n * daysSinceJ2000);
-            M = M % 360.0;
-            const M_rad = M * Math.PI / 180.0;
-            // Newton-Raphson to solve Kepler's equation: E - e*sin(E) = M
-            let E = M_rad;
-            for(let i=0; i<8; i++) {
-                E = E - (E - elements.e * Math.sin(E) - M_rad) / (1.0 - elements.e * Math.cos(E));
-            }
-            const v = 2 * Math.atan( Math.sqrt((1+elements.e)/(1-elements.e)) * Math.tan(E/2) );
-            const r = elements.a * (1 - elements.e * Math.cos(E));
-            const x_orb = r * Math.cos(v);
-            const y_orb = r * Math.sin(v);
-            // Rotate from orbital plane to ecliptic frame
-            const x = (elements.cN*elements.cw - elements.sN*elements.sw*elements.ci)*x_orb + (-elements.cN*elements.sw - elements.sN*elements.cw*elements.ci)*y_orb;
-            const y = (elements.sN*elements.cw + elements.cN*elements.sw*elements.ci)*x_orb + (-elements.sN*elements.sw + elements.cN*elements.cw*elements.ci)*y_orb;
-            const z = (elements.sw*elements.si)*x_orb + (elements.cw*elements.si)*y_orb;
-            // Normalize to visual distance (preserves angular position, scales distance)
-            return new THREE.Vector3(x, z, -y).normalize().multiplyScalar(elements.visualDist);
-        }
-
-        // ============================================================
-        // 7. Sun Position Calculations (for Earth rotation alignment)
-        // @DEPRECATED — getSunRA/getGMST will be replaced by OrbitalTimeUtils (Sub-Agent 4)
-        // ============================================================
-        // Meeus low-precision solar position (good to ~1 arcminute)
-        function getSunRA(d) {
-            const g = ((357.529 + 0.98560028 * d) % 360 + 360) % 360;
-            const q = ((280.459 + 0.98564736 * d) % 360 + 360) % 360;
-            const g_rad = g * Math.PI / 180;
-            const L = q + 1.915 * Math.sin(g_rad) + 0.020 * Math.sin(2 * g_rad);
-            const e = 23.439 - 0.00000036 * d;
-            const e_rad = e * Math.PI / 180;
-            const L_rad = L * Math.PI / 180;
-            const RA = Math.atan2(Math.cos(e_rad) * Math.sin(L_rad), Math.cos(L_rad)) * 180 / Math.PI;
-            return ((RA % 360) + 360) % 360;
-        }
-
-        // GMST in degrees (Meeus / Astronomical Almanac)
-        function getGMST(d) {
-            return ((280.46061837 + 360.98564736629 * d) % 360 + 360) % 360;
-        }
 
         // ============================================================
         // 8. Scene Object Construction
