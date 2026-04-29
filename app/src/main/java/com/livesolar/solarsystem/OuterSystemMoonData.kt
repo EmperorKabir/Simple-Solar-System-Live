@@ -484,52 +484,112 @@ class OuterSystemMoonData {
 
 
         // =====================================================================================
-        // SECTION 3: TRITON — Chapront Model Stub
+        // SECTION 3: TRITON — Explanatory Supplement Model
         //
-        // The Chapront analytical theory for Triton is described in:
-        //   Chapront-Touzé, M. & Chapront, J. (1988), "The orbit of Triton" / IMCCE
-        //   Meeus, "Astronomical Algorithms", Chapter 36: Positions of the Satellites of Neptune
+        // Low-precision analytical ephemeris for Triton (Neptune I).
         //
-        // Context7-indexed open-source libraries (Astronomia, Astropy, Skyfield, astronomy-bundle-php)
-        // do NOT contain the Chapront Triton coefficient tables. Stellarium uses JPL ephemerides
-        // rather than analytical theories for Triton.
+        // Source: "Explanatory Supplement to the Astronomical Almanac" (1992), p.373
+        // Implementation reference: Project Pluto (Bill-Gray/lunar/triton.cpp, GPL v2)
         //
-        // The numerical coefficients must be extracted from:
-        //   1. Meeus' "Astronomical Algorithms" 2nd ed., Table 36.A
-        //   2. Original IMCCE publication at ftp://ftp.imcce.fr/pub/ephem/satel/
+        // The algorithm computes Triton's position relative to Neptune in the
+        // J2000.0 ecliptic reference frame. Triton has a retrograde orbit
+        // (inclination γ ≈ 158.996° to Neptune's orbital plane).
         //
-        // Below is the structural framework matching Meeus Chapter 36.
+        // Time variables:
+        //   T = (JD - 2451545.0) / 36525.0  (Julian centuries from J2000.0)
+        //   t_days = JD - t0                 (days from reference epoch t0)
+        //   t_years = t_days / 365.25        (Julian years from t0)
+        //
+        // Algorithm summary:
+        //   1. Compute precession angle N (node regression of Neptune's pole)
+        //   2. Compute θ (Triton's argument of latitude on invariable plane)
+        //   3. Compute mean longitude λ on the invariable plane
+        //   4. Convert (λ, γ) to longitude/latitude on invariable plane
+        //   5. Transform to ecliptic via the invariable plane pole direction
+        //   6. Scale by angular semimajor axis (488.49″ at 1 AU)
+        //
+        // Accuracy: ~1″ positional, sufficient for visual simulation.
+        // Valid range: ~1800–2200 (analytical theory, not numerically integrated)
         // =====================================================================================
 
         /**
          * Triton orbital element structure.
-         * Based on Meeus Chapter 36 framework:
+         * Based on Explanatory Supplement framework.
          *
          * Time: t = JDE - 2451545.0 (days from J2000)
          * T = t / 36525.0 (Julian centuries from J2000)
          *
-         * Fundamental arguments (from Meeus Chapter 36):
-         *   N1 = longitude of ascending node of Neptune's orbit (degrees, polynomial in T)
-         *   N2, N3... = additional angular arguments for perturbation series
-         *
-         * Triton has a retrograde orbit with i ≈ 157° to Neptune's equator.
+         * Triton has a retrograde orbit with γ ≈ 158.996° to the invariable plane.
          * The theory computes the position relative to Neptune.
          */
         data class TritonFundamentalAngles(
             val name: String,
             val a0: Double,      // constant term (degrees)
-            val a1: Double,      // linear term (degrees/century)
-            val a2: Double = 0.0 // quadratic term (degrees/century²)
+            val a1: Double,      // linear term (degrees/century or degrees/year)
+            val a2: Double = 0.0 // quadratic term (if applicable)
         )
 
-        // These are placeholder values — exact coefficients require Meeus Table 36.A
-        // The structure is provided so the coordinator agent can populate them.
-        val TRITON_REFERENCE_EPOCH_JD = 2451545.0  // J2000.0
+        // --- Reference epochs ---
+        /** J2000.0 epoch */
+        val TRITON_REFERENCE_EPOCH_JD = 2451545.0
 
-        // Note to coordinator: The Chapront Triton theory was not available in any
-        // context7-indexed library. The coefficient tables must be sourced from
-        // Meeus "Astronomical Algorithms" Chapter 36, Table 36.A, or from the
-        // original IMCCE publication. The data class structure above matches
-        // the expected format for the periodic series expansion.
+        /** Triton theory reference epoch t0 (1949 Dec 31.0 ET) */
+        val TRITON_T0_JD = 2433282.5
+
+        // --- Precession angle N (Neptune pole regression) ---
+        // N = 359.28 + 54.308 * T   (degrees, T in Julian centuries from J2000)
+        // This is the regression of Neptune's pole orientation.
+        val TRITON_N_CONSTANT_DEG = 359.28   // constant term (degrees)
+        val TRITON_N_RATE_DEG_PER_CENTURY = 54.308  // linear rate (degrees/century)
+
+        // --- Argument of latitude θ ---
+        // θ = 151.401 + 0.57806 * t_years  (degrees, t_years from t0)
+        // This is the slowly precessing argument of latitude.
+        val TRITON_THETA_CONSTANT_DEG = 151.401
+        val TRITON_THETA_RATE_DEG_PER_YEAR = 0.57806
+
+        // --- Mean longitude λ ---
+        // λ = 200.913 + 61.2588532 * t_days  (degrees, t_days from t0)
+        // Mean longitude of Triton in the invariable plane frame.
+        // The mean motion of ~61.26°/day corresponds to the sidereal period of ~5.877 days.
+        val TRITON_LAMBDA_CONSTANT_DEG = 200.913
+        val TRITON_LAMBDA_RATE_DEG_PER_DAY = 61.2588532
+
+        // --- Orbital inclination γ ---
+        // γ = 158.996°  (retrograde: > 90°)
+        // This is the inclination of Triton's orbit to the invariable plane,
+        // NOT to Neptune's equator (which is ~157°). The retrograde nature
+        // means sin(γ) > 0, cos(γ) < 0.
+        val TRITON_GAMMA_DEG = 158.996
+
+        // --- Angular semimajor axis ---
+        // a = 488.49″ at 1 AU distance
+        // Convert to radians: a_rad = 488.49 * π / (180 * 3600)
+        // The actual linear distance scales as a_rad * Δ where Δ = Neptune-observer distance.
+        val TRITON_SEMIMAJOR_ARCSEC = 488.49
+        val TRITON_SEMIMAJOR_RAD = 488.49 * Math.PI / (180.0 * 3600.0)
+
+        // --- Invariable plane pole (B1950 equatorial coordinates) ---
+        // The pole of the invariable plane, from which Triton's position is computed,
+        // has the following B1950 coordinates. These must be precessed to J2000.0
+        // before use with modern coordinate frames.
+        //
+        // RA_pole  = 298.72 + 2.58 * sin(N) - 0.04 * sin(2N)   (degrees, B1950)
+        // Dec_pole =  42.63 - 1.90 * cos(N) + 0.01 * cos(2N)   (degrees, B1950)
+        //
+        // where N is the precession angle defined above.
+        val TRITON_POLE_RA_BASE_DEG = 298.72    // base RA (B1950)
+        val TRITON_POLE_RA_SIN_N = 2.58         // sin(N) amplitude (degrees)
+        val TRITON_POLE_RA_SIN_2N = -0.04       // sin(2N) amplitude (degrees)
+        val TRITON_POLE_DEC_BASE_DEG = 42.63    // base Dec (B1950)
+        val TRITON_POLE_DEC_COS_N = -1.90       // cos(N) amplitude (degrees)
+        val TRITON_POLE_DEC_COS_2N = 0.01       // cos(2N) amplitude (degrees)
+
+        // --- Sidereal orbital period ---
+        val TRITON_SIDEREAL_PERIOD_DAYS = 5.876854  // retrograde: P = 360 / 61.2588532
+
+        // --- Physical parameters ---
+        val TRITON_RADIUS_KM = 1353.4   // mean radius (IAU 2015)
+        val TRITON_ORBITAL_RADIUS_KM = 354759.0  // semi-major axis from Neptune center
     }
 }
