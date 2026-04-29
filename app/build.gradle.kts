@@ -9,7 +9,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.livesolar.solarsystem"
+        applicationId = "com.livesolar.solarsystem.hello"
         minSdk = 31
         targetSdk = 35
         versionCode = 1
