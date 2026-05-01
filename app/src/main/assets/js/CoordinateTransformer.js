@@ -830,6 +830,101 @@ export function getObliquityDeg() {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Dual-Scale Spatial Mapping
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Planet-Sun:  linear (relative AU compressed via VisualScaleEngine power-law).
+// Moon-Planet: independent logarithmic magnification preserving direction,
+//   guaranteeing |scaledOffset| > hostBodyRadius for any nonzero physical
+//   separation, so a moon never intersects its host body geometry.
+//
+// Formulation:
+//   scaledRadius = hostBodyRadius * (1 + clearance)
+//                 + K_moon * log(1 + |offsetPhysical| / anchor)
+// where:
+//   hostBodyRadius — visual sphere radius of the host (scene units)
+//   clearance      — minimum gap as a fraction of hostBodyRadius (default 0.10)
+//   K_moon         — per-host magnification coefficient (scene units)
+//   anchor         — reference physical distance (same units as offset)
+//
+// Direction is preserved: scaledOffset = unitDir * scaledRadius.
+// This produces dense visible separation for inner moons and graceful
+// compression for outer moons within the same host system.
+
+/**
+ * Default per-host magnification parameters for the logarithmic moon scale.
+ * Tuned so the innermost moon clears the host body and the outermost moon
+ * stays inside MOON_DIST_CONFIG.maxOuter (see VisualScaleEngine in index.html).
+ *
+ * Each entry: { K_moon, anchor }
+ *   K_moon — multiplier applied to log(1 + offset/anchor). Scene units.
+ *   anchor — the physical distance (km, the same unit as the input offset)
+ *            at which log term contributes K_moon * log(2) ≈ 0.693·K_moon.
+ */
+export const MOON_LOG_SCALE = {
+    Earth:   { K_moon: 0.55, anchor: 100000  },
+    Mars:    { K_moon: 0.45, anchor: 5000    },
+    Jupiter: { K_moon: 1.85, anchor: 250000  },
+    Saturn:  { K_moon: 2.25, anchor: 250000  },
+    Uranus:  { K_moon: 1.75, anchor: 150000  },
+    Neptune: { K_moon: 1.60, anchor: 200000  },
+    Pluto:   { K_moon: 0.85, anchor: 20000   }
+};
+
+/** Minimum gap between scaled moon position and host body surface
+ *  expressed as a multiple of hostBodyRadius. */
+export const MOON_HOST_CLEARANCE = 0.10;
+
+/**
+ * Apply the dual-scale logarithmic transform to a moon's planetocentric offset.
+ *
+ * @param {{x:number,y:number,z:number}} offsetPhysical — planetocentric vector
+ *        in any consistent unit (km recommended). Direction is preserved.
+ * @param {number} hostBodyRadius — host sphere radius in scene units.
+ * @param {string} hostName — host body name; selects MOON_LOG_SCALE entry.
+ * @returns {{x:number,y:number,z:number}} scaled offset in scene units.
+ *          When the input offset is zero, returns the zero vector.
+ */
+export function dualScaleMoonOffset(offsetPhysical, hostBodyRadius, hostName) {
+    const len = Math.sqrt(
+        offsetPhysical.x * offsetPhysical.x +
+        offsetPhysical.y * offsetPhysical.y +
+        offsetPhysical.z * offsetPhysical.z
+    );
+    if (len < 1e-12) return { x: 0, y: 0, z: 0 };
+
+    const cfg = MOON_LOG_SCALE[hostName] || { K_moon: 1.0, anchor: 100000 };
+    const minRadius = hostBodyRadius * (1.0 + MOON_HOST_CLEARANCE);
+    const scaledRadius = minRadius + cfg.K_moon * Math.log(1.0 + len / cfg.anchor);
+
+    const k = scaledRadius / len;
+    return {
+        x: offsetPhysical.x * k,
+        y: offsetPhysical.y * k,
+        z: offsetPhysical.z * k
+    };
+}
+
+/**
+ * Convert an ecliptic moon offset directly to scene coordinates with the
+ * dual-scale logarithmic transform applied. The offset's direction is
+ * preserved through ecliptic→scene axis remap, then magnified via
+ * dualScaleMoonOffset.
+ *
+ * @param {number} x_ecl
+ * @param {number} y_ecl
+ * @param {number} z_ecl
+ * @param {number} hostBodyRadius
+ * @param {string} hostName
+ * @returns {{x:number,y:number,z:number}}
+ */
+export function eclipticToMoonScene(x_ecl, y_ecl, z_ecl, hostBodyRadius, hostName) {
+    const scene = eclipticToScene(x_ecl, y_ecl, z_ecl);
+    return dualScaleMoonOffset(scene, hostBodyRadius, hostName);
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ES Module exports
 // ─────────────────────────────────────────────────────────────────────────────
 
