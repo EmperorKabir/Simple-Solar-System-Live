@@ -2,11 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
     <title>Live Solar Astronomy</title>
     <style>
+        :root {
+            --safe-top:    env(safe-area-inset-top, 0px);
+            --safe-right:  env(safe-area-inset-right, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left:   env(safe-area-inset-left, 0px);
+        }
         body { margin: 0; background-color: #020202; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
-        #ui-container { position: absolute; z-index: 10; width: 100%; top: 0; pointer-events: none; }
+        #ui-container {
+            position: absolute;
+            z-index: 10;
+            width: 100%;
+            top: 0;
+            pointer-events: none;
+            padding-top: var(--safe-top);
+            padding-right: var(--safe-right);
+            padding-left: var(--safe-left);
+            box-sizing: border-box;
+        }
         #hud-telemetry { padding: 15px 20px; float: right; color: white; user-select: none; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 4px #000; text-transform: uppercase; font-size: 12px; text-align: right; display: none; }
         .hud-btn { pointer-events: auto; margin-left: 20px; padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; cursor: pointer; border-radius: 4px; backdrop-filter: blur(4px); font-weight: bold; }
         canvas { display: block; width: 100vw; height: 100vh; position: absolute; top:0; z-index: 1;}
@@ -30,8 +46,8 @@
         
         #header-layer {
             position: absolute;
-            top: 40px;
-            left: 20px;
+            top: calc(var(--safe-top) + 24px);
+            left: calc(var(--safe-left) + 20px);
             pointer-events: auto;
             z-index: 20;
             display: flex;

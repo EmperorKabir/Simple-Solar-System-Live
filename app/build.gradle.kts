@@ -41,6 +41,7 @@ java {
 
 dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.core:core-ktx:1.15.0")  // WindowCompat / ViewCompat / WindowInsetsCompat
 
     // WebViewAssetLoader for secure local asset serving (enables ES modules in WebView)
     implementation("androidx.webkit:webkit:1.12.1")
