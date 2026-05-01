@@ -102,10 +102,13 @@ const MU_SUN = 2.9591220828e-4;
  * @returns {number}
  */
 function sumVSOP87Series(terms, tau) {
-    if (!terms || terms.length === 0) return 0.0;
+    if (!terms || !Array.isArray(terms) || terms.length === 0) return 0.0;
     let sum = 0.0;
     for (let j = 0, len = terms.length; j < len; j++) {
-        sum += terms[j][0] * Math.cos(terms[j][1] + terms[j][2] * tau);
+        const t = terms[j];
+        // Guard: each term must be an array with at least 3 elements [A, B, C]
+        if (!t || t.length < 3) continue;
+        sum += t[0] * Math.cos(t[1] + t[2] * tau);
     }
     return sum;
 }
@@ -190,6 +193,11 @@ function computeVSOP87Position(data, tau) {
  * @returns {number} eccentric anomaly E (radians)
  */
 export function solveKepler(M_rad, e, iterations = KEPLER_MAX_ITER) {
+    // Guard: eccentricity must be in [0, 1) for elliptical orbits
+    if (typeof e !== 'number' || !isFinite(e)) return M_rad;
+    e = Math.max(0, Math.min(e, 0.9999));  // clamp to prevent division by zero
+    if (typeof M_rad !== 'number' || !isFinite(M_rad)) return 0;
+
     // Normalize M to [0, 2π)
     let M = ((M_rad % TWO_PI) + TWO_PI) % TWO_PI;
     // Danby starter for improved convergence
@@ -200,13 +208,14 @@ export function solveKepler(M_rad, e, iterations = KEPLER_MAX_ITER) {
         const cosE = Math.cos(E);
         const f  = E - e * sinE - M;
         const fp = 1.0 - e * cosE;
+        if (Math.abs(fp) < 1e-15) break; // Guard: prevent division by ~zero
         // Halley refinement
         const fpp = e * sinE;
         const delta = -f / (fp - 0.5 * f * fpp / fp);
         E += delta;
         if (Math.abs(delta) < KEPLER_TOLERANCE) break;
     }
-    return E;
+    return isFinite(E) ? E : M_rad;
 }
 
 /**
@@ -246,12 +255,17 @@ export function heliocentricDistance(a, e, E) {
  * @returns {number}
  */
 function lagrangeInterpolate(ts, ys, t) {
-    const n = ts.length;
+    if (!ts || !ys || ts.length === 0 || ys.length === 0) return 0.0;
+    const n = Math.min(ts.length, ys.length); // guard mismatched array lengths
     let result = 0.0;
     for (let i = 0; i < n; i++) {
         let basis = 1.0;
         for (let j = 0; j < n; j++) {
-            if (j !== i) basis *= (t - ts[j]) / (ts[i] - ts[j]);
+            if (j !== i) {
+                const denom = ts[i] - ts[j];
+                if (Math.abs(denom) < 1e-15) continue; // guard coincident points
+                basis *= (t - ts[j]) / denom;
+            }
         }
         result += ys[i] * basis;
     }
@@ -446,11 +460,17 @@ export function computeStandardMoonPosition(mc, d) {
  * @returns {{x: number, y: number, z: number}} position relative to host
  */
 export function computeMoonPosition(mc, d) {
+    // Guard: validate moon config has required fields
+    if (!mc || typeof d !== 'number' || !isFinite(d)) {
+        return { x: 0, y: 0, z: 0 };
+    }
     if (mc.specialOrbit === "ecliptic") {
+        if (typeof mc.L0 !== 'number' || typeof mc.nRate !== 'number') return { x: 0, y: 0, z: 0 };
         return computeEarthMoonPosition(mc, d);
     } else if (mc.galilean) {
         return computeGalileanMoonPosition(mc, d);
     } else {
+        if (typeof mc.p !== 'number' || mc.p === 0) return { x: 0, y: 0, z: 0 };
         return computeStandardMoonPosition(mc, d);
     }
 }
