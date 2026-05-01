@@ -5,3 +5,4 @@ app/build/
 .idea/
 *.apk
 local.properties
+.claude/settings.local.json
