@@ -420,47 +420,65 @@
                 return RADIUS_SCALE * Math.pow(realRadiusKm / RADIUS_REF_KM, RADIUS_EXPONENT);
             }
             
+            /**
+             * Dual-Scale Moon Distance: Logarithmic compression.
+             * 
+             * Uses log(SMA_ratio) to map moon-planet distances into visual space.
+             * This provides magnified separation for tightly-packed inner moons
+             * (e.g. Phobos at 9376km vs Deimos at 23460km) while compressing
+             * the vast range of outer moons (e.g. Iapetus at 3.56M km).
+             * 
+             * The planet distance scale (power-law AU compression) is NOT altered.
+             * Only the moon-host visual offset uses this logarithmic mapping.
+             * 
+             * Formula: visualDist = baseInner + spread * log2(SMA / SMA_inner)
+             *          clamped to [baseInner, maxOuter]
+             * 
+             * log2 chosen over ln/log10 for intuitive doubling: a moon at 2×
+             * the innermost SMA gets +1 spread unit of visual distance.
+             */
             function computeMoonVisualDist(moonName, hostName) {
                 const config = MOON_DIST_CONFIG[hostName];
                 if (!config) return 2.0; // fallback
-                
-                // Find the innermost moon of this host
-                const hostMoons = Object.keys(REAL_MOON_SMA).filter(m => {
-                    // Match moons to host by checking moonSystemConfig
-                    return true; // We'll filter properly below
-                });
-                
-                // Get all moons for this host from the SMA table
-                const smaForHost = {};
-                for (const [mName, sma] of Object.entries(REAL_MOON_SMA)) {
-                    smaForHost[mName] = sma;
-                }
                 
                 const thisSma = REAL_MOON_SMA[moonName];
                 if (!thisSma) return config.baseInner; // unknown moon
                 
                 // Find innermost moon SMA for this host from moonSystemConfig
                 let innerMostSma = Infinity;
-                let innerMostName = null;
                 for (const mc of moonSystemConfig) {
                     if (mc.host === hostName && REAL_MOON_SMA[mc.name]) {
                         if (REAL_MOON_SMA[mc.name] < innerMostSma) {
                             innerMostSma = REAL_MOON_SMA[mc.name];
-                            innerMostName = mc.name;
                         }
                     }
                 }
                 
-                if (!innerMostName || innerMostSma === Infinity) return config.baseInner;
+                if (innerMostSma === Infinity) return config.baseInner;
                 
-                // Scale by SMA ratio from innermost moon
+                // Logarithmic mapping: log2(ratio) distributes moons evenly
+                // across doublings of physical distance
                 const ratio = thisSma / innerMostSma;
-                // Apply mild compression to the ratio for very distant moons
-                const compressedRatio = Math.pow(ratio, 0.85);
-                let visualDist = config.baseInner * compressedRatio;
+                const logRatio = Math.log2(Math.max(1, ratio));
                 
-                // Clamp to maxOuter
-                visualDist = Math.min(visualDist, config.maxOuter);
+                // Spread = available visual range above baseInner
+                const spread = (config.maxOuter - config.baseInner);
+                
+                // Find max log-ratio among this host's moons for normalization
+                let maxLogRatio = 0;
+                for (const mc of moonSystemConfig) {
+                    if (mc.host === hostName && REAL_MOON_SMA[mc.name]) {
+                        const r = REAL_MOON_SMA[mc.name] / innerMostSma;
+                        maxLogRatio = Math.max(maxLogRatio, Math.log2(Math.max(1, r)));
+                    }
+                }
+                
+                // Normalize log-ratio to [0, 1] then map to [baseInner, maxOuter]
+                const normalizedLog = maxLogRatio > 0 ? logRatio / maxLogRatio : 0;
+                let visualDist = config.baseInner + spread * normalizedLog;
+                
+                // Safety clamp
+                visualDist = Math.max(config.baseInner, Math.min(config.maxOuter, visualDist));
                 
                 return visualDist;
             }
