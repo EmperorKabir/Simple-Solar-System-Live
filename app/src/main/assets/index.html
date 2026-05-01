@@ -121,7 +121,7 @@
         // ============================================================
         import { dateToJulianDate, julianDateToJ2000Days, getCurrentJ2000Days, getGMST, getSunRA } from './js/OrbitalTimeUtils.js';
         import { eclipticToScene, normalizeToVisualDistance, eclipticToVisualScene } from './js/CoordinateTransformer.js';
-        import { computePlanetPosition, computeMoonPosition, computeBodyRotation, computeSunRotation } from './js/OrbitalEngine.js';
+        import { computePlanetPosition, computePlanetPositionVSOP87, VSOP87B, computeMoonPosition, computeBodyRotation, computeSunRotation } from './js/OrbitalEngine.js';
 
         // ============================================================
         // 1. Core WebGL Engine Setup
@@ -544,6 +544,7 @@
             const i_rad = el.i * Math.PI / 180.0;
             planetsData[key] = {
                 ...el,
+                bodyName: key,                              // for VSOP87B lookup
                 cw: Math.cos(w_rad), sw: Math.sin(w_rad),
                 cN: Math.cos(N_rad), sN: Math.sin(N_rad),
                 ci: Math.cos(i_rad), si: Math.sin(i_rad),
@@ -558,7 +559,14 @@
         // Pre-allocated scratch Vector3 for the adapter (avoids per-frame allocation)
         const _adapterVec = new THREE.Vector3();
         function getOrbitPositionFast(elements, daysSinceJ2000, isRingPoint = false) {
-            const pos = computePlanetPosition(elements, daysSinceJ2000, isRingPoint);
+            // Live planet positions: prefer VSOP87B series (Mercury–Neptune) for sub-arcsec accuracy.
+            // Ring traces stay on Keplerian path — VSOP87 is parameterised by time, not orbital phase.
+            let pos;
+            if (!isRingPoint && elements.bodyName && VSOP87B[elements.bodyName]) {
+                pos = computePlanetPositionVSOP87(elements.bodyName, elements, daysSinceJ2000);
+            } else {
+                pos = computePlanetPosition(elements, daysSinceJ2000, isRingPoint);
+            }
             return _adapterVec.set(pos.x, pos.y, pos.z);
         }
 

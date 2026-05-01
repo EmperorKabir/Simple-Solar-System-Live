@@ -37,6 +37,37 @@
 import { getGMST } from './OrbitalTimeUtils.js';
 import { eclipticToScene, normalizeToVisualDistance } from './CoordinateTransformer.js';
 
+// VSOP87B series (heliocentric ecliptic L,B,R) per planet
+import mercuryVSOP from './data/vsop87/mercury.js';
+import venusVSOP   from './data/vsop87/venus.js';
+import earthVSOP   from './data/vsop87/earth.js';
+import marsVSOP    from './data/vsop87/mars.js';
+import jupiterVSOP from './data/vsop87/jupiter.js';
+import saturnVSOP  from './data/vsop87/saturn.js';
+import uranusVSOP  from './data/vsop87/uranus.js';
+import neptuneVSOP from './data/vsop87/neptune.js';
+
+// ELP 2000-85 (Meeus Ch.47) Moon theory
+import { longitudeDistanceTerms } from './data/elp2000/longDist.js';
+import { latitudeTerms }          from './data/elp2000/latitude.js';
+import {
+    moonMeanLongitude as ELP_Lp_poly,
+    meanElongation    as ELP_D_poly,
+    sunMeanAnomaly    as ELP_M_poly,
+    moonMeanAnomaly   as ELP_Mp_poly,
+    moonArgLatitude   as ELP_F_poly,
+    A1_const, A1_rate, A2_const, A2_rate, A3_const, A3_rate,
+    eccentricityE     as ELP_E_poly,
+    meanDistanceKm    as ELP_MEAN_DIST_KM,
+    horner
+} from './data/elp2000/arguments.js';
+
+/** Lookup table: bodyId → VSOP87B series object */
+export const VSOP87B = {
+    Mercury: mercuryVSOP, Venus: venusVSOP, Earth: earthVSOP, Mars: marsVSOP,
+    Jupiter: jupiterVSOP, Saturn: saturnVSOP, Uranus: uranusVSOP, Neptune: neptuneVSOP
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
@@ -335,6 +366,137 @@ export function computePlanetPosition(elements, dSinceJ2000, isRingPoint = false
 
 
 // ──────────────────────────────────────────────────
+// VSOP87B Scene-Position Adapter
+// ──────────────────────────────────────────────────
+
+/**
+ * Compute scene-frame position from VSOP87B series for a named planet.
+ * Returns position normalised to the planet's visualDist for display.
+ *
+ * @param {string} bodyName — 'Mercury' .. 'Neptune'
+ * @param {object} elements — pre-processed planet element set (for visualDist)
+ * @param {number} dSinceJ2000
+ * @returns {{x,y,z}} scene-frame position
+ */
+export function computePlanetPositionVSOP87(bodyName, elements, dSinceJ2000) {
+    const data = VSOP87B[bodyName];
+    if (!data) return computePlanetPosition(elements, dSinceJ2000, false);
+    const tau = dSinceJ2000 / DAYS_PER_MILLENNIUM;
+    const eq = computeVSOP87Position(data, tau);
+    const scene = eclipticToScene(eq.x, eq.y, eq.z);
+    return normalizeToVisualDistance(scene, elements.visualDist);
+}
+
+/**
+ * Compute raw heliocentric ecliptic AU position via VSOP87B.
+ *
+ * @param {string} bodyName
+ * @param {number} dSinceJ2000
+ * @returns {{x,y,z}|null} ecliptic AU, or null if no VSOP87B series for body
+ */
+export function computePlanetEclipticVSOP87(bodyName, dSinceJ2000) {
+    const data = VSOP87B[bodyName];
+    if (!data) return null;
+    const tau = dSinceJ2000 / DAYS_PER_MILLENNIUM;
+    return computeVSOP87Position(data, tau);
+}
+
+
+// ──────────────────────────────────────────────────
+// ELP 2000-85 — Earth's Moon (Meeus Chapter 47)
+// ──────────────────────────────────────────────────
+
+/**
+ * Compute Earth's Moon geocentric ecliptic position via ELP 2000-85.
+ *
+ * Truncated Meeus formulation (60+60 terms). Returns geocentric ecliptic
+ * Cartesian J2000 in km. Caller must convert to scene units.
+ *
+ * @param {number} dSinceJ2000 — days since J2000.0 TT
+ * @returns {{x: number, y: number, z: number, distKm: number, lonDeg: number, latDeg: number}}
+ */
+export function computeMoonELP(dSinceJ2000) {
+    const T = dSinceJ2000 / 36525.0; // Julian centuries from J2000
+
+    // Fundamental arguments (degrees), normalize to [0, 360)
+    const wrap360 = (x) => ((x % 360.0) + 360.0) % 360.0;
+    const Lp = wrap360(horner(ELP_Lp_poly, T));   // Moon's mean longitude
+    const D  = wrap360(horner(ELP_D_poly,  T));   // Mean elongation
+    const M  = wrap360(horner(ELP_M_poly,  T));   // Sun's mean anomaly
+    const Mp = wrap360(horner(ELP_Mp_poly, T));   // Moon's mean anomaly
+    const F  = wrap360(horner(ELP_F_poly,  T));   // Moon's argument of latitude
+
+    const A1 = wrap360(A1_const + A1_rate * T);
+    const A2 = wrap360(A2_const + A2_rate * T);
+    const A3 = wrap360(A3_const + A3_rate * T);
+
+    const E  = horner(ELP_E_poly, T); // eccentricity correction
+    const E2 = E * E;
+
+    const D_r  = D  * DEG2RAD;
+    const M_r  = M  * DEG2RAD;
+    const Mp_r = Mp * DEG2RAD;
+    const F_r  = F  * DEG2RAD;
+
+    // Sum periodic terms
+    let sigmaL = 0, sigmaR = 0, sigmaB = 0;
+    for (let i = 0, n = longitudeDistanceTerms.length; i < n; i++) {
+        const t = longitudeDistanceTerms[i];
+        const arg = t[0] * D_r + t[1] * M_r + t[2] * Mp_r + t[3] * F_r;
+        // Apply eccentricity correction E for terms with M = ±1, E^2 for ±2
+        let scale = 1.0;
+        const mAbs = Math.abs(t[1]);
+        if (mAbs === 1) scale = E;
+        else if (mAbs === 2) scale = E2;
+        sigmaL += t[4] * scale * Math.sin(arg);
+        sigmaR += t[5] * scale * Math.cos(arg);
+    }
+    for (let i = 0, n = latitudeTerms.length; i < n; i++) {
+        const t = latitudeTerms[i];
+        const arg = t[0] * D_r + t[1] * M_r + t[2] * Mp_r + t[3] * F_r;
+        let scale = 1.0;
+        const mAbs = Math.abs(t[1]);
+        if (mAbs === 1) scale = E;
+        else if (mAbs === 2) scale = E2;
+        sigmaB += t[4] * scale * Math.sin(arg);
+    }
+
+    // Additive corrections (Meeus 47.A footnote)
+    const A1_r = A1 * DEG2RAD;
+    const A2_r = A2 * DEG2RAD;
+    const A3_r = A3 * DEG2RAD;
+    const Lp_r = Lp * DEG2RAD;
+    sigmaL += 3958 * Math.sin(A1_r)
+           + 1962 * Math.sin(Lp_r - F_r)
+           +  318 * Math.sin(A2_r);
+    sigmaB += -2235 * Math.sin(Lp_r)
+           +    382 * Math.sin(A3_r)
+           +    175 * Math.sin(A1_r - F_r)
+           +    175 * Math.sin(A1_r + F_r)
+           +    127 * Math.sin(Lp_r - Mp_r)
+           +   -115 * Math.sin(Lp_r + Mp_r);
+
+    // Convert sums to physical units
+    const lonDeg = wrap360(Lp + sigmaL / 1_000_000.0);            // degrees
+    const latDeg = sigmaB / 1_000_000.0;                          // degrees
+    const distKm = ELP_MEAN_DIST_KM + sigmaR / 1000.0;            // km
+
+    const lonR = lonDeg * DEG2RAD;
+    const latR = latDeg * DEG2RAD;
+    const cosLat = Math.cos(latR);
+
+    return {
+        x: distKm * cosLat * Math.cos(lonR),
+        y: distKm * cosLat * Math.sin(lonR),
+        z: distKm * Math.sin(latR),
+        distKm,
+        lonDeg,
+        latDeg
+    };
+}
+
+
+// ──────────────────────────────────────────────────
 // Moon Positions — Per-system Orbital Models
 // ──────────────────────────────────────────────────
 
@@ -347,20 +509,12 @@ export function computePlanetPosition(elements, dSinceJ2000, isRingPoint = false
  * @returns {{x: number, y: number, z: number}} scene-frame position relative to host
  */
 export function computeEarthMoonPosition(mc, d) {
-    const L = ((mc.L0 + mc.nRate * d) % 360 + 360) % 360;
-    const L_rad = L * Math.PI / 180.0;
-
-    const node = ((mc.node0 + mc.nodeRate * d) % 360 + 360) % 360;
-    const node_rad = node * Math.PI / 180.0;
-    const inc_rad = mc.inclination * Math.PI / 180.0;
-
-    const u = L_rad - node_rad;
-    const x_ecl = mc.dist * (Math.cos(node_rad) * Math.cos(u) - Math.sin(node_rad) * Math.sin(u) * Math.cos(inc_rad));
-    const y_ecl = mc.dist * (Math.sin(node_rad) * Math.cos(u) + Math.cos(node_rad) * Math.sin(u) * Math.cos(inc_rad));
-    const z_ecl = mc.dist * Math.sin(u) * Math.sin(inc_rad);
-
-    // Scene coords: x=x_ecl, y=z_ecl, z=-y_ecl (relative to Earth)
-    return eclipticToScene(x_ecl, y_ecl, z_ecl);
+    // High-precision path: ELP 2000-85 direction, scaled to mc.dist visual units.
+    // The ELP returns geocentric ecliptic km — we use the direction vector and
+    // scale to mc.dist (scene-unit visual distance).
+    const elp = computeMoonELP(d);
+    const scale = mc.dist / elp.distKm;
+    return eclipticToScene(elp.x * scale, elp.y * scale, elp.z * scale);
 }
 
 /**
@@ -494,18 +648,10 @@ export function computeMoonPosition(mc, d) {
  */
 export function computeMoonEcliptic(mc, d, hostObliquityDeg = 0, hostPoleLonDeg = 0) {
     if (mc.specialOrbit === "ecliptic") {
-        // Earth Moon already computes in ecliptic — return without scene transform
-        const L = ((mc.L0 + mc.nRate * d) % 360 + 360) % 360;
-        const L_rad = L * DEG2RAD;
-        const node = ((mc.node0 + mc.nodeRate * d) % 360 + 360) % 360;
-        const node_rad = node * DEG2RAD;
-        const inc_rad = mc.inclination * DEG2RAD;
-        const u = L_rad - node_rad;
-        return {
-            x: mc.dist * (Math.cos(node_rad) * Math.cos(u) - Math.sin(node_rad) * Math.sin(u) * Math.cos(inc_rad)),
-            y: mc.dist * (Math.sin(node_rad) * Math.cos(u) + Math.cos(node_rad) * Math.sin(u) * Math.cos(inc_rad)),
-            z: mc.dist * Math.sin(u) * Math.sin(inc_rad)
-        };
+        // Earth Moon: ELP 2000-85 direction scaled to visual distance mc.dist.
+        const elp = computeMoonELP(d);
+        const scale = mc.dist / elp.distKm;
+        return { x: elp.x * scale, y: elp.y * scale, z: elp.z * scale };
     } else if (mc.galilean) {
         // Galilean: already ecliptic-aligned via Lieske + OmegaJ
         const dir = _galileanEcliptic(mc, d);
@@ -547,7 +693,10 @@ export function computeMoonEcliptic(mc, d, hostObliquityDeg = 0, hostPoleLonDeg 
  * @returns {{x: number, y: number, z: number}} heliocentric ecliptic J2000
  */
 export function computeMoonHeliocentricEcliptic(mc, d, hostElements, hostObliquityDeg = 0, hostPoleLonDeg = 0) {
-    const hostEcl = computePlanetEcliptic(hostElements, d);
+    // Prefer VSOP87B for the host if available (Mercury–Neptune)
+    const hostEcl = (mc.host && VSOP87B[mc.host])
+        ? computePlanetEclipticVSOP87(mc.host, d)
+        : computePlanetEcliptic(hostElements, d);
     const moonEcl = computeMoonEcliptic(mc, d, hostObliquityDeg, hostPoleLonDeg);
     return {
         x: hostEcl.x + moonEcl.x,
