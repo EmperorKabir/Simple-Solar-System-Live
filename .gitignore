@@ -3,6 +3,7 @@ app/build/
 .gradle/
 .gradle-local/
 .idea/
+.kotlin/
 *.apk
 local.properties
 .claude/settings.local.json

@@ -119,8 +119,7 @@
         // All dynamic position requests are routed through these local
         // classes. No network calls — pure offline computation.
         // ============================================================
-        import { dateToJulianDate, julianDateToJ2000Days, getCurrentJ2000Days, getGMST, getSunRA } from './js/OrbitalTimeUtils.js';
-        import { eclipticToScene, normalizeToVisualDistance, eclipticToVisualScene } from './js/CoordinateTransformer.js';
+        import { getCurrentJ2000Days } from './js/OrbitalTimeUtils.js';
         import { computePlanetPosition, computePlanetPositionVSOP87, VSOP87B, computeMoonPosition, computeBodyRotation, computeSunRotation } from './js/OrbitalEngine.js';
 
         // ============================================================
@@ -162,7 +161,8 @@
 
         // ============================================================
         // 3. Astronomical Data — J2000 Keplerian Elements
-        // @DEPRECATED — Will be replaced by OrbitalEngine periodic series data (Sub-Agents 1A-1E, 2)
+        // (Mercury–Neptune live positions come from VSOP87B; these elements
+        //  are still used for orbit-ring traces and as Pluto's only source.)
         // ============================================================
         // All orbital elements are J2000.0 epoch (JD 2451545.0)
         // a = semi-major axis (AU), e = eccentricity, i = inclination (deg)
@@ -630,14 +630,6 @@
             }
         }
 
-        // ============================================================
-        // 6–7. REMOVED: Deprecated inline getOrbitPositionFast / getSunRA / getGMST
-        // All position/rotation computation now routed through:
-        //   - OrbitalEngine.computePlanetPosition() (imported above)
-        //   - OrbitalTimeUtils.getGMST / getSunRA   (imported above)
-        // The adapter function getOrbitPositionFast() at §Orbital Position Adapter
-        // bridges old call-sites to the new module.
-        // ============================================================
 
         // ============================================================
         // 8. Scene Object Construction

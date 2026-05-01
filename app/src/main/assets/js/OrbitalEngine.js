@@ -91,9 +91,6 @@ const KEPLER_MAX_ITER = 15;
 /** Convergence tolerance for Kepler solver (radians) */
 const KEPLER_TOLERANCE = 1e-12;
 
-/** Solar gravitational parameter μ☉ in AU³/day² (k² where k = 0.01720209895) */
-const MU_SUN = 2.9591220828e-4;
-
 
 // ──────────────────────────────────────────────────
 // VSOP87 Periodic Series Summation
@@ -223,7 +220,7 @@ function computeVSOP87Position(data, tau) {
  * @param {number} [iterations=15] — max solver iterations
  * @returns {number} eccentric anomaly E (radians)
  */
-export function solveKepler(M_rad, e, iterations = KEPLER_MAX_ITER) {
+function solveKepler(M_rad, e, iterations = KEPLER_MAX_ITER) {
     // Guard: eccentricity must be in [0, 1) for elliptical orbits
     if (typeof e !== 'number' || !isFinite(e)) return M_rad;
     e = Math.max(0, Math.min(e, 0.9999));  // clamp to prevent division by zero
@@ -255,7 +252,7 @@ export function solveKepler(M_rad, e, iterations = KEPLER_MAX_ITER) {
  * @param {number} e — eccentricity
  * @returns {number} true anomaly v (radians)
  */
-export function trueAnomaly(E, e) {
+function trueAnomaly(E, e) {
     return 2 * Math.atan(Math.sqrt((1 + e) / (1 - e)) * Math.tan(E / 2));
 }
 
@@ -266,73 +263,14 @@ export function trueAnomaly(E, e) {
  * @param {number} E — eccentric anomaly (radians)
  * @returns {number} distance r
  */
-export function heliocentricDistance(a, e, E) {
+function heliocentricDistance(a, e, E) {
     return a * (1 - e * Math.cos(E));
-}
-
-
-// ──────────────────────────────────────────────────
-// Lagrange Interpolation (for ephemeris tables)
-// ──────────────────────────────────────────────────
-
-/**
- * n-point Lagrange polynomial interpolation.
- *
- *   P(t) = Σ_i [ y_i · Π_{j≠i} (t − t_j) / (t_i − t_j) ]
- *
- * @param {number[]} ts — time values
- * @param {number[]} ys — function values
- * @param {number} t    — target time
- * @returns {number}
- */
-function lagrangeInterpolate(ts, ys, t) {
-    if (!ts || !ys || ts.length === 0 || ys.length === 0) return 0.0;
-    const n = Math.min(ts.length, ys.length); // guard mismatched array lengths
-    let result = 0.0;
-    for (let i = 0; i < n; i++) {
-        let basis = 1.0;
-        for (let j = 0; j < n; j++) {
-            if (j !== i) {
-                const denom = ts[i] - ts[j];
-                if (Math.abs(denom) < 1e-15) continue; // guard coincident points
-                basis *= (t - ts[j]) / denom;
-            }
-        }
-        result += ys[i] * basis;
-    }
-    return result;
 }
 
 
 // ──────────────────────────────────────────────────
 // Planet Position — Keplerian Propagation
 // ──────────────────────────────────────────────────
-
-/**
- * Compute raw heliocentric ecliptic J2000 Cartesian coordinates (AU).
- * No scene transform, no visual normalization.
- *
- * @param {object} elements — pre-processed planet element set
- * @param {number} dSinceJ2000 — days since J2000.0
- * @returns {{x: number, y: number, z: number}} heliocentric ecliptic J2000 (AU)
- */
-export function computePlanetEcliptic(elements, dSinceJ2000) {
-    let M = (elements.L - elements.w + elements.n * dSinceJ2000) % 360.0;
-    const M_rad = M * DEG2RAD;
-    const E = solveKepler(M_rad, elements.e);
-    const v = trueAnomaly(E, elements.e);
-    const r = heliocentricDistance(elements.a, elements.e, E);
-    const x_orb = r * Math.cos(v);
-    const y_orb = r * Math.sin(v);
-    return {
-        x: (elements.cN * elements.cw - elements.sN * elements.sw * elements.ci) * x_orb
-         + (-elements.cN * elements.sw - elements.sN * elements.cw * elements.ci) * y_orb,
-        y: (elements.sN * elements.cw + elements.cN * elements.sw * elements.ci) * x_orb
-         + (-elements.sN * elements.sw + elements.cN * elements.cw * elements.ci) * y_orb,
-        z: (elements.sw * elements.si) * x_orb
-         + (elements.cw * elements.si) * y_orb
-    };
-}
 
 /**
  * Compute heliocentric ecliptic position for a planet, returned as
@@ -386,21 +324,6 @@ export function computePlanetPositionVSOP87(bodyName, elements, dSinceJ2000) {
     const scene = eclipticToScene(eq.x, eq.y, eq.z);
     return normalizeToVisualDistance(scene, elements.visualDist);
 }
-
-/**
- * Compute raw heliocentric ecliptic AU position via VSOP87B.
- *
- * @param {string} bodyName
- * @param {number} dSinceJ2000
- * @returns {{x,y,z}|null} ecliptic AU, or null if no VSOP87B series for body
- */
-export function computePlanetEclipticVSOP87(bodyName, dSinceJ2000) {
-    const data = VSOP87B[bodyName];
-    if (!data) return null;
-    const tau = dSinceJ2000 / DAYS_PER_MILLENNIUM;
-    return computeVSOP87Position(data, tau);
-}
-
 
 // ──────────────────────────────────────────────────
 // ELP 2000-85 — Earth's Moon (Meeus Chapter 47)
@@ -631,82 +554,6 @@ export function computeMoonPosition(mc, d) {
 
 
 // ──────────────────────────────────────────────────
-// Ecliptic-Aligned Moon Pipeline (Phase 1)
-// All moon models output planetocentric J2000 ecliptic coordinates.
-// ──────────────────────────────────────────────────
-
-/**
- * Compute planetocentric position in J2000 ecliptic frame for ANY moon.
- * Unlike computeMoonPosition (which outputs in per-model rendering frames),
- * this always returns ecliptic Cartesian coordinates.
- *
- * @param {object} mc — moon config
- * @param {number} d — days since J2000.0
- * @param {number} [hostObliquityDeg=0] — host axial tilt (needed for standard moons)
- * @param {number} [hostPoleLonDeg=0] — host pole ecliptic longitude
- * @returns {{x: number, y: number, z: number}} planetocentric ecliptic J2000
- */
-export function computeMoonEcliptic(mc, d, hostObliquityDeg = 0, hostPoleLonDeg = 0) {
-    if (mc.specialOrbit === "ecliptic") {
-        // Earth Moon: ELP 2000-85 direction scaled to visual distance mc.dist.
-        const elp = computeMoonELP(d);
-        const scale = mc.dist / elp.distKm;
-        return { x: elp.x * scale, y: elp.y * scale, z: elp.z * scale };
-    } else if (mc.galilean) {
-        // Galilean: already ecliptic-aligned via Lieske + OmegaJ
-        const dir = _galileanEcliptic(mc, d);
-        return { x: dir.x * mc.dist, y: dir.y * mc.dist, z: dir.z * mc.dist };
-    } else {
-        // Standard moons: computed in host equatorial, rotate to ecliptic
-        const L = ((mc.L0 + (360.0 / mc.p) * d) % 360 + 360) % 360;
-        const L_rad = L * DEG2RAD;
-        const x_eq = mc.dist * Math.cos(L_rad);
-        const z_eq = mc.dist * Math.sin(L_rad);
-        // Rotate from equatorial to ecliptic: Ry(-poleLon) then Rz(+obliquity)
-        const obl = hostObliquityDeg * DEG2RAD;
-        const pol = hostPoleLonDeg * DEG2RAD;
-        const cosO = Math.cos(obl), sinO = Math.sin(obl);
-        const cosP = Math.cos(pol), sinP = Math.sin(pol);
-        // Step 1: rotate around Y by poleLon (equatorial x-z → ecliptic azimuth)
-        const rx = x_eq * cosP + z_eq * sinP;
-        const ry = 0;
-        const rz = -x_eq * sinP + z_eq * cosP;
-        // Step 2: tilt by obliquity around the new Z axis
-        return {
-            x: rx * cosO - ry * sinO,
-            y: rx * sinO + ry * cosO,
-            z: rz
-        };
-    }
-}
-
-/**
- * Compute absolute heliocentric ecliptic position of a moon.
- * Performs vector addition: host_ecliptic + moon_ecliptic.
- * Both vectors are aligned to J2000 ecliptic before addition.
- *
- * @param {object} mc — moon config
- * @param {number} d — days since J2000.0
- * @param {object} hostElements — host planet's pre-processed elements
- * @param {number} [hostObliquityDeg=0]
- * @param {number} [hostPoleLonDeg=0]
- * @returns {{x: number, y: number, z: number}} heliocentric ecliptic J2000
- */
-export function computeMoonHeliocentricEcliptic(mc, d, hostElements, hostObliquityDeg = 0, hostPoleLonDeg = 0) {
-    // Prefer VSOP87B for the host if available (Mercury–Neptune)
-    const hostEcl = (mc.host && VSOP87B[mc.host])
-        ? computePlanetEclipticVSOP87(mc.host, d)
-        : computePlanetEcliptic(hostElements, d);
-    const moonEcl = computeMoonEcliptic(mc, d, hostObliquityDeg, hostPoleLonDeg);
-    return {
-        x: hostEcl.x + moonEcl.x,
-        y: hostEcl.y + moonEcl.y,
-        z: hostEcl.z + moonEcl.z
-    };
-}
-
-
-// ──────────────────────────────────────────────────
 // Body Rotation
 // ──────────────────────────────────────────────────
 
@@ -741,322 +588,3 @@ export function computeSunRotation(d) {
     return sunW * Math.PI / 180.0;
 }
 
-
-// ══════════════════════════════════════════════════════════════════════════════
-// OrbitalEngine Class — Unified Stage 7 computation engine
-// ══════════════════════════════════════════════════════════════════════════════
-//
-// Wraps all three computation pathways and the moon systems into a single
-// class that iterates through the data arrays from Sub-Agents 1A–1E.
-//
-// Data contracts consumed:
-//   1A: physicalConstants  — G, AU, μ per body
-//   1B: keplerianElements  — a, e, i, Ω, ω, L, n + secular rates
-//   1C: vsop87Data         — VSOP87 series coefficients (A, B, C triplets)
-//       ephemerisTable     — pre-computed XYZ snapshots indexed by JD
-//   1D: bodyPhysics        — radii, rotation, axial tilt
-//   1E: referenceFrames    — ICRF / ecliptic frame definitions
-//
-// Output contract:
-//   Exposes OrbitalStateProvider interface consumed by Stage 8 + Stage 12
-// ══════════════════════════════════════════════════════════════════════════════
-
-export class OrbitalEngine {
-
-    /**
-     * @param {object} config
-     * @param {object} [config.keplerianElements]  — Sub-Agent 1B: keyed by bodyId
-     * @param {object} [config.vsop87Data]         — Sub-Agent 1C: VSOP87 series, keyed by bodyId
-     * @param {object} [config.ephemerisTable]      — Sub-Agent 1C: { snapshots: [{jd, bodies:{...}}] }
-     * @param {object} [config.physicalConstants]   — Sub-Agent 1A
-     * @param {object} [config.bodyPhysics]         — Sub-Agent 1D
-     * @param {object} [config.referenceFrames]     — Sub-Agent 1E
-     * @param {object[]} [config.moonSystems]       — Moon config array
-     * @param {object} [config.methodOverrides]     — Force method per body: { Mercury: 'vsop87' }
-     */
-    constructor(config = {}) {
-        /** @type {object} Keplerian elements keyed by bodyId */
-        this.keplerianElements = config.keplerianElements || {};
-
-        /** @type {object} VSOP87 series data keyed by bodyId */
-        this.vsop87Data = config.vsop87Data || {};
-
-        /** @type {object} Pre-computed ephemeris table */
-        this.ephemerisTable = config.ephemerisTable || { snapshots: [] };
-
-        /** @type {object} Physical constants */
-        this.physicalConstants = config.physicalConstants || {};
-
-        /** @type {object} Body physics */
-        this.bodyPhysics = config.bodyPhysics || {};
-
-        /** @type {object} Reference frames */
-        this.referenceFrames = config.referenceFrames || {};
-
-        /** @type {object[]} Moon system configurations */
-        this.moonSystems = config.moonSystems || [];
-
-        /** @type {object} Per-body method overrides */
-        this.methodOverrides = config.methodOverrides || {};
-
-        // Pre-compute Keplerian trigonometric constants
-        this._keplerCache = {};
-        this._precomputeKeplerianTrig();
-
-        // Build sorted JD index for ephemeris binary search
-        this._ephemerisJDs = (this.ephemerisTable.snapshots || []).map(s => s.jd);
-    }
-
-    // ──────────────────────────────────────────────────
-    // Pre-computation
-    // ──────────────────────────────────────────────────
-
-    /** Pre-compute sin/cos of orbital angles for Keplerian propagation. */
-    _precomputeKeplerianTrig() {
-        for (const [id, el] of Object.entries(this.keplerianElements)) {
-            const N_rad = (el.node || 0) * DEG2RAD;
-            const w_rad = ((el.w || 0) - (el.node || 0)) * DEG2RAD;
-            const i_rad = (el.i || 0) * DEG2RAD;
-            this._keplerCache[id] = {
-                cw: Math.cos(w_rad), sw: Math.sin(w_rad),
-                cN: Math.cos(N_rad), sN: Math.sin(N_rad),
-                ci: Math.cos(i_rad), si: Math.sin(i_rad)
-            };
-        }
-    }
-
-    // ──────────────────────────────────────────────────
-    // Method Selection
-    // ──────────────────────────────────────────────────
-
-    /**
-     * Select computation pathway for a body.
-     * Priority: override > vsop87 > ephemeris > kepler
-     *
-     * @param {string} bodyId
-     * @returns {string} 'vsop87' | 'kepler' | 'ephemeris'
-     */
-    _selectMethod(bodyId) {
-        if (this.methodOverrides[bodyId]) return this.methodOverrides[bodyId];
-        if (this.vsop87Data[bodyId])      return 'vsop87';
-        if (this._hasEphemeris(bodyId))    return 'ephemeris';
-        if (this.keplerianElements[bodyId]) return 'kepler';
-        throw new Error(`OrbitalEngine: no data source for '${bodyId}'`);
-    }
-
-    /** Check if ephemeris table has data for this body. */
-    _hasEphemeris(bodyId) {
-        const snaps = this.ephemerisTable.snapshots;
-        return snaps && snaps.length > 1 && snaps[0].bodies && snaps[0].bodies[bodyId];
-    }
-
-    // ──────────────────────────────────────────────────
-    // Primary API — OrbitalStateProvider interface
-    // ──────────────────────────────────────────────────
-
-    /**
-     * Compute raw heliocentric ecliptic position for a body.
-     *
-     * @param {string} bodyId — e.g. 'Earth', 'Jupiter'
-     * @param {number} jd — Julian Date (TT)
-     * @returns {{x: number, y: number, z: number, method: string}} ecliptic coords (AU)
-     */
-    computeHeliocentric(bodyId, jd) {
-        const method = this._selectMethod(bodyId);
-
-        switch (method) {
-            case 'vsop87':   return { ...this._viaVSOP87(bodyId, jd),   method };
-            case 'ephemeris': return { ...this._viaEphemeris(bodyId, jd), method };
-            case 'kepler':   return { ...this._viaKepler(bodyId, jd),   method };
-            default:
-                throw new Error(`OrbitalEngine: unknown method '${method}'`);
-        }
-    }
-
-    /**
-     * Compute heliocentric positions for ALL registered bodies.
-     *
-     * @param {number} jd — Julian Date (TT)
-     * @returns {Map<string, {x,y,z,method}>}
-     */
-    computeAllHeliocentric(jd) {
-        const results = new Map();
-        const allBodies = new Set([
-            ...Object.keys(this.keplerianElements),
-            ...Object.keys(this.vsop87Data)
-        ]);
-        for (const id of allBodies) {
-            try { results.set(id, this.computeHeliocentric(id, jd)); }
-            catch (e) { console.warn(`OrbitalEngine: ${id}: ${e.message}`); }
-        }
-        return results;
-    }
-
-    /**
-     * Compute planetocentric positions for all moons.
-     *
-     * @param {number} jd — Julian Date (TT)
-     * @returns {Map<string, {x,y,z}>}
-     */
-    computeAllMoons(jd) {
-        const d = jd - J2000_JD;
-        const results = new Map();
-        for (const mc of this.moonSystems) {
-            results.set(mc.name, computeMoonPosition(mc, d));
-        }
-        return results;
-    }
-
-    /**
-     * Compute scene-mapped position (ecliptic → Three.js XZ plane).
-     * Convenience method for drop-in replacement of getOrbitPositionFast().
-     *
-     * @param {string} bodyId
-     * @param {number} daysSinceJ2000
-     * @param {number} visualDist
-     * @returns {{x: number, y: number, z: number}}
-     */
-    getScenePosition(bodyId, daysSinceJ2000, visualDist) {
-        const jd = J2000_JD + daysSinceJ2000;
-        const pos = this.computeHeliocentric(bodyId, jd);
-        const scene = eclipticToScene(pos.x, pos.y, pos.z);
-        return normalizeToVisualDistance(scene, visualDist);
-    }
-
-    // ──────────────────────────────────────────────────
-    // Pathway ① — VSOP87  
-    // ──────────────────────────────────────────────────
-
-    /**
-     * @param {string} bodyId
-     * @param {number} jd
-     * @returns {{x,y,z}}
-     */
-    _viaVSOP87(bodyId, jd) {
-        const data = this.vsop87Data[bodyId];
-        if (!data) throw new Error(`No VSOP87 data for '${bodyId}'`);
-        const tau = (jd - J2000_JD) / DAYS_PER_MILLENNIUM;
-        return computeVSOP87Position(data, tau);
-    }
-
-    // ──────────────────────────────────────────────────
-    // Pathway ② — Keplerian
-    // ──────────────────────────────────────────────────
-
-    /**
-     * @param {string} bodyId
-     * @param {number} jd
-     * @returns {{x,y,z}}
-     */
-    _viaKepler(bodyId, jd) {
-        const el = this.keplerianElements[bodyId];
-        if (!el) throw new Error(`No Keplerian elements for '${bodyId}'`);
-
-        const d = jd - J2000_JD;
-
-        // Mean anomaly in degrees
-        let M = (el.L - el.w + el.n * d) % 360.0;
-        const M_rad = M * DEG2RAD;
-
-        const E = solveKepler(M_rad, el.e);
-        const v = trueAnomaly(E, el.e);
-        const r = heliocentricDistance(el.a, el.e, E);
-
-        const x_orb = r * Math.cos(v);
-        const y_orb = r * Math.sin(v);
-
-        // Use cached or re-compute trig
-        const c = this._keplerCache[bodyId] || this._computeTrig(el);
-
-        const x = (c.cN * c.cw - c.sN * c.sw * c.ci) * x_orb + (-c.cN * c.sw - c.sN * c.cw * c.ci) * y_orb;
-        const y = (c.sN * c.cw + c.cN * c.sw * c.ci) * x_orb + (-c.sN * c.sw + c.cN * c.cw * c.ci) * y_orb;
-        const z = (c.sw * c.si) * x_orb + (c.cw * c.si) * y_orb;
-
-        return { x, y, z };
-    }
-
-    /** Compute trig values on-the-fly (fallback if not cached). */
-    _computeTrig(el) {
-        const N_rad = (el.node || 0) * DEG2RAD;
-        const w_rad = ((el.w || 0) - (el.node || 0)) * DEG2RAD;
-        const i_rad = (el.i || 0) * DEG2RAD;
-        return {
-            cw: Math.cos(w_rad), sw: Math.sin(w_rad),
-            cN: Math.cos(N_rad), sN: Math.sin(N_rad),
-            ci: Math.cos(i_rad), si: Math.sin(i_rad)
-        };
-    }
-
-    // ──────────────────────────────────────────────────
-    // Pathway ③ — Ephemeris Table (Lagrange interpolation)
-    // ──────────────────────────────────────────────────
-
-    /**
-     * @param {string} bodyId
-     * @param {number} jd
-     * @returns {{x,y,z}}
-     */
-    _viaEphemeris(bodyId, jd) {
-        const snaps = this.ephemerisTable.snapshots;
-        if (!snaps || snaps.length < 2) {
-            throw new Error('Insufficient ephemeris data');
-        }
-
-        // Binary search for bracketing index
-        const idx = this._bsearchJD(jd);
-
-        // Select 4 points for cubic Lagrange (or fewer near edges)
-        const n = snaps.length;
-        const i0 = Math.max(0, Math.min(idx - 1, n - 4));
-        const ts = [], xs = [], ys = [], zs = [];
-
-        for (let k = 0; k < 4 && (i0 + k) < n; k++) {
-            const s = snaps[i0 + k];
-            const bd = s.bodies ? s.bodies[bodyId] : null;
-            if (bd) {
-                ts.push(s.jd);
-                xs.push(bd.x || 0);
-                ys.push(bd.y || 0);
-                zs.push(bd.z || 0);
-            }
-        }
-
-        if (ts.length < 2) throw new Error(`Not enough ephemeris for '${bodyId}'`);
-
-        return {
-            x: lagrangeInterpolate(ts, xs, jd),
-            y: lagrangeInterpolate(ts, ys, jd),
-            z: lagrangeInterpolate(ts, zs, jd)
-        };
-    }
-
-    /** Binary search: find index of snapshot at or just before jd. */
-    _bsearchJD(jd) {
-        const jds = this._ephemerisJDs;
-        let lo = 0, hi = jds.length - 1;
-        while (lo < hi) {
-            const mid = (lo + hi + 1) >>> 1;
-            if (jds[mid] <= jd) lo = mid; else hi = mid - 1;
-        }
-        return lo;
-    }
-
-    // ──────────────────────────────────────────────────
-    // Static time-conversion utilities
-    // ──────────────────────────────────────────────────
-
-    /** Convert JS Date → Julian Date (TT, approximate). */
-    static dateToJD(date) {
-        return date.getTime() / 86400000.0 + 2440587.5;
-    }
-
-    /** Julian Date → days since J2000.0. */
-    static jdToJ2000Days(jd) {
-        return jd - J2000_JD;
-    }
-
-    /** Julian Date → VSOP87 τ (Julian millennia from J2000). */
-    static jdToVSOPTau(jd) {
-        return (jd - J2000_JD) / DAYS_PER_MILLENNIUM;
-    }
-}

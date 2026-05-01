@@ -1,6 +1,33 @@
 // Smoke test: load OrbitalEngine and verify VSOP87 + ELP produce sane J2000 outputs.
-import { computePlanetEclipticVSOP87, computeMoonELP, VSOP87B }
+import { computeMoonELP, VSOP87B }
     from '../app/src/main/assets/js/OrbitalEngine.js';
+
+// Inline helper since computePlanetEclipticVSOP87 was de-exported as dead code.
+const DAYS_PER_MILLENNIUM = 365250.0;
+function evalSeries(terms, tau) {
+    if (!terms) return 0;
+    let s = 0; for (const t of terms) s += t[0] * Math.cos(t[1] + t[2] * tau);
+    return s;
+}
+function evalCoord(data, key, tau) {
+    let r = 0, p = 1;
+    for (let a = 0; a <= 5; a++) {
+        const k = a === 0 ? (data[key] ? key : `${key}0`) : `${key}${a}`;
+        if (data[k]) r += p * evalSeries(data[k], tau);
+        p *= tau;
+    }
+    return r;
+}
+function computePlanetEclipticVSOP87(name, d) {
+    const data = VSOP87B[name]; if (!data) return null;
+    const tau = d / DAYS_PER_MILLENNIUM;
+    const L = evalCoord(data, 'L', tau);
+    const B = evalCoord(data, 'B', tau);
+    const R = evalCoord(data, 'R', tau);
+    const Ln = ((L % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+    const cosB = Math.cos(B);
+    return { x: R * cosB * Math.cos(Ln), y: R * cosB * Math.sin(Ln), z: R * Math.sin(B) };
+}
 
 const PLANETS = ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'];
 
