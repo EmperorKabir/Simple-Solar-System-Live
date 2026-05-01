@@ -555,13 +555,11 @@
         // ============================================================
         // Orbital Position Adapter
         // ============================================================
-        // Thin wrapper bridging the old getOrbitPositionFast call sites to the
-        // offline OrbitalEngine module. Returns THREE.Vector3 for scene compat.
-        // All actual computation is delegated to computePlanetPosition() which
-        // solves Kepler's equation and transforms coordinates offline.
+        // Pre-allocated scratch Vector3 for the adapter (avoids per-frame allocation)
+        const _adapterVec = new THREE.Vector3();
         function getOrbitPositionFast(elements, daysSinceJ2000, isRingPoint = false) {
             const pos = computePlanetPosition(elements, daysSinceJ2000, isRingPoint);
-            return new THREE.Vector3(pos.x, pos.y, pos.z);
+            return _adapterVec.set(pos.x, pos.y, pos.z);
         }
 
         // (moonSystemConfig already defined above, before VisualScaleEngine)
@@ -675,7 +673,7 @@
             // Draw orbit rings
             const ringPoints = [];
             for(let i = 0; i <= 360; i+=2) {
-                ringPoints.push(getOrbitPositionFast(data, (i / 360) * (data.period * 365.25), true));
+                ringPoints.push(getOrbitPositionFast(data, (i / 360) * (data.period * 365.25), true).clone());
             }
             const ring = new THREE.LineLoop(
                 new THREE.BufferGeometry().setFromPoints(ringPoints),
@@ -1233,6 +1231,13 @@
         let frameCount = 0;
         const visibilityRaycaster = new THREE.Raycaster();
 
+        // Pre-allocated scratch vectors for the animation loop (Phase 6: GC elimination)
+        const _followWorldPos = new THREE.Vector3();
+        const _followDelta = new THREE.Vector3();
+        const _labelWorldPos = new THREE.Vector3();
+        const _labelHostWorld = new THREE.Vector3();
+        const _labelRayDir = new THREE.Vector3();
+
         function animate() {
             requestAnimationFrame(animate);
             frameCount++;
@@ -1297,12 +1302,11 @@
             
             // Camera follow
             if (viewMode === "PLANET" && targetPlanet) {
-                const worldPos = new THREE.Vector3();
-                targetPlanet.getWorldPosition(worldPos);
-                const deltaMovement = new THREE.Vector3().subVectors(worldPos, lastTargetPos);
-                camera.position.add(deltaMovement);
-                controls.target.add(deltaMovement);
-                lastTargetPos.copy(worldPos);
+                targetPlanet.getWorldPosition(_followWorldPos);
+                _followDelta.subVectors(_followWorldPos, lastTargetPos);
+                camera.position.add(_followDelta);
+                controls.target.add(_followDelta);
+                lastTargetPos.copy(_followWorldPos);
             }
 
             controls.update();
@@ -1330,11 +1334,10 @@
                     }
                     
                     let isEclipsed = false;
-                    const worldPos = new THREE.Vector3();
-                    targetMesh.getWorldPosition(worldPos);
-                    const targetDist = cameraPos.distanceTo(worldPos);
-                    const rayDir = worldPos.clone().sub(cameraPos).normalize();
-                    visibilityRaycaster.set(cameraPos, rayDir);
+                    targetMesh.getWorldPosition(_labelWorldPos);
+                    const targetDist = cameraPos.distanceTo(_labelWorldPos);
+                    _labelRayDir.subVectors(_labelWorldPos, cameraPos).normalize();
+                    visibilityRaycaster.set(cameraPos, _labelRayDir);
                     const intersects = visibilityRaycaster.intersectObjects(planetMeshes, true);
                     
                     for(let intx of intersects) {
@@ -1353,7 +1356,7 @@
                         if (isEclipsed) lblDiv.classList.add('hidden-label');
                         else lblDiv.classList.remove('hidden-label');
                     } else if (moonConfig) {
-                        const hostWorld = new THREE.Vector3();
+                        const hostWorld = _labelHostWorld;
                         if(planets[moonConfig.host]) planets[moonConfig.host].getWorldPosition(hostWorld);
                         const hostDist = cameraPos.distanceTo(hostWorld);
                         const hideThreshold = planetsData[moonConfig.host].size * 45.0;
