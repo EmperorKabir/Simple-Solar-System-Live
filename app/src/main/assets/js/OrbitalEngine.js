@@ -264,43 +264,57 @@ function lagrangeInterpolate(ts, ys, t) {
 // ──────────────────────────────────────────────────
 
 /**
+ * Compute raw heliocentric ecliptic J2000 Cartesian coordinates (AU).
+ * No scene transform, no visual normalization.
+ *
+ * @param {object} elements — pre-processed planet element set
+ * @param {number} dSinceJ2000 — days since J2000.0
+ * @returns {{x: number, y: number, z: number}} heliocentric ecliptic J2000 (AU)
+ */
+export function computePlanetEcliptic(elements, dSinceJ2000) {
+    let M = (elements.L - elements.w + elements.n * dSinceJ2000) % 360.0;
+    const M_rad = M * DEG2RAD;
+    const E = solveKepler(M_rad, elements.e);
+    const v = trueAnomaly(E, elements.e);
+    const r = heliocentricDistance(elements.a, elements.e, E);
+    const x_orb = r * Math.cos(v);
+    const y_orb = r * Math.sin(v);
+    return {
+        x: (elements.cN * elements.cw - elements.sN * elements.sw * elements.ci) * x_orb
+         + (-elements.cN * elements.sw - elements.sN * elements.cw * elements.ci) * y_orb,
+        y: (elements.sN * elements.cw + elements.cN * elements.sw * elements.ci) * x_orb
+         + (-elements.sN * elements.sw + elements.cN * elements.cw * elements.ci) * y_orb,
+        z: (elements.sw * elements.si) * x_orb
+         + (elements.cw * elements.si) * y_orb
+    };
+}
+
+/**
  * Compute heliocentric ecliptic position for a planet, returned as
  * a scene-frame vector normalised to the planet's visual display distance.
  *
- * This is the offline replacement for getOrbitPositionFast().
- *
- * @param {object} elements — pre-processed planet element set. Must include:
- *   a, e, L, w, n, cw, sw, cN, sN, ci, si, visualDist
+ * @param {object} elements — pre-processed planet element set
  * @param {number} dSinceJ2000 — days since J2000.0
  * @param {boolean} [isRingPoint=false] — true when computing orbit-ring trace points
  * @returns {{x: number, y: number, z: number}} scene-frame position
  */
 export function computePlanetPosition(elements, dSinceJ2000, isRingPoint = false) {
-    // Mean anomaly
     let M = isRingPoint
         ? (dSinceJ2000 * elements.n)
         : (elements.L - elements.w + elements.n * dSinceJ2000);
     M = M % 360.0;
-    const M_rad = M * Math.PI / 180.0;
-
-    // Solve Kepler's equation
+    const M_rad = M * DEG2RAD;
     const E = solveKepler(M_rad, elements.e);
     const v = trueAnomaly(E, elements.e);
     const r = heliocentricDistance(elements.a, elements.e, E);
-
-    // Orbital plane coordinates
     const x_orb = r * Math.cos(v);
     const y_orb = r * Math.sin(v);
-
-    // Rotate from orbital plane to ecliptic frame
     const x_ecl = (elements.cN * elements.cw - elements.sN * elements.sw * elements.ci) * x_orb
                 + (-elements.cN * elements.sw - elements.sN * elements.cw * elements.ci) * y_orb;
     const y_ecl = (elements.sN * elements.cw + elements.cN * elements.sw * elements.ci) * x_orb
                 + (-elements.sN * elements.sw + elements.cN * elements.cw * elements.ci) * y_orb;
     const z_ecl = (elements.sw * elements.si) * x_orb
                 + (elements.cw * elements.si) * y_orb;
-
-    // Transform to scene frame and normalise to visual distance
     const scene = eclipticToScene(x_ecl, y_ecl, z_ecl);
     return normalizeToVisualDistance(scene, elements.visualDist);
 }
@@ -343,13 +357,20 @@ export function computeEarthMoonPosition(mc, d) {
  * @returns {{x: number, y: number, z: number}} position relative to host (in host-pivot frame)
  */
 export function computeGalileanMoonPosition(mc, d) {
-    const toRad = Math.PI / 180.0;
+    const ecl = _galileanEcliptic(mc, d);
+    // Route through eclipticToScene for frame consistency with Earth Moon
+    return eclipticToScene(ecl.x * mc.dist, ecl.y * mc.dist, ecl.z * mc.dist);
+}
 
+/**
+ * Internal: Compute Galilean moon unit-vector in planetocentric ecliptic frame.
+ * Separated so computeMoonEcliptic can reuse without scene transform.
+ * @returns {{x,y,z}} unit direction in J2000 ecliptic (z≈0 for Galilean moons)
+ */
+function _galileanEcliptic(mc, d) {
     // Mean motions (deg/day)
-    const n1 = 203.48895579;  // Io
-    const n2 = 101.37472473;  // Europa
-    const n3 =  50.31760920;  // Ganymede
-    const n4 =  21.57107117;  // Callisto
+    const n1 = 203.48895579, n2 = 101.37472473;
+    const n3 =  50.31760920, n4 =  21.57107117;
 
     // Mean longitudes
     const l1 = ((106.07 + n1 * d) % 360 + 360) % 360;
@@ -364,50 +385,38 @@ export function computeGalileanMoonPosition(mc, d) {
     const pi4 = ((335.2868 + 0.00184000 * d) % 360 + 360) % 360;
 
     // Laplace resonance argument
-    const phi_lib = l1 - 3 * l2 + 2 * l3;
-    const phi_rad = phi_lib * toRad;
+    const phi_rad = (l1 - 3 * l2 + 2 * l3) * DEG2RAD;
 
     let trueLon;
-
     if (mc.name === "Io") {
-        const M = (l1 - pi1) * toRad;
-        const eqCenter = 2 * 0.0041 * Math.sin(M) * 180 / Math.PI;
-        const pert = -0.47 * Math.sin(2 * (l1 - l2) * toRad)
-                   +  0.10 * Math.sin(2 * (l1 - l3) * toRad)
-                   +  0.07 * Math.sin(phi_rad);
-        trueLon = l1 + eqCenter + pert;
+        const M = (l1 - pi1) * DEG2RAD;
+        trueLon = l1 + 2 * 0.0041 * Math.sin(M) * RAD2DEG
+                - 0.47 * Math.sin(2 * (l1 - l2) * DEG2RAD)
+                + 0.10 * Math.sin(2 * (l1 - l3) * DEG2RAD)
+                + 0.07 * Math.sin(phi_rad);
     } else if (mc.name === "Europa") {
-        const M = (l2 - pi2) * toRad;
-        const eqCenter = 2 * 0.0094 * Math.sin(M) * 180 / Math.PI;
-        const pert =  1.07 * Math.sin(2 * (l2 - l3) * toRad)
-                   -  0.10 * Math.sin(2 * (l1 - l2) * toRad)
-                   +  0.17 * Math.sin(phi_rad);
-        trueLon = l2 + eqCenter + pert;
+        const M = (l2 - pi2) * DEG2RAD;
+        trueLon = l2 + 2 * 0.0094 * Math.sin(M) * RAD2DEG
+                + 1.07 * Math.sin(2 * (l2 - l3) * DEG2RAD)
+                - 0.10 * Math.sin(2 * (l1 - l2) * DEG2RAD)
+                + 0.17 * Math.sin(phi_rad);
     } else if (mc.name === "Ganymede") {
-        const M = (l3 - pi3) * toRad;
-        const eqCenter = 2 * 0.0013 * Math.sin(M) * 180 / Math.PI;
-        const pert = -0.33 * Math.sin(2 * (l2 - l3) * toRad)
-                   +  0.12 * Math.sin(phi_rad)
-                   -  0.08 * Math.sin(2 * (l3 - l4) * toRad);
-        trueLon = l3 + eqCenter + pert;
-    } else { // Callisto
-        const M = (l4 - pi4) * toRad;
-        const eqCenter = 2 * 0.0074 * Math.sin(M) * 180 / Math.PI;
-        const pert =  0.84 * Math.sin(2 * (l3 - l4) * toRad)
-                   +  0.06 * Math.sin(3 * (l3 - l4) * toRad);
-        trueLon = l4 + eqCenter + pert;
+        const M = (l3 - pi3) * DEG2RAD;
+        trueLon = l3 + 2 * 0.0013 * Math.sin(M) * RAD2DEG
+                - 0.33 * Math.sin(2 * (l2 - l3) * DEG2RAD)
+                + 0.12 * Math.sin(phi_rad)
+                - 0.08 * Math.sin(2 * (l3 - l4) * DEG2RAD);
+    } else {
+        const M = (l4 - pi4) * DEG2RAD;
+        trueLon = l4 + 2 * 0.0074 * Math.sin(M) * RAD2DEG
+                + 0.84 * Math.sin(2 * (l3 - l4) * DEG2RAD)
+                + 0.06 * Math.sin(3 * (l3 - l4) * DEG2RAD);
     }
 
-    // Convert from Jupiter-ascending-node frame to ecliptic longitude
-    const OmegaJ = 100.55; // Jupiter ascending node on ecliptic (J2000)
-    const L_ecl = ((trueLon + OmegaJ) % 360 + 360) % 360;
-    const r = L_ecl * toRad;
-
-    return {
-        x: mc.dist * Math.cos(r),
-        y: 0,
-        z: -mc.dist * Math.sin(r)
-    };
+    // Jupiter ascending node on ecliptic (J2000)
+    const L_ecl_rad = ((trueLon + 100.55) % 360 + 360) % 360 * DEG2RAD;
+    // Galilean moons orbit within ~0.5° of ecliptic plane → z_ecl ≈ 0
+    return { x: Math.cos(L_ecl_rad), y: Math.sin(L_ecl_rad), z: 0 };
 }
 
 /**
@@ -428,8 +437,9 @@ export function computeStandardMoonPosition(mc, d) {
 }
 
 /**
- * Unified moon position dispatcher.
- * Routes to the correct model based on moon config flags.
+ * Unified moon position dispatcher (rendering pipeline).
+ * Returns position relative to host in the frame expected by each moon's
+ * scene-graph parent node.
  *
  * @param {object} mc — moon config
  * @param {number} d — days since J2000.0
@@ -443,6 +453,87 @@ export function computeMoonPosition(mc, d) {
     } else {
         return computeStandardMoonPosition(mc, d);
     }
+}
+
+
+// ──────────────────────────────────────────────────
+// Ecliptic-Aligned Moon Pipeline (Phase 1)
+// All moon models output planetocentric J2000 ecliptic coordinates.
+// ──────────────────────────────────────────────────
+
+/**
+ * Compute planetocentric position in J2000 ecliptic frame for ANY moon.
+ * Unlike computeMoonPosition (which outputs in per-model rendering frames),
+ * this always returns ecliptic Cartesian coordinates.
+ *
+ * @param {object} mc — moon config
+ * @param {number} d — days since J2000.0
+ * @param {number} [hostObliquityDeg=0] — host axial tilt (needed for standard moons)
+ * @param {number} [hostPoleLonDeg=0] — host pole ecliptic longitude
+ * @returns {{x: number, y: number, z: number}} planetocentric ecliptic J2000
+ */
+export function computeMoonEcliptic(mc, d, hostObliquityDeg = 0, hostPoleLonDeg = 0) {
+    if (mc.specialOrbit === "ecliptic") {
+        // Earth Moon already computes in ecliptic — return without scene transform
+        const L = ((mc.L0 + mc.nRate * d) % 360 + 360) % 360;
+        const L_rad = L * DEG2RAD;
+        const node = ((mc.node0 + mc.nodeRate * d) % 360 + 360) % 360;
+        const node_rad = node * DEG2RAD;
+        const inc_rad = mc.inclination * DEG2RAD;
+        const u = L_rad - node_rad;
+        return {
+            x: mc.dist * (Math.cos(node_rad) * Math.cos(u) - Math.sin(node_rad) * Math.sin(u) * Math.cos(inc_rad)),
+            y: mc.dist * (Math.sin(node_rad) * Math.cos(u) + Math.cos(node_rad) * Math.sin(u) * Math.cos(inc_rad)),
+            z: mc.dist * Math.sin(u) * Math.sin(inc_rad)
+        };
+    } else if (mc.galilean) {
+        // Galilean: already ecliptic-aligned via Lieske + OmegaJ
+        const dir = _galileanEcliptic(mc, d);
+        return { x: dir.x * mc.dist, y: dir.y * mc.dist, z: dir.z * mc.dist };
+    } else {
+        // Standard moons: computed in host equatorial, rotate to ecliptic
+        const L = ((mc.L0 + (360.0 / mc.p) * d) % 360 + 360) % 360;
+        const L_rad = L * DEG2RAD;
+        const x_eq = mc.dist * Math.cos(L_rad);
+        const z_eq = mc.dist * Math.sin(L_rad);
+        // Rotate from equatorial to ecliptic: Ry(-poleLon) then Rz(+obliquity)
+        const obl = hostObliquityDeg * DEG2RAD;
+        const pol = hostPoleLonDeg * DEG2RAD;
+        const cosO = Math.cos(obl), sinO = Math.sin(obl);
+        const cosP = Math.cos(pol), sinP = Math.sin(pol);
+        // Step 1: rotate around Y by poleLon (equatorial x-z → ecliptic azimuth)
+        const rx = x_eq * cosP + z_eq * sinP;
+        const ry = 0;
+        const rz = -x_eq * sinP + z_eq * cosP;
+        // Step 2: tilt by obliquity around the new Z axis
+        return {
+            x: rx * cosO - ry * sinO,
+            y: rx * sinO + ry * cosO,
+            z: rz
+        };
+    }
+}
+
+/**
+ * Compute absolute heliocentric ecliptic position of a moon.
+ * Performs vector addition: host_ecliptic + moon_ecliptic.
+ * Both vectors are aligned to J2000 ecliptic before addition.
+ *
+ * @param {object} mc — moon config
+ * @param {number} d — days since J2000.0
+ * @param {object} hostElements — host planet's pre-processed elements
+ * @param {number} [hostObliquityDeg=0]
+ * @param {number} [hostPoleLonDeg=0]
+ * @returns {{x: number, y: number, z: number}} heliocentric ecliptic J2000
+ */
+export function computeMoonHeliocentricEcliptic(mc, d, hostElements, hostObliquityDeg = 0, hostPoleLonDeg = 0) {
+    const hostEcl = computePlanetEcliptic(hostElements, d);
+    const moonEcl = computeMoonEcliptic(mc, d, hostObliquityDeg, hostPoleLonDeg);
+    return {
+        x: hostEcl.x + moonEcl.x,
+        y: hostEcl.y + moonEcl.y,
+        z: hostEcl.z + moonEcl.z
+    };
 }
 
 
