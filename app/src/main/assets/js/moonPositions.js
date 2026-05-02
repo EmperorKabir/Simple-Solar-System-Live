@@ -31,6 +31,16 @@ import * as jupMoons   from './lib/astronomia/jupitermoons.js';
 import { Qs as SatQs } from './lib/astronomia/saturnmoons.js';
 import * as plutoMod   from './lib/astronomia/pluto.js';
 import { phobos, deimos } from './data/martianMoons.js';
+import { Planet } from './lib/astronomia/planetposition.js';
+import vsop87Bearth   from './lib/astronomia/data/vsop87Bearth.js';
+import vsop87Buranus  from './lib/astronomia/data/vsop87Buranus.js';
+
+// Light-time constant: τ_days = LIGHT_TIME_DAYS_PER_AU · |distance_AU|.
+// Source: Meeus 'Astronomical Algorithms' eq. 33.3 (p.224), via
+// astronomia/base.js:65: lightTime(dist) = 0.0057755183 · dist.
+const LIGHT_TIME_DAYS_PER_AU = 0.0057755183;
+const _earthVSOP  = new Planet(vsop87Bearth);
+const _uranusVSOP = new Planet(vsop87Buranus);
 
 const J2000_JD = 2451545.0;
 const D2R      = Math.PI / 180.0;
@@ -442,7 +452,26 @@ const GUST86_LAMBDA_PERT = {
 export function uranusMoon(mc, jde) {
     const idx = GUST86_INDEX[mc.name];
     if (idx == null) return { x: 0, y: 0, z: 0 };
-    const t = jde - GUST86_EPOCH_JD;
+
+    // Light-time retardation: when comparing to Earth-apparent ephemerides
+    // (Stellarium), positions must be evaluated at jde - τ where τ is the
+    // light-travel time from Uranus to Earth. astronomia/jupitermoons.e5
+    // applies the same correction (lines 67-68 of vendored jupitermoons.js).
+    //
+    // Uranus geocentric distance via VSOP87B Earth+Uranus heliocentric, then
+    // |Uranus - Earth|. Constants from astronomia.
+    const eP = _earthVSOP.position2000(jde);
+    const uP = _uranusVSOP.position2000(jde);
+    const ex =  eP.range * Math.cos(eP.lat) * Math.cos(eP.lon);
+    const ey =  eP.range * Math.cos(eP.lat) * Math.sin(eP.lon);
+    const ez =  eP.range * Math.sin(eP.lat);
+    const ux =  uP.range * Math.cos(uP.lat) * Math.cos(uP.lon);
+    const uy =  uP.range * Math.cos(uP.lat) * Math.sin(uP.lon);
+    const uz =  uP.range * Math.sin(uP.lat);
+    const dist = Math.hypot(ux - ex, uy - ey, uz - ez);   // AU
+    const tau  = LIGHT_TIME_DAYS_PER_AU * dist;            // days
+
+    const t = (jde - tau) - GUST86_EPOCH_JD;
 
     // Base mean longitudes for all 5 moons (used in perturbation arguments).
     const an = [
