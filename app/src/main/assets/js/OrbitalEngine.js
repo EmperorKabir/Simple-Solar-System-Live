@@ -36,6 +36,7 @@
 
 import { getGMST } from './OrbitalTimeUtils.js';
 import { eclipticToScene, normalizeToVisualDistance } from './CoordinateTransformer.js';
+import { moonPosition as astroMoonPosition } from './moonPositions.js';
 
 // VSOP87B series (heliocentric ecliptic L,B,R) per planet
 import mercuryVSOP from './data/vsop87/mercury.js';
@@ -571,29 +572,20 @@ export function computeStandardMoonPosition(mc, d) {
 
 /**
  * Unified moon position dispatcher (rendering pipeline).
- * Returns position relative to host in the frame expected by each moon's
- * scene-graph parent node.
+ * Delegates to the Context7-verified astronomia-backed evaluators in
+ * moonPositions.js. The legacy computeEarthMoonPosition / computeGalileanMoonPosition
+ * / computeStandardMoonPosition / computeMarsMoonPosition functions above
+ * are retained for backwards-compat / regression diff but no longer dispatched.
  *
  * @param {object} mc — moon config
  * @param {number} d — days since J2000.0
  * @returns {{x: number, y: number, z: number}} position relative to host
  */
 export function computeMoonPosition(mc, d) {
-    // Guard: validate moon config has required fields
     if (!mc || typeof d !== 'number' || !isFinite(d)) {
         return { x: 0, y: 0, z: 0 };
     }
-    if (mc.specialOrbit === "ecliptic") {
-        if (typeof mc.L0 !== 'number' || typeof mc.nRate !== 'number') return { x: 0, y: 0, z: 0 };
-        return computeEarthMoonPosition(mc, d);
-    } else if (mc.galilean) {
-        return computeGalileanMoonPosition(mc, d);
-    } else if (mc.marsMoon) {
-        return computeMarsMoonPosition(mc, d);
-    } else {
-        if (typeof mc.p !== 'number' || mc.p === 0) return { x: 0, y: 0, z: 0 };
-        return computeStandardMoonPosition(mc, d);
-    }
+    return astroMoonPosition(mc, J2000_JD + d);
 }
 
 
