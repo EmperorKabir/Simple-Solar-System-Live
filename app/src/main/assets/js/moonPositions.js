@@ -279,6 +279,141 @@ export function saturnMoon(mc, jde) {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Uranian moons  (Miranda, Ariel, Umbriel, Titania, Oberon)
+//
+// astronomia does not vendor a Uranian-moon theory (no GUST86). Use simple
+// Kepler propagation in Uranus's equatorial frame with mean elements from
+// JPL Horizons / IAU 2015, then transform to scene-ecliptic via the IAU
+// 2015 Uranus pole orientation (Archinal et al. 2018, "Report of the IAU
+// Working Group on Cartographic Coordinates and Rotational Elements: 2015",
+// Celestial Mechanics and Dynamical Astronomy 130:22):
+//
+//   Uranus pole: α₀ = 257.311°, δ₀ = -15.175°
+//
+// Frame transformation Uranus-equatorial → J2000 ecliptic:
+//   1. Build pole rotation M (planet equatorial → ICRF) using α₀, δ₀.
+//   2. Apply ICRF → ecliptic obliquity rotation R_x(-ε).
+// The rotation matrix is constant in time (epoch J2000 ignoring precession),
+// so we precompute it once below.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const URANUS_POLE_RA  = 257.311 * D2R;
+const URANUS_POLE_DEC = -15.175 * D2R;
+const ECL_OBLIQ       =  23.4392911 * D2R;
+
+/** Compose Uranus-equator → J2000-ecliptic rotation matrix (3x3, row-major). */
+const URANUS_EQ_TO_ECL = (() => {
+    const a = URANUS_POLE_RA, d = URANUS_POLE_DEC, e = ECL_OBLIQ;
+    const ca = Math.cos(a), sa = Math.sin(a);
+    const cd = Math.cos(d), sd = Math.sin(d);
+    // Planet equatorial → ICRF (J2000 equatorial)
+    //   X_planet = (-sin α₀, cos α₀, 0)
+    //   Y_planet = (-sin δ₀ cos α₀, -sin δ₀ sin α₀, cos δ₀)
+    //   Z_planet = ( cos δ₀ cos α₀,  cos δ₀ sin α₀, sin δ₀)
+    const M = [
+        [-sa, -sd * ca,  cd * ca],
+        [ ca, -sd * sa,  cd * sa],
+        [  0,       cd,       sd]
+    ];
+    // ICRF → ecliptic-of-J2000 via R_x(-ε)
+    const ce = Math.cos(e), se = Math.sin(e);
+    const R = [
+        [1, 0,   0 ],
+        [0, ce,  se],
+        [0,-se,  ce]
+    ];
+    // Combined = R · M
+    const out = [[0,0,0],[0,0,0],[0,0,0]];
+    for (let i = 0; i < 3; i++)
+        for (let j = 0; j < 3; j++)
+            for (let k = 0; k < 3; k++)
+                out[i][j] += R[i][k] * M[k][j];
+    return out;
+})();
+
+// Mean orbital elements at J2000 for the five major Uranian moons,
+// referenced to Uranus's equatorial plane. Sources: JPL Horizons mean
+// elements / NASA Planetary Fact Sheet (semi-major axis km), Laskar &
+// Jacobson 1987 (mean motions), IAU 2015 Uranian system. L0 values are
+// J2000 mean longitudes from JPL Horizons.
+const URANIAN_MOONS = {
+    Miranda:  { eccentricity: 0.0013, inclinationDeg: 4.232, longAscNodeDeg:   0.0,
+                argPericenterDeg:  68.312, L0Deg:  35.3, nDegPerDay: 360.0 / 1.413479 },
+    Ariel:    { eccentricity: 0.0012, inclinationDeg: 0.260, longAscNodeDeg:   0.0,
+                argPericenterDeg: 115.349, L0Deg:  11.7, nDegPerDay: 360.0 / 2.520379 },
+    Umbriel:  { eccentricity: 0.0039, inclinationDeg: 0.205, longAscNodeDeg:   0.0,
+                argPericenterDeg:  84.709, L0Deg: 251.2, nDegPerDay: 360.0 / 4.144177 },
+    Titania:  { eccentricity: 0.0011, inclinationDeg: 0.340, longAscNodeDeg:   0.0,
+                argPericenterDeg: 284.400, L0Deg:  89.0, nDegPerDay: 360.0 / 8.705872 },
+    Oberon:   { eccentricity: 0.0014, inclinationDeg: 0.058, longAscNodeDeg:   0.0,
+                argPericenterDeg: 104.400, L0Deg: 286.0, nDegPerDay: 360.0 / 13.463239 }
+};
+
+/**
+ * Uranian moon planetocentric position in scene-ecliptic frame.
+ *
+ * 1. Solve Kepler in Uranus equatorial frame (eccentricity, inclination,
+ *    node, pericenter, mean anomaly).
+ * 2. Apply URANUS_EQ_TO_ECL fixed rotation to get J2000 ecliptic coords.
+ * 3. Map ecliptic → scene: (x_ecl, z_ecl, -y_ecl).
+ * 4. Scale to mc.dist.
+ *
+ * @param {object} mc — moonSystemConfig entry; mc.name selects elements.
+ * @param {number} jde — Julian ephemeris day.
+ * @returns {{x:number,y:number,z:number}} scene-frame position relative to
+ *   Uranus pivot, magnitude == mc.dist.
+ */
+export function uranusMoon(mc, jde) {
+    const el = URANIAN_MOONS[mc.name];
+    if (!el) return { x: 0, y: 0, z: 0 };
+    const d = jde - J2000_JD;
+
+    // Mean anomaly (deg, [0, 360))
+    const Mdeg = ((el.L0Deg - el.argPericenterDeg + el.nDegPerDay * d) % 360 + 360) % 360;
+    const Mr = Mdeg * D2R;
+
+    // Newton-Raphson Kepler solve
+    let E = Mr;
+    for (let i = 0; i < 8; i++) {
+        E -= (E - el.eccentricity * Math.sin(E) - Mr) /
+             (1 - el.eccentricity * Math.cos(E));
+    }
+    const v = 2 * Math.atan(
+        Math.sqrt((1 + el.eccentricity) / (1 - el.eccentricity)) *
+        Math.tan(E / 2)
+    );
+    const xo = Math.cos(v);
+    const yo = Math.sin(v);
+
+    const N = el.longAscNodeDeg   * D2R;
+    const w = el.argPericenterDeg * D2R;
+    const i = el.inclinationDeg   * D2R;
+    const cN = Math.cos(N), sN = Math.sin(N);
+    const cw = Math.cos(w), sw = Math.sin(w);
+    const ci = Math.cos(i), si = Math.sin(i);
+
+    // Position in Uranus equatorial frame
+    const xUe = (cN * cw - sN * sw * ci) * xo + (-cN * sw - sN * cw * ci) * yo;
+    const yUe = (sN * cw + cN * sw * ci) * xo + (-sN * sw + cN * cw * ci) * yo;
+    const zUe = (sw * si)               * xo + ( cw * si)               * yo;
+
+    // Rotate Uranus equatorial → J2000 ecliptic
+    const M = URANUS_EQ_TO_ECL;
+    const xEcl = M[0][0] * xUe + M[0][1] * yUe + M[0][2] * zUe;
+    const yEcl = M[1][0] * xUe + M[1][1] * yUe + M[1][2] * zUe;
+    const zEcl = M[2][0] * xUe + M[2][1] * yUe + M[2][2] * zUe;
+
+    // Scale to mc.dist
+    const len = Math.hypot(xEcl, yEcl, zEcl);
+    if (len < 1e-12) return { x: 0, y: 0, z: 0 };
+    const k = mc.dist / len;
+
+    // Ecliptic → scene: scene_x = ecl_x, scene_y = ecl_z, scene_z = -ecl_y
+    return { x: xEcl * k, y: zEcl * k, z: -yEcl * k };
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Pluto / Charon  (Meeus Ch.37 / IAU pole + Charon Keplerian)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -350,6 +485,7 @@ export function moonPosition(mc, jde) {
     if (mc.marsMoon || mc.host === 'Mars') return marsMoon(mc, jde);
     if (mc.galilean || mc.host === 'Jupiter') return galileanMoon(mc, jde);
     if (mc.host === 'Saturn') return saturnMoon(mc, jde);
+    if (mc.host === 'Uranus') return uranusMoon(mc, jde);
     if (mc.host === 'Pluto')  return plutoMoon(mc, jde);
     return simpleCircular(mc, jde);
 }

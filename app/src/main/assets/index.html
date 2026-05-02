@@ -910,19 +910,20 @@
                 if (earthPivot) {
                     earthPivot.add(mMesh);
                 }
-            } else if (mc.galilean || mc.host === "Saturn") {
-                // Galilean and Saturn moons: moonPositions.js returns coords already
-                // in scene-ecliptic frame (Galilean: Lieske l_i directly = scene
-                // longitude; Saturn: full Meeus Ch.46 reduction including obliquity
-                // and ascending-node rotations). Attach to the un-tilted orbital
-                // pivot so the groupPivot's tilt is NOT double-applied.
+            } else if (mc.galilean || mc.host === "Saturn" || mc.host === "Uranus") {
+                // Galilean, Saturn, and Uranian moons: moonPositions.js returns
+                // coords already in scene-ecliptic frame (Galilean: Lieske l_i
+                // direct; Saturn: full Meeus Ch.46 reduction including obliquity
+                // and ascending-node rotations; Uranian: IAU 2015 Uranus-pole
+                // rotation applied). Attach to the un-tilted orbital pivot so
+                // the groupPivot's tilt is NOT double-applied.
                 if (planets[mc.host]) {
                     planets[mc.host].add(mMesh);
                 } else {
                     scene.add(mMesh);
                 }
             } else {
-                // Mars, Uranus, Neptune, Pluto moons: orbit inside the host's
+                // Mars, Neptune, Pluto moons: orbit inside the host's
                 // tilted groupPivot (their evaluators return host-equator coords).
                 const hostPlanet = planetsData[mc.host];
                 if (hostPlanet && hostPlanet.bodyMesh) {
