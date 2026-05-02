@@ -317,6 +317,110 @@ const GUST86_TO_VSOP87 = [
     [ 9.214881523275189928e-02, -9.864478281437795399e-01, -1.357544776485127136e-01]
 ];
 
+// Inclination phase frequencies (rad/day) and phases at GUST86_EPOCH (rad)
+// — Stellarium gust86.c. Used to evaluate elem[4] = sin(i/2)cos(Ω) and
+// elem[5] = sin(i/2)sin(Ω) for each moon.
+const GUST86_FQI = [
+    -20.309 * Math.PI / (180.0 * 365.25),
+     -6.288 * Math.PI / (180.0 * 365.25),
+     -2.836 * Math.PI / (180.0 * 365.25),
+     -1.843 * Math.PI / (180.0 * 365.25),
+     -0.259 * Math.PI / (180.0 * 365.25)
+];
+const GUST86_PHI = [5.702313, 0.395757, 0.589326, 1.746237, 4.206896];
+
+// Primary inclination amplitudes (sin(i/2) magnitudes). Stellarium gust86.c
+// uses a per-moon table of 5 amplitudes acting on phases ai0..ai4; the
+// dominant term of each moon corresponds to its own actual inclination.
+// Index in the array = [Miranda primary, Ariel primary, Umbriel primary,
+// Titania primary, Oberon primary], paired with the inclination phase
+// index used by GUST86 (Miranda uses ai[0], Ariel uses ai[1], etc.).
+const GUST86_INCL_AMPLITUDE = [3.787171e-2, 3.5825e-4, 1.11336e-3, 6.8572e-4, 4.5169e-4];
+const GUST86_INCL_PHASE_IDX = [0, 1, 2, 3, 4];
+
+// Per-moon mean-longitude perturbation series — verbatim from Stellarium
+// gust86.c (recovered from OuterSystemMoonData.kt @ d33ca70~1).
+// Each row: [m0, m1, m2, m3, m4, amplitude] where multipliers act on
+// the base mean longitudes an[i] = PHN[i] + FQN[i] * t (rad).
+//   λ_corrected = λ_base + Σ amplitude · sin(m0·an0 + m1·an1 + … + m4·an4)
+const GUST86_LAMBDA_PERT = {
+    // Miranda
+    0: [
+        [1, -3,  2, 0, 0,  0.02547217 ],
+        [2, -6,  4, 0, 0, -0.00308831 ],
+        [3, -9,  6, 0, 0, -3.181e-4   ],
+        [4,-12,  8, 0, 0, -3.749e-5   ],
+        [1, -1,  0, 0, 0, -5.785e-5   ],
+        [2, -2,  0, 0, 0, -6.232e-5   ],
+        [3, -3,  0, 0, 0, -2.795e-5   ]
+    ],
+    // Ariel
+    1: [
+        [1, -3,  2, 0, 0, -0.0018605  ],
+        [2, -6,  4, 0, 0,  2.1999e-4  ],
+        [3, -9,  6, 0, 0,  2.31e-5    ],
+        [4,-12,  8, 0, 0,  4.3e-6     ],
+        [0,  1, -1, 0, 0, -9.011e-5   ],
+        [0,  2, -2, 0, 0, -9.107e-5   ],
+        [0,  3, -3, 0, 0, -4.275e-5   ],
+        [0,  2,  0,-2, 0, -1.649e-5   ]
+    ],
+    // Umbriel
+    2: [
+        [1, -3,  2, 0, 0,  6.6057e-4  ],
+        [2, -6,  4, 0, 0, -7.651e-5   ],
+        [3, -9,  6, 0, 0, -8.96e-6    ],
+        [4,-12,  8, 0, 0, -2.53e-6    ],
+        [0,  0,  1,-4, 3, -5.291e-5   ],
+        [0,  0,  1,-2, 0,  1.4791e-4  ],
+        [0,  1, -1, 0, 0,  9.776e-5   ],
+        [0,  2, -2, 0, 0,  7.313e-5   ],
+        [0,  3, -3, 0, 0,  3.471e-5   ],
+        [0,  4, -4, 0, 0,  1.889e-5   ],
+        [0,  0,  1,-1, 0, -6.789e-5   ],
+        [0,  0,  2,-2, 0, -8.286e-5   ],
+        [0,  0,  3,-3, 0, -3.381e-5   ],
+        [0,  0,  4,-4, 0, -1.579e-5   ],
+        [0,  0,  1, 0,-1, -1.021e-5   ],
+        [0,  0,  2, 0,-2, -1.708e-5   ]
+    ],
+    // Titania
+    3: [
+        [0,  0,  1,-4, 3,  2.061e-5   ],
+        [0,  0,  1,-2, 0, -4.079e-5   ],
+        [0,  0,  0, 2,-3, -5.183e-5   ],
+        [0,  0,  0, 2,-3,  1.5987e-4  ],
+        [0,  0,  0, 2,-3, -3.505e-5   ],
+        [0,  1,  0,-1, 0,  4.054e-5   ],
+        [0,  0,  1,-1, 0,  4.617e-5   ],
+        [0,  0,  0, 1,-1, -3.1776e-4  ],
+        [0,  0,  0, 2,-2, -3.0559e-4  ],
+        [0,  0,  0, 3,-3, -1.4836e-4  ],
+        [0,  0,  0, 4,-4, -8.292e-5   ],
+        [0,  0,  0, 5,-5, -4.998e-5   ],
+        [0,  0,  0, 6,-6, -3.156e-5   ],
+        [0,  0,  0, 7,-7, -2.056e-5   ],
+        [0,  0,  0, 8,-8, -1.369e-5   ]
+    ],
+    // Oberon
+    4: [
+        [0,  0,  1,-4, 3, -7.82e-6    ],
+        [0,  0,  0, 2,-3,  5.129e-5   ],
+        [0,  0,  0, 2,-3, -1.5824e-4  ],
+        [0,  0,  0, 2,-3,  3.451e-5   ],
+        [0,  1,  0, 0,-1,  4.751e-5   ],
+        [0,  0,  1, 0,-1,  3.896e-5   ],
+        [0,  0,  0, 1,-1,  3.5973e-4  ],
+        [0,  0,  0, 2,-2,  2.8278e-4  ],
+        [0,  0,  0, 3,-3,  1.386e-4   ],
+        [0,  0,  0, 4,-4,  7.803e-5   ],
+        [0,  0,  0, 5,-5,  4.729e-5   ],
+        [0,  0,  0, 6,-6,  3e-5       ],
+        [0,  0,  0, 7,-7,  1.962e-5   ],
+        [0,  0,  0, 8,-8,  1.311e-5   ]
+    ]
+};
+
 /**
  * Uranian moon planetocentric position in scene-ecliptic frame.
  *
@@ -340,10 +444,43 @@ export function uranusMoon(mc, jde) {
     if (idx == null) return { x: 0, y: 0, z: 0 };
     const t = jde - GUST86_EPOCH_JD;
 
-    const lam = GUST86_PHN[idx] + GUST86_FQN[idx] * t;     // radians
-    const xU = Math.cos(lam);
-    const yU = Math.sin(lam);
-    const zU = 0;
+    // Base mean longitudes for all 5 moons (used in perturbation arguments).
+    const an = [
+        GUST86_PHN[0] + GUST86_FQN[0] * t,
+        GUST86_PHN[1] + GUST86_FQN[1] * t,
+        GUST86_PHN[2] + GUST86_FQN[2] * t,
+        GUST86_PHN[3] + GUST86_FQN[3] * t,
+        GUST86_PHN[4] + GUST86_FQN[4] * t
+    ];
+
+    // Add lambda perturbation series for this moon (Stellarium gust86.c).
+    let lam = an[idx];
+    const series = GUST86_LAMBDA_PERT[idx];
+    for (let s = 0; s < series.length; s++) {
+        const r = series[s];
+        const arg = r[0]*an[0] + r[1]*an[1] + r[2]*an[2] + r[3]*an[3] + r[4]*an[4];
+        lam += r[5] * Math.sin(arg);
+    }
+
+    // Primary inclination contribution (Stellarium gust86.c primary terms):
+    //   elem[4] = sin(i/2) cos(Ω) = AMP · cos(ai_phase)
+    //   elem[5] = sin(i/2) sin(Ω) = AMP · sin(ai_phase)
+    // From these recover (i, Ω); place moon at (cos u, sin u, 0) in orbital
+    // plane (u = λ - Ω), then rotate by inclination i around line of nodes
+    // to get planetocentric Cartesian in the GUST86 frame.
+    const ai = GUST86_PHI[GUST86_INCL_PHASE_IDX[idx]] +
+               GUST86_FQI[GUST86_INCL_PHASE_IDX[idx]] * t;
+    const amp = GUST86_INCL_AMPLITUDE[idx];
+    const sinHalfI = Math.abs(amp);  // magnitude of sin(i/2)
+    const Omega = (amp >= 0) ? ai : (ai + Math.PI);  // sign flips the node by π
+    const sinI = 2 * sinHalfI * Math.sqrt(1 - sinHalfI * sinHalfI);
+    const cosI = 1 - 2 * sinHalfI * sinHalfI;
+    const u = lam - Omega;
+    const cu = Math.cos(u),  su = Math.sin(u);
+    const cO = Math.cos(Omega), sO = Math.sin(Omega);
+    const xU = cu * cO - su * cosI * sO;
+    const yU = cu * sO + su * cosI * cO;
+    const zU = su * sinI;
 
     // Rotate GUST86 uranicentric → VSOP87 J2000 ecliptic
     const M = GUST86_TO_VSOP87;
