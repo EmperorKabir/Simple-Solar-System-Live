@@ -4,15 +4,19 @@ import { assertNear } from './audit_helpers.mjs';
 
 console.log('Sub-Agent 1D — Galilean longitudes at J2000 (astronomia.jupitermoons)');
 
-// Reference: astronomia.jupitermoons.positions(J2000) low-precision Lieske
-// recovered into planetocentric Jupiter-equatorial XZ. Values pinned from
-// the smoke run after vendoring; tolerance loose because the low-precision
-// formula has ~30-arcsec residuals vs E5.
+// Reference: Meeus Ch.44 low-precision Lieske longitudes at J2000.
+// Constants from astronomia.jupitermoons.positions (Context7-verified):
+//   u(jde) = L0 + n·(jde - J2000),  L0 in degrees
+//   Io:       163.8069 + 203.4058646·d
+//   Europa:   358.414  + 101.2916335·d
+//   Ganymede:   5.7176 +  50.234518·d
+//   Callisto: 224.8092 +  21.48798·d
+// At d=0 (J2000) the longitudes equal L0 modulo 360.
 const refs = [
-    { name: 'Io',       expected:  12.89 },
-    { name: 'Europa',   expected: 175.60 },
-    { name: 'Ganymede', expected: 166.70 },
-    { name: 'Callisto', expected: 305.91 }
+    { name: 'Io',       expected: 163.8069 },
+    { name: 'Europa',   expected: 358.414  },
+    { name: 'Ganymede', expected:   5.7176 },
+    { name: 'Callisto', expected: 224.8092 }
 ];
 
 for (const r of refs) {

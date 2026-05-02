@@ -127,37 +127,40 @@ const GAL_INDEX = { Io: 0, Europa: 1, Ganymede: 2, Callisto: 3 };
 
 /**
  * Galilean moon planetocentric position in Jupiter equatorial frame.
- * Uses astronomia.jupitermoons.positions which returns sky-plane Cartesian
- * in Jupiter radii (XYZ where X is east-west, Y/Z are projected line-of-sight
- * components scaled by sin(DE)/cos(DE)). For a 3D scene we want the orbital-
- * frame XZ (with Y as Jupiter's spin axis), so we recover it from the
- * sky-plane vector by undoing the DE projection.
  *
- * Geometry (from jupitermoons.positions internals):
- *   X_sky = r·sin(u)
- *   Y_sky = -r·cos(u)·sin(DE)
- *   Z_sky = -r·cos(u)·cos(DE)
- *   where DE is the geocentric declination of Earth as seen from Jupiter
- *   (which we don't need to know explicitly):
- *     r·cos(u) = -sqrt(Y_sky² + Z_sky²) · sign(Z_sky)  // Z_sky always <0 for visible side
+ * Uses Meeus Ch.44 Lieske low-precision orbital-longitude formulas — the
+ * SAME constants astronomia.jupitermoons.positions uses internally
+ * (lines 69-72 of the vendored jupitermoons.js), but skips the
+ * Earth-sky-plane projection so we recover frame-independent
+ * planetocentric XZ. Constants Context7-verified.
  *
- * Returns {x,y,z} in Jupiter equatorial frame, scaled to mc.dist.
+ *   d  = jde - 2451545.0           (J2000 day count, per astronomia)
+ *   u1 = 163.8069° + 203.4058646°·d   (Io)
+ *   u2 = 358.414°  + 101.2916335°·d  (Europa)
+ *   u3 =   5.7176° +  50.234518°·d   (Ganymede)
+ *   u4 = 224.8092° +  21.48798°·d    (Callisto)
+ *
+ * The small (ψ - B) solar perturbation is omitted (≤0.4°).
+ *
+ * @param {object} mc — moonSystemConfig entry with mc.name and mc.dist.
+ * @param {number} jde — Julian ephemeris day.
+ * @returns {{x:number,y:number,z:number}} planetocentric Jupiter-equatorial,
+ *   magnitude == mc.dist.
  */
+const GAL_LIESKE = [
+    { L0: 163.8069, n: 203.4058646  },  // Io
+    { L0: 358.414,  n: 101.2916335 },  // Europa
+    { L0:   5.7176, n:  50.234518  },  // Ganymede
+    { L0: 224.8092, n:  21.48798   }   // Callisto
+];
+
 export function galileanMoon(mc, jde) {
     const idx = GAL_INDEX[mc.name];
     if (idx == null) return { x: 0, y: 0, z: 0 };
-    const sky = jupMoons.positions(jde);
-    const p   = sky[idx];
-    // Recover orbital-frame (sin u, cos u). Z_sky = -r cos u cos DE,
-    // so sign(cos u) = -sign(Z_sky) (cos DE > 0 always for typical geometry).
-    const rMag    = Math.hypot(p.x, p.y, p.z);
-    const sinU_r  = p.x;                              // r · sin(u)
-    const cosU_r  = -Math.sqrt(p.y * p.y + p.z * p.z) // r · cos(u), magnitude
-                  * (p.z >= 0 ? -1 : 1);              // sign from sky Z
-    // Place the moon in Jupiter's equatorial XZ plane (Y is spin axis).
-    const u   = Math.atan2(sinU_r, cosU_r);
-    const cosU = Math.cos(u), sinU = Math.sin(u);
-    return { x: mc.dist * cosU, y: 0, z: mc.dist * sinU };
+    const k = GAL_LIESKE[idx];
+    const d = jde - J2000_JD;
+    const u = (k.L0 + k.n * d) * D2R;
+    return { x: mc.dist * Math.cos(u), y: 0, z: mc.dist * Math.sin(u) };
 }
 
 
