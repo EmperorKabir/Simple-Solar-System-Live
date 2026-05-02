@@ -265,26 +265,32 @@
             }
         }
 
+        // texOffset (deg) corrects for the texture-authoring convention vs the
+        // Three.js SphereGeometry UV mapping. NASA / Solar-System-Scope-style
+        // textures (used here) place the prime meridian at IMAGE CENTER (U=0.5),
+        // which Three.js maps to the body-local -X axis. To align that with
+        // the IAU prime meridian (W=0 → body +X), we add +180°.
+        // Earth is exempt because the GMST path applies its own -90° offset.
         const rawPlanetsData = {
             Mercury: { order: 1, a: 0.3871, e: 0.2056, i: 7.00, L: 252.25, w: 77.45, node: 48.33, n: 4.0923344, period: 0.240846, size: 0.35,
-                rotPeriod: 58.6, obliquity: 0.034, W0: 329.5469, Wd: 6.1385025, poleLon: 281.01, texOffset: 0.0 },
+                rotPeriod: 58.6, obliquity: 0.034, W0: 329.5469, Wd: 6.1385025, poleLon: 281.01, texOffset: 180.0 },
             Venus: { order: 2, a: 0.7233, e: 0.0067, i: 3.39, L: 181.97, w: 131.53, node: 76.68, n: 1.6021302, period: 0.615197, size: 0.55,
-                rotPeriod: -243.0, obliquity: 177.36, W0: 160.20, Wd: -1.4813688, poleLon: 272.76, texOffset: 0.0 },
+                rotPeriod: -243.0, obliquity: 177.36, W0: 160.20, Wd: -1.4813688, poleLon: 272.76, texOffset: 180.0 },
             Earth: { order: 3, a: 1.0000, e: 0.0167, i: 0.00, L: 100.46, w: 102.94, node: 0.00, n: 0.9856091, period: 1.000017, size: 0.7,
                 rotPeriod: 1.0, obliquity: 23.44, W0: 0, Wd: 0, poleLon: 0.0, texOffset: 0.0,
                 useGMST: true },
             Mars: { order: 4, a: 1.5237, e: 0.0934, i: 1.85, L: -4.55, w: -23.94, node: 49.57, n: 0.5240330, period: 1.880847, size: 0.45,
-                rotPeriod: 1.03, obliquity: 25.19, W0: 176.630, Wd: 350.89198226, poleLon: 352.9, texOffset: 0.0 },
+                rotPeriod: 1.03, obliquity: 25.19, W0: 176.630, Wd: 350.89198226, poleLon: 352.9, texOffset: 180.0 },
             Jupiter: { order: 5, a: 5.2044, e: 0.0489, i: 1.30, L: 34.40, w: 14.75, node: 100.55, n: 0.0830853, period: 11.862615, size: 1.6,
-                rotPeriod: 0.41, obliquity: 3.13, W0: 284.95, Wd: 870.5366420, poleLon: 268.06, texOffset: 0.0 },
+                rotPeriod: 0.41, obliquity: 3.13, W0: 284.95, Wd: 870.5366420, poleLon: 268.06, texOffset: 180.0 },
             Saturn: { order: 6, a: 9.5826, e: 0.0565, i: 2.48, L: 49.94, w: 92.43, node: 113.71, n: 0.0334442, period: 29.447498, size: 1.4,
-                rotPeriod: 0.45, obliquity: 26.73, W0: 38.90, Wd: 810.7939024, poleLon: 40.59, texOffset: 0.0 },
+                rotPeriod: 0.45, obliquity: 26.73, W0: 38.90, Wd: 810.7939024, poleLon: 40.59, texOffset: 180.0 },
             Uranus: { order: 7, a: 19.201, e: 0.0463, i: 0.77, L: 313.23, w: 170.96, node: 74.22, n: 0.0117258, period: 84.016846, size: 1.1,
-                rotPeriod: -0.72, obliquity: 97.77, W0: 203.81, Wd: -501.1600928, poleLon: 257.31, texOffset: 0.0 },
+                rotPeriod: -0.72, obliquity: 97.77, W0: 203.81, Wd: -501.1600928, poleLon: 257.31, texOffset: 180.0 },
             Neptune: { order: 8, a: 30.047, e: 0.0085, i: 1.76, L: -55.12, w: 44.97, node: 131.72, n: 0.0059810, period: 164.79132, size: 1.05,
-                rotPeriod: 0.67, obliquity: 28.32, W0: 253.18, Wd: 536.3128492, poleLon: 299.36, texOffset: 0.0 },
+                rotPeriod: 0.67, obliquity: 28.32, W0: 253.18, Wd: 536.3128492, poleLon: 299.36, texOffset: 180.0 },
             Pluto: { order: 9, a: 39.482, e: 0.2488, i: 17.16, L: 238.92, w: 224.06, node: 110.30, n: 0.0039640, period: 247.92065, size: 0.25,
-                rotPeriod: -6.39, obliquity: 122.53, W0: 302.695, Wd: -56.3623195, poleLon: 227.34, texOffset: 0.0 }
+                rotPeriod: -6.39, obliquity: 122.53, W0: 302.695, Wd: -56.3623195, poleLon: 227.34, texOffset: 180.0 }
         };
 
         // ============================================================
