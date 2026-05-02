@@ -13,11 +13,13 @@ console.log('Sub-Agent 1D — Galilean longitudes at J2000 (astronomia.jupitermo
 //   Ganymede: (120.55883 +  50.317609207  × 8544.5) mod 360
 //   Callisto: ( 84.44459 +  21.571071177  × 8544.5) mod 360
 // l_i is the planetocentric scene-ecliptic longitude (no extra offset).
+// Includes ~5° shift from light-time retardation at J2000 (Earth-Jupiter
+// distance ~ 4.97 AU → τ ≈ 0.029 d × Lieske mean motion).
 const refs = [
-    { name: 'Io',       expected:  17.46 },
-    { name: 'Europa',   expected: 212.07 },
-    { name: 'Ganymede', expected: 219.37 },
-    { name: 'Callisto', expected:  78.46 }
+    { name: 'Io',       expected:  12.03 },
+    { name: 'Europa',   expected: 209.36 },
+    { name: 'Ganymede', expected: 218.03 },
+    { name: 'Callisto', expected:  77.89 }
 ];
 
 for (const r of refs) {

@@ -34,9 +34,9 @@ const charon = { name: 'Charon', host: 'Pluto', dist: 1.8, L0: 282.0, p: 6.38723
 const cp = computeMoonPosition(charon, 0);
 assertNear('Charon radius', Math.hypot(cp.x, cp.y, cp.z), 1.8, 1e-9);
 const charonLon = (Math.atan2(cp.z, cp.x) * 180 / Math.PI + 360) % 360;
-// Charon J2000 mean longitude per IAU SPICE PCK ≈ 88.7° (much different
-// from the 282.0 stub previously used).
-assertNear('Charon planetocentric longitude (deg)', charonLon, 88.7, 1.0);
+// Charon J2000 mean longitude per IAU SPICE PCK = 88.7°, shifted by Pluto-Earth
+// light-time τ ≈ 0.183 d × 56.36°/day ≈ 10.3° → expected ≈ 78.6°.
+assertNear('Charon planetocentric longitude (deg)', charonLon, 78.59, 1.0);
 
 console.log(`
 Outer-system status:

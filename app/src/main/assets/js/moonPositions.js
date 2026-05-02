@@ -33,14 +33,41 @@ import * as plutoMod   from './lib/astronomia/pluto.js';
 import { phobos, deimos } from './data/martianMoons.js';
 import { Planet } from './lib/astronomia/planetposition.js';
 import vsop87Bearth   from './lib/astronomia/data/vsop87Bearth.js';
+import vsop87Bmars    from './lib/astronomia/data/vsop87Bmars.js';
+import vsop87Bjupiter from './lib/astronomia/data/vsop87Bjupiter.js';
+import vsop87Bsaturn  from './lib/astronomia/data/vsop87Bsaturn.js';
 import vsop87Buranus  from './lib/astronomia/data/vsop87Buranus.js';
 
 // Light-time constant: τ_days = LIGHT_TIME_DAYS_PER_AU · |distance_AU|.
 // Source: Meeus 'Astronomical Algorithms' eq. 33.3 (p.224), via
 // astronomia/base.js:65: lightTime(dist) = 0.0057755183 · dist.
 const LIGHT_TIME_DAYS_PER_AU = 0.0057755183;
-const _earthVSOP  = new Planet(vsop87Bearth);
-const _uranusVSOP = new Planet(vsop87Buranus);
+const _earthVSOP   = new Planet(vsop87Bearth);
+const _marsVSOP    = new Planet(vsop87Bmars);
+const _jupiterVSOP = new Planet(vsop87Bjupiter);
+const _saturnVSOP  = new Planet(vsop87Bsaturn);
+const _uranusVSOP  = new Planet(vsop87Buranus);
+
+/**
+ * Compute the light-time τ in days from a host planet to Earth at jde.
+ * Uses VSOP87B heliocentric positions for both bodies; same formula
+ * astronomia.jupitermoons.e5 / saturnmoons.positions use internally.
+ *
+ * @param {number} jde
+ * @param {Planet} hostVSOP — astronomia Planet instance for the host
+ * @returns {number} τ in days
+ */
+function lightTimeDays(jde, hostVSOP) {
+    const e = _earthVSOP.position2000(jde);
+    const h = hostVSOP.position2000(jde);
+    const ex = e.range * Math.cos(e.lat) * Math.cos(e.lon);
+    const ey = e.range * Math.cos(e.lat) * Math.sin(e.lon);
+    const ez = e.range * Math.sin(e.lat);
+    const hx = h.range * Math.cos(h.lat) * Math.cos(h.lon);
+    const hy = h.range * Math.cos(h.lat) * Math.sin(h.lon);
+    const hz = h.range * Math.sin(h.lat);
+    return LIGHT_TIME_DAYS_PER_AU * Math.hypot(hx - ex, hy - ey, hz - ez);
+}
 
 const J2000_JD = 2451545.0;
 const D2R      = Math.PI / 180.0;
@@ -85,7 +112,11 @@ const MARS_ELEMENTS = { Phobos: phobos, Deimos: deimos };
 export function marsMoon(mc, jde) {
     const el = MARS_ELEMENTS[mc.name];
     if (!el) return { x: 0, y: 0, z: 0 };
-    const d  = jde - J2000_JD;
+    // Light-time retardation to Earth so the moon position matches what
+    // an Earth observer (Stellarium) sees. Same formula astronomia uses
+    // for Galilean/Saturn moons.
+    const tau = lightTimeDays(jde, _marsVSOP);
+    const d  = (jde - tau) - J2000_JD;
     const yr = d / 365.25;
 
     const node = el.longAscNodeDeg   + el.nodePrecessionDegPerYear * yr;
@@ -187,7 +218,10 @@ export function galileanMoon(mc, jde) {
     const idx = GAL_INDEX[mc.name];
     if (idx == null) return { x: 0, y: 0, z: 0 };
     const k = GAL_E5[idx];
-    const t = jde - JUPITER_LIESKE_EPOCH;
+    // Light-time retardation: astronomia.jupitermoons.e5 lines 67-68
+    // apply 'dd = d - τ' before evaluating l_i. Same here.
+    const tau = lightTimeDays(jde, _jupiterVSOP);
+    const t = (jde - tau) - JUPITER_LIESKE_EPOCH;
     const lDeg = ((k.L0 + k.n * t) % 360 + 360) % 360;
     const sceneLonRad = lDeg * D2R;
     return {
@@ -252,7 +286,11 @@ const SAT_NODE_DEG      = 168.8112;    // Saturn equator's ascending node on ecl
 export function saturnMoon(mc, jde) {
     const fn = SAT_METHOD[mc.name];
     if (!fn) return { x: 0, y: 0, z: 0 };
-    const q = new SatQs(jde);
+    // Light-time retardation: astronomia.saturnmoons.positions iterates
+    // f() with τ = base.lightTime(Δ). Apply same here using a single-pass
+    // approximation (sufficient at our visual precision).
+    const tau = lightTimeDays(jde, _saturnVSOP);
+    const q = new SatQs(jde - tau);
     const r4 = q[fn]();
 
     const u = r4.λ - r4.Ω;
@@ -453,24 +491,8 @@ export function uranusMoon(mc, jde) {
     const idx = GUST86_INDEX[mc.name];
     if (idx == null) return { x: 0, y: 0, z: 0 };
 
-    // Light-time retardation: when comparing to Earth-apparent ephemerides
-    // (Stellarium), positions must be evaluated at jde - τ where τ is the
-    // light-travel time from Uranus to Earth. astronomia/jupitermoons.e5
-    // applies the same correction (lines 67-68 of vendored jupitermoons.js).
-    //
-    // Uranus geocentric distance via VSOP87B Earth+Uranus heliocentric, then
-    // |Uranus - Earth|. Constants from astronomia.
-    const eP = _earthVSOP.position2000(jde);
-    const uP = _uranusVSOP.position2000(jde);
-    const ex =  eP.range * Math.cos(eP.lat) * Math.cos(eP.lon);
-    const ey =  eP.range * Math.cos(eP.lat) * Math.sin(eP.lon);
-    const ez =  eP.range * Math.sin(eP.lat);
-    const ux =  uP.range * Math.cos(uP.lat) * Math.cos(uP.lon);
-    const uy =  uP.range * Math.cos(uP.lat) * Math.sin(uP.lon);
-    const uz =  uP.range * Math.sin(uP.lat);
-    const dist = Math.hypot(ux - ex, uy - ey, uz - ez);   // AU
-    const tau  = LIGHT_TIME_DAYS_PER_AU * dist;            // days
-
+    // Light-time retardation to Earth so positions match Stellarium.
+    const tau = lightTimeDays(jde, _uranusVSOP);
     const t = (jde - tau) - GUST86_EPOCH_JD;
 
     // Base mean longitudes for all 5 moons (used in perturbation arguments).
@@ -547,17 +569,34 @@ const CHARON_ELEMENTS = {
     nDegPerDay:    360.0 / 6.3872273
 };
 
+/** Light-time τ (days) from Pluto to Earth. astronomia.pluto.heliocentric
+ *  returns ecliptic spherical (lon, lat, range AU). */
+function _plutoLightTime(jde) {
+    const e = _earthVSOP.position2000(jde);
+    const p = plutoMod.heliocentric(jde);
+    const ex = e.range * Math.cos(e.lat) * Math.cos(e.lon);
+    const ey = e.range * Math.cos(e.lat) * Math.sin(e.lon);
+    const ez = e.range * Math.sin(e.lat);
+    const px = p.range * Math.cos(p.lat) * Math.cos(p.lon);
+    const py = p.range * Math.cos(p.lat) * Math.sin(p.lon);
+    const pz = p.range * Math.sin(p.lat);
+    return LIGHT_TIME_DAYS_PER_AU * Math.hypot(px - ex, py - ey, pz - ez);
+}
+
 export function plutoMoon(mc, jde) {
+    // Light-time retardation from Pluto to Earth (~0.19 days).
+    const tau = _plutoLightTime(jde);
+    const jdeR = jde - tau;
     if (mc.name !== 'Charon') {
         // Styx/Nix/Kerberos/Hydra: reasonable circular fallback at correct
         // J2000 mean longitude (these are tiny and lack public ephemerides).
-        const d = jde - J2000_JD;
+        const d = jdeR - J2000_JD;
         const period = mc.p || 1;
         const L = ((mc.L0 + 360.0 / period * d) % 360 + 360) % 360;
         const Lr = L * D2R;
         return { x: mc.dist * Math.cos(Lr), y: 0, z: mc.dist * Math.sin(Lr) };
     }
-    const d = jde - J2000_JD;
+    const d = jdeR - J2000_JD;
     const L = ((CHARON_ELEMENTS.L0Deg + CHARON_ELEMENTS.nDegPerDay * d) % 360 + 360) % 360;
     const Lr = L * D2R;
     return { x: mc.dist * Math.cos(Lr), y: 0, z: mc.dist * Math.sin(Lr) };
