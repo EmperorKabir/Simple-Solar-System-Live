@@ -4,19 +4,20 @@ import { assertNear } from './audit_helpers.mjs';
 
 console.log('Sub-Agent 1D — Galilean longitudes at J2000 (astronomia.jupitermoons)');
 
-// Reference: Meeus Ch.44 low-precision Lieske longitudes at J2000.
-// Constants from astronomia.jupitermoons.positions (Context7-verified):
-//   u(jde) = L0 + n·(jde - J2000),  L0 in degrees
-//   Io:       163.8069 + 203.4058646·d
-//   Europa:   358.414  + 101.2916335·d
-//   Ganymede:   5.7176 +  50.234518·d
-//   Callisto: 224.8092 +  21.48798·d
-// At d=0 (J2000) the longitudes equal L0 modulo 360.
+// Reference: Meeus Ch.44 high-precision Lieske E5 mean longitudes at J2000.
+// Constants from astronomia/src/jupitermoons.js E5 function:
+//   l(jde) = L0 + n·(jde - 2443000.5)   (Lieske 1976 epoch)
+// At J2000 (jde - 2443000.5 = 8544.5):
+//   Io:       (106.07719 + 203.48895579   × 8544.5) mod 360
+//   Europa:   (175.73161 + 101.374724735  × 8544.5) mod 360
+//   Ganymede: (120.55883 +  50.317609207  × 8544.5) mod 360
+//   Callisto: ( 84.44459 +  21.571071177  × 8544.5) mod 360
+// l_i is the planetocentric scene-ecliptic longitude (no extra offset).
 const refs = [
-    { name: 'Io',       expected: 163.8069 },
-    { name: 'Europa',   expected: 358.414  },
-    { name: 'Ganymede', expected:   5.7176 },
-    { name: 'Callisto', expected: 224.8092 }
+    { name: 'Io',       expected:  17.46 },
+    { name: 'Europa',   expected: 212.07 },
+    { name: 'Ganymede', expected: 219.37 },
+    { name: 'Callisto', expected:  78.46 }
 ];
 
 for (const r of refs) {

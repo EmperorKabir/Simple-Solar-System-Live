@@ -126,41 +126,65 @@ export function marsMoon(mc, jde) {
 const GAL_INDEX = { Io: 0, Europa: 1, Ganymede: 2, Callisto: 3 };
 
 /**
- * Galilean moon planetocentric position in Jupiter equatorial frame.
+ * Galilean moon planetocentric position in scene-local frame.
  *
- * Uses Meeus Ch.44 Lieske low-precision orbital-longitude formulas — the
- * SAME constants astronomia.jupitermoons.positions uses internally
- * (lines 69-72 of the vendored jupitermoons.js), but skips the
- * Earth-sky-plane projection so we recover frame-independent
- * planetocentric XZ. Constants Context7-verified.
+ * Uses Meeus Ch.44 high-precision Lieske E5 MEAN longitudes — verbatim
+ * constants from astronomia/src/jupitermoons.js E5 function (lines 146-149),
+ * Context7-verified.  These are TRUE planetocentric mean longitudes in
+ * Jupiter's equatorial plane, measured from the ascending node of
+ * Jupiter's equator on Earth's equator at the Lieske 1976 epoch.
  *
- *   d  = jde - 2451545.0           (J2000 day count, per astronomia)
- *   u1 = 163.8069° + 203.4058646°·d   (Io)
- *   u2 = 358.414°  + 101.2916335°·d  (Europa)
- *   u3 =   5.7176° +  50.234518°·d   (Ganymede)
- *   u4 = 224.8092° +  21.48798°·d    (Callisto)
+ *   t  = jde - 2443000.5                (Lieske 1976 epoch)
+ *   l1 = 106.07719° + 203.48895579°·t   (Io)
+ *   l2 = 175.73161° + 101.374724735°·t  (Europa)
+ *   l3 = 120.55883° +  50.317609207°·t  (Ganymede)
+ *   l4 =  84.44459° +  21.571071177°·t  (Callisto)
  *
- * The small (ψ - B) solar perturbation is omitted (≤0.4°).
+ * Frame mapping to scene-ecliptic:
+ *   The reference direction l=0 lies at right-ascension ≈ 358° (ascending
+ *   node of Jupiter's equator on Earth's equator, derived from IAU 2015
+ *   Jupiter pole RA=268.057° via RA_node = RA_pole + 90°). Converting that
+ *   equatorial point to ecliptic gives ecliptic longitude ≈ 358° as well
+ *   (declination 0 + obliquity rotation only shifts longitude by ~1.8°).
+ *   So l_i in degrees IS our scene-ecliptic longitude to within ~2°,
+ *   no offset rotation is needed.  This was empirically verified against
+ *   astronomia.jupitermoons.e5 sky-plane positions: Io slightly west,
+ *   Europa+Ganymede east, Callisto far west — matching Stellarium.
+ *
+ * Final scene-local position (Jupiter pivot has no tilt applied for
+ * Galilean moons since they attach to planets[host], not groupPivot):
+ *   x =  mc.dist · cos(l_i)
+ *   z =  mc.dist · sin(l_i)
+ *   y = 0   (Galilean inclinations to Jupiter equator are <0.5°)
+ *
+ * E5 perturbations Σ1..Σ4 are NOT added here; amplitude ≤0.5°, negligible.
  *
  * @param {object} mc — moonSystemConfig entry with mc.name and mc.dist.
  * @param {number} jde — Julian ephemeris day.
- * @returns {{x:number,y:number,z:number}} planetocentric Jupiter-equatorial,
- *   magnitude == mc.dist.
+ * @returns {{x:number,y:number,z:number}} scene-local position relative to
+ *   Jupiter pivot, magnitude == mc.dist.
  */
-const GAL_LIESKE = [
-    { L0: 163.8069, n: 203.4058646  },  // Io
-    { L0: 358.414,  n: 101.2916335 },  // Europa
-    { L0:   5.7176, n:  50.234518  },  // Ganymede
-    { L0: 224.8092, n:  21.48798   }   // Callisto
+const GAL_E5 = [
+    { L0: 106.07719, n: 203.48895579   },  // Io
+    { L0: 175.73161, n: 101.374724735  },  // Europa
+    { L0: 120.55883, n:  50.317609207  },  // Ganymede
+    { L0:  84.44459, n:  21.571071177  }   // Callisto
 ];
+
+const JUPITER_LIESKE_EPOCH = 2443000.5;
 
 export function galileanMoon(mc, jde) {
     const idx = GAL_INDEX[mc.name];
     if (idx == null) return { x: 0, y: 0, z: 0 };
-    const k = GAL_LIESKE[idx];
-    const d = jde - J2000_JD;
-    const u = (k.L0 + k.n * d) * D2R;
-    return { x: mc.dist * Math.cos(u), y: 0, z: mc.dist * Math.sin(u) };
+    const k = GAL_E5[idx];
+    const t = jde - JUPITER_LIESKE_EPOCH;
+    const lDeg = ((k.L0 + k.n * t) % 360 + 360) % 360;
+    const sceneLonRad = lDeg * D2R;
+    return {
+        x: mc.dist * Math.cos(sceneLonRad),
+        y: 0,
+        z: mc.dist * Math.sin(sceneLonRad)
+    };
 }
 
 
