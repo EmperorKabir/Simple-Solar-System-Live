@@ -910,18 +910,20 @@
                 if (earthPivot) {
                     earthPivot.add(mMesh);
                 }
-            } else if (mc.galilean) {
-                // Galilean moons: Lieske longitudes are ECLIPTIC longitudes (Sun-centred,
-                // from vernal equinox). Must attach to the un-tilted orbital pivot
-                // (planets['Jupiter']), NOT to the obliquity-tilted groupPivot.
-                // Coordinate mapping same as Earth Moon: (cos L, 0, -sin L).
+            } else if (mc.galilean || mc.host === "Saturn") {
+                // Galilean and Saturn moons: moonPositions.js returns coords already
+                // in scene-ecliptic frame (Galilean: Lieske l_i directly = scene
+                // longitude; Saturn: full Meeus Ch.46 reduction including obliquity
+                // and ascending-node rotations). Attach to the un-tilted orbital
+                // pivot so the groupPivot's tilt is NOT double-applied.
                 if (planets[mc.host]) {
                     planets[mc.host].add(mMesh);
                 } else {
                     scene.add(mMesh);
                 }
             } else {
-                // All other moons: orbit in their host's equatorial plane (inside groupPivot/tilt group)
+                // Mars, Uranus, Neptune, Pluto moons: orbit inside the host's
+                // tilted groupPivot (their evaluators return host-equator coords).
                 const hostPlanet = planetsData[mc.host];
                 if (hostPlanet && hostPlanet.bodyMesh) {
                     hostPlanet.bodyMesh.parent.add(mMesh);

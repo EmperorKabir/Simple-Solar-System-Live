@@ -204,25 +204,49 @@ const SAT_METHOD = {
 };
 
 /**
- * Saturn-moon planetocentric position in Saturn's equatorial frame.
- * Uses astronomia's Qs class to recover (λ, r, γ, Ω) for each moon, then
- * places it in Saturn-equatorial Cartesian via Meeus Ch.46 lines:
- *   u = λ - Ω,  w = Ω - 168.8112°
- *   X = r (cos u cos w - sin u cos γ sin w)
- *   Y = r (sin u cos w cos γ + cos u sin w)
- *   Z = r sin u sin γ
+ * Saturn-moon planetocentric position in scene-ecliptic frame.
  *
- * The (X,Y,Z) here are in Saturn-mean-equator-of-1950 — close enough to
- * J2000 ecliptic for visual rendering (~0.7° precession over 50 yr).
- * Scaled to mc.dist preserving direction.
+ * Mirrors astronomia.saturnmoons.positions reduction at lines 100-123 of
+ * the vendored saturnmoons.js (Context7-verified):
+ *   1. Compute (X, Y, Z) from per-moon orbital elements (Qs.{moon}() →
+ *      r4 = {λ, r, γ, Ω}) via Meeus Ch.46 formulas 46.D-G:
+ *        u = λ - Ω,  w = Ω - 168.8112°
+ *        X = r (cos u cos w - sin u cos γ sin w)
+ *        Y = r (sin u cos w cos γ + cu sin w)
+ *        Z = r sin u sin γ
+ *   2. Rotate by Saturn's obliquity 28.0817° around X-axis to take
+ *      Saturn-equator-of-1950 → ecliptic-of-1950 (line 119 of source):
+ *        a = X
+ *        b = c1·Y - s1·Z
+ *        c = s1·Y + c1·Z          (c1=cos 28.0817°, s1=sin 28.0817°)
+ *   3. Rotate by 168.8112° around Z to align with ecliptic vernal
+ *      equinox of 1950 (line 121 of source):
+ *        a' = c2·a - s2·b
+ *        b' = s2·a + c2·b          (c2=cos 168.8112°, s2=sin 168.8112°)
+ *      → (a', b', c) is now in ecliptic-of-1950 frame.
+ *
+ * Frame remap to scene (scene_x = ecl_x, scene_y = ecl_z, scene_z = -ecl_y):
+ *   scene = (a', c, -b')
+ *
+ * Scaled to mc.dist preserving direction. (B1950 → J2000 precession of
+ * ~0.7° over 50 yr is ignored for visual rendering.)
+ *
+ * IMPORTANT: callers must attach Saturn moons to the un-tilted
+ * planets[host] pivot (NOT the obliquity-tilted groupPivot), since the
+ * c1/s1 rotation here already brings the result into ecliptic frame —
+ * applying the pivot's tilt again would double-rotate.
  */
+const SAT_OBLIQUITY_DEG = 28.0817;     // Saturn equator → ecliptic-of-1950
+const SAT_NODE_DEG      = 168.8112;    // Saturn equator's ascending node on ecliptic-1950
+
 export function saturnMoon(mc, jde) {
     const fn = SAT_METHOD[mc.name];
     if (!fn) return { x: 0, y: 0, z: 0 };
     const q = new SatQs(jde);
     const r4 = q[fn]();
+
     const u = r4.λ - r4.Ω;
-    const w = r4.Ω - 168.8112 * D2R;
+    const w = r4.Ω - SAT_NODE_DEG * D2R;
     const cu = Math.cos(u), su = Math.sin(u);
     const cw = Math.cos(w), sw = Math.sin(w);
     const cg = Math.cos(r4.γ), sg = Math.sin(r4.γ);
@@ -231,11 +255,26 @@ export function saturnMoon(mc, jde) {
     const Y = r4.r * (su * cw * cg + cu * sw);
     const Z = r4.r * su * sg;
 
-    const len = Math.hypot(X, Y, Z);
+    // Step 2: Saturn obliquity rotation (X-axis), → ecliptic-of-1950.
+    const c1 = Math.cos(SAT_OBLIQUITY_DEG * D2R);
+    const s1 = Math.sin(SAT_OBLIQUITY_DEG * D2R);
+    let a = X;
+    let b = c1 * Y - s1 * Z;
+    const c = s1 * Y + c1 * Z;
+
+    // Step 3: rotate to vernal equinox of 1950.
+    const c2 = Math.cos(SAT_NODE_DEG * D2R);
+    const s2 = Math.sin(SAT_NODE_DEG * D2R);
+    const a0 = c2 * a - s2 * b;
+    b        = s2 * a + c2 * b;
+    a        = a0;
+
+    // (a, b, c) now in ecliptic-of-1950. Scene-frame remap:
+    //   scene_x = ecl_x = a;  scene_y = ecl_z = c;  scene_z = -ecl_y = -b
+    const len = Math.hypot(a, b, c);
     if (len < 1e-12) return { x: 0, y: 0, z: 0 };
     const k = mc.dist / len;
-    // Saturn-equatorial-of-1950 (X, Y, Z) → scene (x, y, z) with Z (north) → y.
-    return { x: X * k, y: Z * k, z: Y * k };
+    return { x: a * k, y: c * k, z: -b * k };
 }
 
 
