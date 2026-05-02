@@ -6,4 +6,5 @@ app/build/
 .kotlin/
 *.apk
 local.properties
-.claude/settings.local.json
+.claude/settings.local.jsontools/astronomia_src/
+tools/astronomia-*.tgz
