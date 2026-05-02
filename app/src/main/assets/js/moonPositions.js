@@ -281,134 +281,82 @@ export function saturnMoon(mc, jde) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Uranian moons  (Miranda, Ariel, Umbriel, Titania, Oberon)
 //
-// astronomia does not vendor a Uranian-moon theory (no GUST86). Use simple
-// Kepler propagation in Uranus's equatorial frame with mean elements from
-// JPL Horizons / IAU 2015, then transform to scene-ecliptic via the IAU
-// 2015 Uranus pole orientation (Archinal et al. 2018, "Report of the IAU
-// Working Group on Cartographic Coordinates and Rotational Elements: 2015",
-// Celestial Mechanics and Dynamical Astronomy 130:22):
+// Constants verbatim from Stellarium's GUST86 implementation
+// (src/core/planetsephems/gust86.c — the canonical Laskar & Jacobson 1987
+// Uranian satellite ephemeris). Originally extracted by sub-agent 1E and
+// recovered from git history (file OuterSystemMoonData.kt @ d33ca70~1).
 //
-//   Uranus pole: α₀ = 257.311°, δ₀ = -15.175°
+//   Mean longitude:  λ_i(t) = PHN[i] + FQN[i] * t      (radians)
+//   t = JD - GUST86_EPOCH = JD - 2444239.5  (1980-01-01.0 TDB)
 //
-// Frame transformation Uranus-equatorial → J2000 ecliptic:
-//   1. Build pole rotation M (planet equatorial → ICRF) using α₀, δ₀.
-//   2. Apply ICRF → ecliptic obliquity rotation R_x(-ε).
-// The rotation matrix is constant in time (epoch J2000 ignoring precession),
-// so we precompute it once below.
+// Frame: GUST86 uranicentric (Uranus's equatorial plane, equinox-of-1980 X
+// axis). Position in GUST86 frame for a quasi-circular orbit is taken as
+// (cos λ, sin λ, 0) — eccentricities for these moons are <0.005, neglected
+// for visual purposes (the user's complaint is about ORIENTATION).
+//
+// To get scene-ecliptic, multiply by GUST86_TO_VSOP87, the canonical 3x3
+// matrix from Stellarium that maps GUST86 uranicentric → VSOP87 (J2000
+// ecliptic dynamical equinox).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const URANUS_POLE_RA  = 257.311 * D2R;
-const URANUS_POLE_DEC = -15.175 * D2R;
-const ECL_OBLIQ       =  23.4392911 * D2R;
+const GUST86_EPOCH_JD = 2444239.5;
 
-/** Compose Uranus-equator → J2000-ecliptic rotation matrix (3x3, row-major). */
-const URANUS_EQ_TO_ECL = (() => {
-    const a = URANUS_POLE_RA, d = URANUS_POLE_DEC, e = ECL_OBLIQ;
-    const ca = Math.cos(a), sa = Math.sin(a);
-    const cd = Math.cos(d), sd = Math.sin(d);
-    // Planet equatorial → ICRF (J2000 equatorial)
-    //   X_planet = (-sin α₀, cos α₀, 0)
-    //   Y_planet = (-sin δ₀ cos α₀, -sin δ₀ sin α₀, cos δ₀)
-    //   Z_planet = ( cos δ₀ cos α₀,  cos δ₀ sin α₀, sin δ₀)
-    const M = [
-        [-sa, -sd * ca,  cd * ca],
-        [ ca, -sd * sa,  cd * sa],
-        [  0,       cd,       sd]
-    ];
-    // ICRF → ecliptic-of-J2000 via R_x(-ε)
-    const ce = Math.cos(e), se = Math.sin(e);
-    const R = [
-        [1, 0,   0 ],
-        [0, ce,  se],
-        [0,-se,  ce]
-    ];
-    // Combined = R · M
-    const out = [[0,0,0],[0,0,0],[0,0,0]];
-    for (let i = 0; i < 3; i++)
-        for (let j = 0; j < 3; j++)
-            for (let k = 0; k < 3; k++)
-                out[i][j] += R[i][k] * M[k][j];
-    return out;
-})();
+// PHN — mean-motion phases at GUST86_EPOCH (rad). Stellarium gust86.c.
+const GUST86_PHN = [-0.238051, 3.098046, 2.285402, 0.856359, -0.915592];
+// FQN — mean motions (rad/day). Stellarium gust86.c.
+const GUST86_FQN = [4.44519055, 2.492952519, 1.516148111, 0.721718509, 0.46669212];
 
-// Mean orbital elements at J2000 for the five major Uranian moons,
-// referenced to Uranus's equatorial plane. Sources: JPL Horizons mean
-// elements / NASA Planetary Fact Sheet (semi-major axis km), Laskar &
-// Jacobson 1987 (mean motions), IAU 2015 Uranian system. L0 values are
-// J2000 mean longitudes from JPL Horizons.
-const URANIAN_MOONS = {
-    Miranda:  { eccentricity: 0.0013, inclinationDeg: 4.232, longAscNodeDeg:   0.0,
-                argPericenterDeg:  68.312, L0Deg:  35.3, nDegPerDay: 360.0 / 1.413479 },
-    Ariel:    { eccentricity: 0.0012, inclinationDeg: 0.260, longAscNodeDeg:   0.0,
-                argPericenterDeg: 115.349, L0Deg:  11.7, nDegPerDay: 360.0 / 2.520379 },
-    Umbriel:  { eccentricity: 0.0039, inclinationDeg: 0.205, longAscNodeDeg:   0.0,
-                argPericenterDeg:  84.709, L0Deg: 251.2, nDegPerDay: 360.0 / 4.144177 },
-    Titania:  { eccentricity: 0.0011, inclinationDeg: 0.340, longAscNodeDeg:   0.0,
-                argPericenterDeg: 284.400, L0Deg:  89.0, nDegPerDay: 360.0 / 8.705872 },
-    Oberon:   { eccentricity: 0.0014, inclinationDeg: 0.058, longAscNodeDeg:   0.0,
-                argPericenterDeg: 104.400, L0Deg: 286.0, nDegPerDay: 360.0 / 13.463239 }
-};
+// Index in the FQN/PHN arrays: 0=Miranda, 1=Ariel, 2=Umbriel, 3=Titania, 4=Oberon.
+const GUST86_INDEX = { Miranda: 0, Ariel: 1, Umbriel: 2, Titania: 3, Oberon: 4 };
+
+// GUST86 → VSOP87 rotation matrix (row-major), Stellarium gust86.c constant.
+// Maps uranicentric ecliptic-of-1980 → VSOP87 ecliptic-of-J2000.
+const GUST86_TO_VSOP87 = [
+    [ 9.753206632086812015e-01,  6.194425668001473004e-02,  2.119257251551559653e-01],
+    [-2.006444610981783542e-01, -1.519328516640849367e-01,  9.678110398294910731e-01],
+    [ 9.214881523275189928e-02, -9.864478281437795399e-01, -1.357544776485127136e-01]
+];
 
 /**
  * Uranian moon planetocentric position in scene-ecliptic frame.
  *
- * 1. Solve Kepler in Uranus equatorial frame (eccentricity, inclination,
- *    node, pericenter, mean anomaly).
- * 2. Apply URANUS_EQ_TO_ECL fixed rotation to get J2000 ecliptic coords.
- * 3. Map ecliptic → scene: (x_ecl, z_ecl, -y_ecl).
- * 4. Scale to mc.dist.
+ *   1. Mean longitude  λ = PHN[i] + FQN[i] * (jde - 2444239.5)
+ *   2. GUST86 uranicentric position = (cos λ, sin λ, 0) (circular approx)
+ *   3. Multiply by GUST86_TO_VSOP87 → VSOP87 ecliptic-of-J2000
+ *   4. Map ecliptic → scene: (x_ecl, z_ecl, -y_ecl)
+ *   5. Scale to mc.dist
  *
- * @param {object} mc — moonSystemConfig entry; mc.name selects elements.
+ * Constants are Context7-grade: verbatim from the canonical Stellarium
+ * gust86.c source (Laskar & Jacobson 1987 GUST86 theory). No LLM-derived
+ * orbital elements.
+ *
+ * @param {object} mc — moonSystemConfig entry with mc.name and mc.dist.
  * @param {number} jde — Julian ephemeris day.
  * @returns {{x:number,y:number,z:number}} scene-frame position relative to
  *   Uranus pivot, magnitude == mc.dist.
  */
 export function uranusMoon(mc, jde) {
-    const el = URANIAN_MOONS[mc.name];
-    if (!el) return { x: 0, y: 0, z: 0 };
-    const d = jde - J2000_JD;
+    const idx = GUST86_INDEX[mc.name];
+    if (idx == null) return { x: 0, y: 0, z: 0 };
+    const t = jde - GUST86_EPOCH_JD;
 
-    // Mean anomaly (deg, [0, 360))
-    const Mdeg = ((el.L0Deg - el.argPericenterDeg + el.nDegPerDay * d) % 360 + 360) % 360;
-    const Mr = Mdeg * D2R;
+    const lam = GUST86_PHN[idx] + GUST86_FQN[idx] * t;     // radians
+    const xU = Math.cos(lam);
+    const yU = Math.sin(lam);
+    const zU = 0;
 
-    // Newton-Raphson Kepler solve
-    let E = Mr;
-    for (let i = 0; i < 8; i++) {
-        E -= (E - el.eccentricity * Math.sin(E) - Mr) /
-             (1 - el.eccentricity * Math.cos(E));
-    }
-    const v = 2 * Math.atan(
-        Math.sqrt((1 + el.eccentricity) / (1 - el.eccentricity)) *
-        Math.tan(E / 2)
-    );
-    const xo = Math.cos(v);
-    const yo = Math.sin(v);
+    // Rotate GUST86 uranicentric → VSOP87 J2000 ecliptic
+    const M = GUST86_TO_VSOP87;
+    const xEcl = M[0][0] * xU + M[0][1] * yU + M[0][2] * zU;
+    const yEcl = M[1][0] * xU + M[1][1] * yU + M[1][2] * zU;
+    const zEcl = M[2][0] * xU + M[2][1] * yU + M[2][2] * zU;
 
-    const N = el.longAscNodeDeg   * D2R;
-    const w = el.argPericenterDeg * D2R;
-    const i = el.inclinationDeg   * D2R;
-    const cN = Math.cos(N), sN = Math.sin(N);
-    const cw = Math.cos(w), sw = Math.sin(w);
-    const ci = Math.cos(i), si = Math.sin(i);
-
-    // Position in Uranus equatorial frame
-    const xUe = (cN * cw - sN * sw * ci) * xo + (-cN * sw - sN * cw * ci) * yo;
-    const yUe = (sN * cw + cN * sw * ci) * xo + (-sN * sw + cN * cw * ci) * yo;
-    const zUe = (sw * si)               * xo + ( cw * si)               * yo;
-
-    // Rotate Uranus equatorial → J2000 ecliptic
-    const M = URANUS_EQ_TO_ECL;
-    const xEcl = M[0][0] * xUe + M[0][1] * yUe + M[0][2] * zUe;
-    const yEcl = M[1][0] * xUe + M[1][1] * yUe + M[1][2] * zUe;
-    const zEcl = M[2][0] * xUe + M[2][1] * yUe + M[2][2] * zUe;
-
-    // Scale to mc.dist
+    // Unit vector in ecliptic; scale to mc.dist preserving direction.
     const len = Math.hypot(xEcl, yEcl, zEcl);
     if (len < 1e-12) return { x: 0, y: 0, z: 0 };
     const k = mc.dist / len;
 
-    // Ecliptic → scene: scene_x = ecl_x, scene_y = ecl_z, scene_z = -ecl_y
+    // Ecliptic → scene: scene_x = ecl_x, scene_y = ecl_z, scene_z = -ecl_y.
     return { x: xEcl * k, y: zEcl * k, z: -yEcl * k };
 }
 
