@@ -511,6 +511,48 @@ function _galileanEcliptic(mc, d) {
 }
 
 /**
+ * Mars Moons — ESAPHO/ESADE Kepler propagation with secular precession.
+ *
+ * @param {object} mc — moon config; mc.elements = full Phobos/Deimos element set
+ * @param {number} d — days since J2000.0
+ * @returns {{x,y,z}} planetocentric, scaled to mc.dist, scene frame
+ */
+export function computeMarsMoonPosition(mc, d) {
+    const el = mc.elements;
+    if (!el) return { x: 0, y: 0, z: 0 };
+    const yr = d / 365.25;
+
+    const node = el.longAscNodeDeg   + el.nodePrecessionDegPerYear * yr;
+    const peri = el.argPericenterDeg + el.periPrecessionDegPerYear * yr;
+
+    const M_deg = el.meanAnomalyDeg + el.meanMotionDegPerDay * d;
+    const M_rad = ((M_deg % 360.0) + 360.0) % 360.0 * DEG2RAD;
+
+    const E = solveKepler(M_rad, el.eccentricity);
+    const v = trueAnomaly(E, el.eccentricity);
+
+    const xo = Math.cos(v);
+    const yo = Math.sin(v);
+
+    const N = node * DEG2RAD;
+    const w = peri * DEG2RAD;
+    const i = el.inclinationDeg * DEG2RAD;
+    const cN = Math.cos(N), sN = Math.sin(N);
+    const cw = Math.cos(w), sw = Math.sin(w);
+    const ci = Math.cos(i), si = Math.sin(i);
+
+    const xe = (cN * cw - sN * sw * ci) * xo + (-cN * sw - sN * cw * ci) * yo;
+    const ye = (sN * cw + cN * sw * ci) * xo + (-sN * sw + cN * cw * ci) * yo;
+    const ze = (sw * si)               * xo + ( cw * si)               * yo;
+
+    const len = Math.sqrt(xe*xe + ye*ye + ze*ze);
+    if (len < 1e-12) return { x: 0, y: 0, z: 0 };
+    const k = mc.dist / len;
+    // Map host-equatorial (x_eq, z_eq) → scene (x, z) with y_eq → y.
+    return { x: xe * k, y: ze * k, z: ye * k };
+}
+
+/**
  * Compute standard moon position in host's equatorial plane.
  *
  * @param {object} mc — moon config with L0, p (period in days), dist
@@ -546,6 +588,8 @@ export function computeMoonPosition(mc, d) {
         return computeEarthMoonPosition(mc, d);
     } else if (mc.galilean) {
         return computeGalileanMoonPosition(mc, d);
+    } else if (mc.marsMoon) {
+        return computeMarsMoonPosition(mc, d);
     } else {
         if (typeof mc.p !== 'number' || mc.p === 0) return { x: 0, y: 0, z: 0 };
         return computeStandardMoonPosition(mc, d);

@@ -137,6 +137,8 @@
         // ============================================================
         import { getCurrentJ2000Days } from './js/OrbitalTimeUtils.js';
         import { computePlanetPosition, computePlanetPositionVSOP87, VSOP87B, computeMoonPosition, computeBodyRotation, computeSunRotation } from './js/OrbitalEngine.js';
+        import { phobos as PHOBOS_ELEMENTS, deimos as DEIMOS_ELEMENTS } from './js/data/martianMoons.js';
+        const MARS_MOON_ELEMENTS = { phobos: PHOBOS_ELEMENTS, deimos: DEIMOS_ELEMENTS };
 
         // ============================================================
         // 1. Core WebGL Engine Setup
@@ -219,9 +221,10 @@
             { name: "Moon", host: "Earth", p: 27.32166, dist: 2.0, size: 0.27, irregular: false, texName: "Moon",
               L0: 218.32, nRate: 13.17639648, inclination: 5.145, node0: 125.04, nodeRate: -0.05295386,
               specialOrbit: "ecliptic" },
-            // Mars — Phobos 9376km, Deimos 23460km (ratio 2.50)
-            { name: "Phobos", host: "Mars", p: 0.31891, dist: 0.9, size: 0.05, irregular: true, texName: "Phobos", L0: 35.06 },
-            { name: "Deimos", host: "Mars", p: 1.26244, dist: 2.25, size: 0.04, irregular: true, texName: "Deimos", L0: 162.0 },
+            // Mars — Phobos 9376km, Deimos 23460km. ESAPHO/ESADE Kepler
+            // propagation via marsMoon flag; mc.elements wired below.
+            { name: "Phobos", host: "Mars", p: 0.31891, dist: 0.9, size: 0.05, irregular: true, texName: "Phobos", L0: 35.06,  marsMoon: true, elementsKey: "phobos" },
+            { name: "Deimos", host: "Mars", p: 1.26244, dist: 2.25, size: 0.04, irregular: true, texName: "Deimos", L0: 162.0, marsMoon: true, elementsKey: "deimos" },
             // Jupiter — Galilean moons (Lieske 1998 L0 at J2000)
             // SMA ratios: Io=1.00, Europa=1.59, Ganymede=2.54, Callisto=4.46
             { name: "Io", host: "Jupiter", p: 1.769138, dist: 2.5, size: 0.13, irregular: false, texName: "Io", L0: 106.07, galilean: true },
@@ -253,6 +256,14 @@
             { name: "Kerberos", host: "Pluto", p: 32.16756, dist: 5.31, size: 0.03, irregular: true, texName: "Kerberos", L0: 0.0 },
             { name: "Hydra", host: "Pluto", p: 38.20177, dist: 5.95, size: 0.04, irregular: true, texName: "Hydra", L0: 0.0 }
         ];
+
+        // Attach Phobos/Deimos full element sets to their moonSystemConfig entries
+        // so OrbitalEngine.computeMarsMoonPosition() can run a true Kepler propagation.
+        for (const mc of moonSystemConfig) {
+            if (mc.marsMoon && mc.elementsKey) {
+                mc.elements = MARS_MOON_ELEMENTS[mc.elementsKey];
+            }
+        }
 
         const rawPlanetsData = {
             Mercury: { order: 1, a: 0.3871, e: 0.2056, i: 7.00, L: 252.25, w: 77.45, node: 48.33, n: 4.0923344, period: 0.240846, size: 0.35,
