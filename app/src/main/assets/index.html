@@ -943,6 +943,7 @@
         let plutoEnabled = true;
         const plutoToggle = document.getElementById('pluto-toggle');
         plutoToggle.addEventListener('click', () => {
+            const wasAtResetView = (typeof isAtResetView === 'function') && isAtResetView();
             plutoEnabled = !plutoEnabled;
             if(planets["Pluto"]) planets["Pluto"].visible = plutoEnabled;
             if(ringLines["Pluto"]) ringLines["Pluto"].visible = plutoEnabled;
@@ -950,6 +951,10 @@
                 if (mc.config.host === "Pluto") mc.mesh.visible = plutoEnabled;
             }
             plutoToggle.innerText = plutoEnabled ? "Hide Pluto" : "Show Pluto";
+            // If the camera was sitting at the reset-view framing, re-fit so
+            // the visible-system fills the screen at the new size. Any other
+            // pan / zoom / selected-body state is left untouched.
+            if (wasAtResetView) calcResetView();
         });
 
         let viewMode = "GALAXY"; 
@@ -1239,6 +1244,7 @@
 
         // Shared function for calculating the correct galaxy zoom level
         // Dynamically adapts to screen resolution, size and aspect ratio
+        let lastResetCamDistance = 0;
         function calcResetView() {
             camera.fov = 45;
             camera.updateProjectionMatrix();
@@ -1247,7 +1253,7 @@
                 if(pData.visualDist > maxDist && pName !== "Pluto") maxDist = pData.visualDist;
             }
             if(plutoEnabled) maxDist = planetsData["Pluto"].visualDist;
-            const distRadius = maxDist * 1.1; 
+            const distRadius = maxDist * 1.1;
             const vFOV = (Math.PI / 180.0) * camera.fov;
             const hFOV = 2 * Math.atan(Math.tan(vFOV / 2) * camera.aspect);
             const activeFOV = (camera.aspect < 1.0) ? hFOV : vFOV;
@@ -1256,6 +1262,22 @@
             controls.target.set(0,0,0);
             viewMode = "GALAXY";
             targetPlanet = null;
+            lastResetCamDistance = requiredDist;
+        }
+
+        // True only when the camera is currently sitting at the framing produced
+        // by the most recent calcResetView() — i.e. the user hasn't panned,
+        // zoomed, or selected a body since reset. Used so toggling Pluto from
+        // the reset view re-fits the framing, while toggling at any other zoom
+        // level just flips visibility without disturbing the camera.
+        function isAtResetView() {
+            if (viewMode !== "GALAXY" || targetPlanet) return false;
+            const camDist = camera.position.length();
+            const targetOffset = controls.target.length();
+            // Tolerances: 1% of reset distance for camera radius, and 0.5 scene
+            // units for the orbit-controls target offset from origin.
+            return Math.abs(camDist - lastResetCamDistance) < lastResetCamDistance * 0.01
+                && targetOffset < 0.5;
         }
 
         // Set initial camera to the same dynamic zoom as reset view
