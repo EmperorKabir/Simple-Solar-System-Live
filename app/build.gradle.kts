@@ -8,11 +8,11 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.livesolar.solarsystem.hello"
+        applicationId = "com.livesolar.solarsystem"
         minSdk = 31
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
     }
 
     testOptions {
@@ -21,10 +21,30 @@ android {
         }
     }
 
+    // Release-signing config reads keystore details from the user's
+    // ~/.gradle/gradle.properties (NEVER committed). gradle-keystore-setup.ps1
+    // generates the keystore and prints the four lines you paste in there.
+    signingConfigs {
+        create("release") {
+            val keystorePath = (project.findProperty("RELEASE_STORE_FILE") as String?) ?: ""
+            if (keystorePath.isNotEmpty()) {
+                storeFile = file(keystorePath)
+                storePassword = project.findProperty("RELEASE_STORE_PASSWORD") as String?
+                keyAlias = project.findProperty("RELEASE_KEY_ALIAS") as String?
+                keyPassword = project.findProperty("RELEASE_KEY_PASSWORD") as String?
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Apply the release signing config only if the keystore property is set.
+            if ((project.findProperty("RELEASE_STORE_FILE") as String?)?.isNotEmpty() == true) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
