@@ -104,6 +104,109 @@
         .hidden-label {
             opacity: 0 !important;
         }
+
+        /* ── Time Override Panel (bottom-left) ───────────────────────── */
+        #time-panel {
+            position: absolute;
+            bottom: calc(var(--safe-bottom) + 12px);
+            left:   calc(var(--safe-left)   + 12px);
+            z-index: 30;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-width: min(360px, calc(100vw - 24px - var(--safe-left) - var(--safe-right)));
+            font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            color: white;
+        }
+        #time-display {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.2;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 6px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+            user-select: text;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #time-display .live-tag {
+            color: #6fff8a;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+        #time-display .override-tag {
+            color: #ffc36f;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+        #time-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .time-btn {
+            pointer-events: auto;
+            flex: 1 1 auto;
+            min-width: 44px;
+            padding: 6px 8px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: white;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            backdrop-filter: blur(6px);
+            text-align: center;
+        }
+        .time-btn:active { background: rgba(255, 255, 255, 0.28); }
+        #time-input-row {
+            display: flex;
+            gap: 4px;
+            align-items: stretch;
+        }
+        #time-picker {
+            flex: 1 1 auto;
+            min-width: 0;
+            padding: 5px 6px;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: white;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: inherit;
+            color-scheme: dark;
+        }
+        #time-live-btn {
+            flex: 0 0 auto;
+            padding: 5px 10px;
+            background: rgba(111, 255, 138, 0.18);
+            border: 1px solid rgba(111, 255, 138, 0.45);
+            color: #d6ffe1;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #time-live-btn:active { background: rgba(111, 255, 138, 0.32); }
+        @media (max-width: 360px) {
+            #time-display { font-size: 11px; padding: 5px 8px; }
+            .time-btn { font-size: 11px; padding: 5px 6px; min-width: 38px; }
+            #time-picker { font-size: 11px; }
+        }
+        @media (orientation: landscape) and (max-height: 480px) {
+            #time-panel { bottom: calc(var(--safe-bottom) + 6px); gap: 4px; }
+            #time-display { font-size: 11px; padding: 4px 8px; }
+            .time-btn { padding: 4px 6px; font-size: 11px; }
+        }
     </style>
     <script type="importmap">
       {
@@ -117,6 +220,22 @@
 <body>
     <div id="ui-container">
         <div id="hud-telemetry" style="display:none; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 5px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">ORBIT: -- DAYS<br>DAY: -- HOURS</div>
+    </div>
+
+    <div id="time-panel">
+        <div id="time-display"><span class="live-tag">LIVE</span><span id="time-text">—</span></div>
+        <div id="time-controls">
+            <button class="time-btn" data-tnudge="-1mo" title="-1 month">−1mo</button>
+            <button class="time-btn" data-tnudge="-1d"  title="-1 day">−1d</button>
+            <button class="time-btn" data-tnudge="-1h"  title="-1 hour">−1h</button>
+            <button class="time-btn" data-tnudge="+1h"  title="+1 hour">+1h</button>
+            <button class="time-btn" data-tnudge="+1d"  title="+1 day">+1d</button>
+            <button class="time-btn" data-tnudge="+1mo" title="+1 month">+1mo</button>
+        </div>
+        <div id="time-input-row">
+            <input id="time-picker" type="datetime-local" step="1" />
+            <button id="time-live-btn" title="Resume real-time">LIVE</button>
+        </div>
     </div>
 
     <div id="header-layer">
@@ -144,6 +263,11 @@
         // classes. No network calls — pure offline computation.
         // ============================================================
         import { getCurrentJ2000Days } from './js/OrbitalTimeUtils.js';
+        import {
+            setTimeOverride, clearTimeOverride, isLive,
+            getEffectiveDate, getEffectiveJ2000Days,
+            formatUT, formatForInput, parseFromInput, addUT
+        } from './js/TimeOverride.js';
         import { computePlanetPosition, computePlanetPositionVSOP87, VSOP87B, computeMoonPosition, computeBodyRotation, computeSunRotation } from './js/OrbitalEngine.js';
         import { phobos as PHOBOS_ELEMENTS, deimos as DEIMOS_ELEMENTS } from './js/data/martianMoons.js';
         const MARS_MOON_ELEMENTS = { phobos: PHOBOS_ELEMENTS, deimos: DEIMOS_ELEMENTS };
@@ -424,7 +548,7 @@
             // Tuned for a stylized but proportionally-correct visual scene
             
             const DIST_EXPONENT   = 0.55;   // distance compression (0.5 = sqrt-like)
-            const DIST_SCALE      = 8.0;    // base multiplier for orbital distances
+            const DIST_SCALE      = 12.0;   // base multiplier for orbital distances (1.5× spread for visual breathing room)
             const DIST_REF_AU     = 1.0;    // reference distance (Earth = 1 AU)
             
             const RADIUS_EXPONENT = 0.45;   // body radius compression
@@ -438,13 +562,13 @@
             //   Remaining moons scale by real SMA ratio from the innermost
             //   maxOuter  = cap to prevent distant moons from overflowing
             const MOON_DIST_CONFIG = {
-                Earth:   { baseInner: 2.0,  maxOuter: 3.0  },
-                Mars:    { baseInner: 0.9,  maxOuter: 2.5  },
-                Jupiter: { baseInner: 2.5,  maxOuter: 12.0 },
-                Saturn:  { baseInner: 3.5,  maxOuter: 16.0 },
-                Uranus:  { baseInner: 2.5,  maxOuter: 12.0 },
-                Neptune: { baseInner: 3.0,  maxOuter: 10.0 },
-                Pluto:   { baseInner: 1.8,  maxOuter: 6.0  }
+                Earth:   { baseInner: 2.40, maxOuter: 3.6  },   // 1.2× of 2.0/3.0
+                Mars:    { baseInner: 1.08, maxOuter: 3.0  },   // 1.2× of 0.9/2.5
+                Jupiter: { baseInner: 3.00, maxOuter: 14.4 },   // 1.2× of 2.5/12.0
+                Saturn:  { baseInner: 4.20, maxOuter: 33.6 },   // 1.2× of 3.5/28.0
+                Uranus:  { baseInner: 3.00, maxOuter: 14.4 },   // 1.2× of 2.5/12.0
+                Neptune: { baseInner: 3.60, maxOuter: 12.0 },   // 1.2× of 3.0/10.0
+                Pluto:   { baseInner: 2.16, maxOuter: 7.2  }    // 1.2× of 1.8/6.0
             };
             
             const MOON_RADIUS_EXPONENT = 0.40;  // stronger compression for tiny moons
@@ -466,66 +590,66 @@
             }
             
             /**
-             * Dual-Scale Moon Distance: Logarithmic compression.
-             * 
-             * Uses log(SMA_ratio) to map moon-planet distances into visual space.
-             * This provides magnified separation for tightly-packed inner moons
-             * (e.g. Phobos at 9376km vs Deimos at 23460km) while compressing
-             * the vast range of outer moons (e.g. Iapetus at 3.56M km).
-             * 
-             * The planet distance scale (power-law AU compression) is NOT altered.
-             * Only the moon-host visual offset uses this logarithmic mapping.
-             * 
-             * Formula: visualDist = baseInner + spread * log2(SMA / SMA_inner)
-             *          clamped to [baseInner, maxOuter]
-             * 
-             * log2 chosen over ln/log10 for intuitive doubling: a moon at 2×
-             * the innermost SMA gets +1 spread unit of visual distance.
+             * Option B Moon Distance Scaling.
+             *
+             * Goal: each moon system's INTERNAL relative spacing matches reality
+             * (the user's "if A is up-left of B and B is up-left of C, that
+             * arrangement should look right" requirement). Outliers (basically
+             * just Iapetus, 19× Mimas) get gracefully compressed only because
+             * a faithful linear scale would push them off-screen.
+             *
+             *   linear      = baseInner * (sma / sma_inner)
+             *   systemRatio = sma_outer / sma_inner
+             *
+             *   if systemRatio ≤ 10  → dist = linear  (Earth, Mars, Jupiter,
+             *                          Uranus, Neptune, Pluto: all qualify;
+             *                          inner clusters stay perfectly proportional)
+             *   else                  → dist = linear up to softCap (0.625 *
+             *                          maxOuter), then log-compress the tail
+             *                          so outliers fit under maxOuter (Saturn:
+             *                          Mimas-Rhea honest linear; Titan slightly
+             *                          compressed; Iapetus heavily compressed)
+             *
+             * Replaces the prior log2 normalisation, which squished Titan to
+             * 1.45× Rhea (real ratio 2.32×) and caused Titan/Rhea to visually
+             * swap order at certain orbital phases.
              */
             function computeMoonVisualDist(moonName, hostName) {
                 const config = MOON_DIST_CONFIG[hostName];
-                if (!config) return 2.0; // fallback
-                
+                if (!config) return 2.0;
+
                 const thisSma = REAL_MOON_SMA[moonName];
-                if (!thisSma) return config.baseInner; // unknown moon
-                
-                // Find innermost moon SMA for this host from moonSystemConfig
+                if (!thisSma) return config.baseInner;
+
                 let innerMostSma = Infinity;
+                let outerMostSma = 0;
                 for (const mc of moonSystemConfig) {
                     if (mc.host === hostName && REAL_MOON_SMA[mc.name]) {
-                        if (REAL_MOON_SMA[mc.name] < innerMostSma) {
-                            innerMostSma = REAL_MOON_SMA[mc.name];
-                        }
+                        const s = REAL_MOON_SMA[mc.name];
+                        if (s < innerMostSma) innerMostSma = s;
+                        if (s > outerMostSma) outerMostSma = s;
                     }
                 }
-                
                 if (innerMostSma === Infinity) return config.baseInner;
-                
-                // Logarithmic mapping: log2(ratio) distributes moons evenly
-                // across doublings of physical distance
-                const ratio = thisSma / innerMostSma;
-                const logRatio = Math.log2(Math.max(1, ratio));
-                
-                // Spread = available visual range above baseInner
-                const spread = (config.maxOuter - config.baseInner);
-                
-                // Find max log-ratio among this host's moons for normalization
-                let maxLogRatio = 0;
-                for (const mc of moonSystemConfig) {
-                    if (mc.host === hostName && REAL_MOON_SMA[mc.name]) {
-                        const r = REAL_MOON_SMA[mc.name] / innerMostSma;
-                        maxLogRatio = Math.max(maxLogRatio, Math.log2(Math.max(1, r)));
+
+                const linear = config.baseInner * (thisSma / innerMostSma);
+                const systemRatio = outerMostSma / innerMostSma;
+
+                let visualDist;
+                if (systemRatio <= 10.0) {
+                    visualDist = linear;
+                } else {
+                    const softCap = config.maxOuter * 0.625;
+                    if (linear <= softCap) {
+                        visualDist = linear;
+                    } else {
+                        const tail = Math.log2(1 + (linear - softCap) / softCap);
+                        const tailScale = (config.maxOuter - softCap) / Math.log2(6.0);
+                        visualDist = softCap + tail * tailScale;
                     }
                 }
-                
-                // Normalize log-ratio to [0, 1] then map to [baseInner, maxOuter]
-                const normalizedLog = maxLogRatio > 0 ? logRatio / maxLogRatio : 0;
-                let visualDist = config.baseInner + spread * normalizedLog;
-                
-                // Safety clamp
-                visualDist = Math.max(config.baseInner, Math.min(config.maxOuter, visualDist));
-                
-                return visualDist;
+
+                return Math.max(config.baseInner, Math.min(config.maxOuter, visualDist));
             }
             
             function computeMoonVisualRadius(realRadiusKm) {
@@ -707,8 +831,9 @@
         sun.add(createLabel("Sun", sunVisualRadius));
         planetMeshes.push(sun);
 
-        // Compute initial Julian date via offline OrbitalTimeUtils
-        const dInit = getCurrentJ2000Days();
+        // Compute initial Julian date via offline OrbitalTimeUtils.
+        // Honors any active simulation-time override (TimeOverride.js).
+        const dInit = getEffectiveJ2000Days();
 
         // Store references for Earth's special Moon handling
         let earthPivot = null;
@@ -910,27 +1035,23 @@
                 if (earthPivot) {
                     earthPivot.add(mMesh);
                 }
-            } else if (mc.galilean || mc.host === "Saturn" || mc.host === "Uranus") {
-                // Galilean, Saturn, and Uranian moons: moonPositions.js returns
-                // coords already in scene-ecliptic frame (Galilean: Lieske l_i
-                // direct; Saturn: full Meeus Ch.46 reduction including obliquity
-                // and ascending-node rotations; Uranian: IAU 2015 Uranus-pole
-                // rotation applied). Attach to the un-tilted orbital pivot so
-                // the groupPivot's tilt is NOT double-applied.
+            } else if (mc.galilean || mc.host === "Saturn" || mc.host === "Uranus"
+                       || mc.host === "Mars" || mc.host === "Neptune" || mc.host === "Pluto") {
+                // All these evaluators return scene-ecliptic-J2000 coords
+                // directly (Galilean: Lieske; Saturn: Meeus Ch.46; Uranian:
+                // GUST86+IAU pole; Mars / Neptune / Pluto: Horizons
+                // OSCULATING ELEMENTS in ecliptic-J2000). Attach to the
+                // un-tilted orbital pivot so the groupPivot's body-axis tilt
+                // is NOT double-applied to the moon orbital plane.
                 if (planets[mc.host]) {
                     planets[mc.host].add(mMesh);
                 } else {
                     scene.add(mMesh);
                 }
             } else {
-                // Mars, Neptune, Pluto moons: orbit inside the host's
-                // tilted groupPivot (their evaluators return host-equator coords).
-                const hostPlanet = planetsData[mc.host];
-                if (hostPlanet && hostPlanet.bodyMesh) {
-                    hostPlanet.bodyMesh.parent.add(mMesh);
-                } else {
-                    scene.add(mMesh);
-                }
+                // No remaining hosts use the tilted-pivot branch — every
+                // host moon path now produces ecliptic-J2000 coords directly.
+                scene.add(mMesh);
             }
             
             planetMeshes.push(mMesh);
@@ -940,6 +1061,63 @@
         // ============================================================
         // 11. UI Controls
         // ============================================================
+
+        // ── Time-override panel wiring ──
+        // Display refreshes every 250ms in LIVE mode (so the visible time
+        // tracks the system clock); freezes when an override is active.
+        const timeText      = document.getElementById('time-text');
+        const timeDisplay   = document.getElementById('time-display');
+        const timeTagSpan   = timeDisplay.querySelector('.live-tag');
+        const timePicker    = document.getElementById('time-picker');
+        const timeLiveBtn   = document.getElementById('time-live-btn');
+        const timeBtns      = document.querySelectorAll('#time-controls .time-btn');
+
+        function refreshTimeDisplay() {
+            const d = getEffectiveDate();
+            timeText.textContent = formatUT(d);
+            // Keep the picker showing whatever moment the engine is using,
+            // so users can edit incrementally without re-typing.
+            if (document.activeElement !== timePicker) {
+                timePicker.value = formatForInput(d);
+            }
+            // Tag color: green LIVE, amber OVERRIDE.
+            if (isLive()) {
+                timeTagSpan.textContent = 'LIVE';
+                timeTagSpan.className = 'live-tag';
+            } else {
+                timeTagSpan.textContent = 'JUMP';
+                timeTagSpan.className = 'override-tag';
+            }
+        }
+        // Initial render + LIVE-mode polling.
+        refreshTimeDisplay();
+        setInterval(() => { if (isLive()) refreshTimeDisplay(); }, 250);
+
+        timePicker.addEventListener('change', () => {
+            const d = parseFromInput(timePicker.value);
+            if (d) { setTimeOverride(d); refreshTimeDisplay(); }
+        });
+        timeLiveBtn.addEventListener('click', () => {
+            clearTimeOverride();
+            refreshTimeDisplay();
+        });
+        const NUDGE = {
+            '-1mo': { months: -1 }, '+1mo': { months: +1 },
+            '-1d':  { days:   -1 }, '+1d':  { days:   +1 },
+            '-1h':  { hours:  -1 }, '+1h':  { hours:  +1 }
+        };
+        timeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const delta = NUDGE[btn.dataset.tnudge];
+                if (!delta) return;
+                // Anchor on the currently-visible UT (live or override),
+                // then switch to override mode at base+delta.
+                const base = getEffectiveDate();
+                setTimeOverride(addUT(base, delta));
+                refreshTimeDisplay();
+            });
+        });
+
         let plutoEnabled = true;
         const plutoToggle = document.getElementById('pluto-toggle');
         plutoToggle.addEventListener('click', () => {
@@ -1312,7 +1490,7 @@
             requestAnimationFrame(animate);
             frameCount++;
             // Time query routed through offline OrbitalTimeUtils
-            const dNow = getCurrentJ2000Days();
+            const dNow = getEffectiveJ2000Days();
 
             // Update planet positions and rotations
             // Planet positions and rotations — all routed through offline OrbitalEngine
@@ -1331,7 +1509,8 @@
                     mc.mesh.position.set(pos.x, pos.y, pos.z);
                 }
             }
-            
+
+
             // Dynamic hitbox scaling — scale hitbox mesh based on camera distance.
             // At galaxy view (far), hitboxes are larger (2.5×) for easy tapping.
             // At planet close-up (near), hitboxes shrink to 1.0× to prevent overlap.

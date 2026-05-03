@@ -6,6 +6,8 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.WindowInsets
+import android.util.Log
+import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -61,7 +63,13 @@ class MainActivity : Activity() {
                     injectSafeAreaInsets(view)
                 }
             }
-            webChromeClient = WebChromeClient()
+            // TEMP DIAG: bridge WebView console.log to logcat (tag: WebConsole)
+            webChromeClient = object : WebChromeClient() {
+                override fun onConsoleMessage(cm: ConsoleMessage): Boolean {
+                    Log.i("WebConsole", "${cm.message()} @ ${cm.sourceId()}:${cm.lineNumber()}")
+                    return true
+                }
+            }
 
             loadUrl("https://appassets.androidplatform.net/assets/index.html")
         }

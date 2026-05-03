@@ -1,6 +1,5 @@
 {
   "permissions": {
-    "defaultMode": "acceptEdits",
     "allow": [
       "Bash",
       "Bash(*)",
@@ -63,8 +62,11 @@
       "Agent",
       "Agent(*)",
       "WebFetch",
-      "WebSearch"
+      "WebSearch",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

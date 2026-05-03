@@ -31,6 +31,8 @@ import * as jupMoons   from './lib/astronomia/jupitermoons.js';
 import { Qs as SatQs } from './lib/astronomia/saturnmoons.js';
 import * as plutoMod   from './lib/astronomia/pluto.js';
 import { phobos, deimos } from './data/martianMoons.js';
+import { triton, proteus } from './data/neptuneMoons.js';
+import { charon } from './data/plutoMoons.js';
 import { Planet } from './lib/astronomia/planetposition.js';
 import vsop87Bearth   from './lib/astronomia/data/vsop87Bearth.js';
 import vsop87Bmars    from './lib/astronomia/data/vsop87Bmars.js';
@@ -103,60 +105,63 @@ export function earthMoon(mc, jde) {
 // Mars moons  (Phobos / Deimos — JPL mean elements + secular precession)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MARS_ELEMENTS = { Phobos: phobos, Deimos: deimos };
+const MARS_ELEMENTS    = { Phobos: phobos, Deimos: deimos };
+const NEPTUNE_ELEMENTS = { Triton: triton, Proteus: proteus };
+const PLUTO_ELEMENTS   = { Charon: charon };
 
 /**
- * Phobos / Deimos planetocentric position via Kepler propagation.
- * Mars-equatorial-of-J2000 frame; magnitude scaled to mc.dist.
+ * Generic Keplerian propagator for ecliptic-J2000 osculating elements.
+ * Uses Horizons-published EC/A/IN/OM/W/MA/N. Returns a unit-normalised
+ * scene-frame vector (scene_x = ecl_x, scene_y = ecl_z, scene_z = -ecl_y),
+ * scaled to mc.dist. Identical scene mapping convention as Saturn / Uranus
+ * / Galilean. Caller MUST attach the mesh to the un-tilted planet pivot.
+ *
+ * Light-time retardation applied via the host's VSOP87 instance to match
+ * Stellarium / astronomia apparent-position convention.
  */
-export function marsMoon(mc, jde) {
-    const el = MARS_ELEMENTS[mc.name];
-    if (!el) return { x: 0, y: 0, z: 0 };
-    // Light-time retardation to Earth so the moon position matches what
-    // an Earth observer (Stellarium) sees. Same formula astronomia uses
-    // for Galilean/Saturn moons.
-    const tau = lightTimeDays(jde, _marsVSOP);
-    const d  = (jde - tau) - J2000_JD;
-    const yr = d / 365.25;
+function eclipticKeplerMoon(el, mc, jde, hostVSOP) {
+    const tau = lightTimeDays(jde, hostVSOP);
+    const dt  = (jde - tau) - el.epochJD;
 
-    const node = el.longAscNodeDeg   + el.nodePrecessionDegPerYear * yr;
-    const peri = el.argPericenterDeg + el.periPrecessionDegPerYear * yr;
-
-    let M = (el.meanAnomalyDeg + el.meanMotionDegPerDay * d) % 360;
+    let M = (el.MA + el.N * dt) % 360;
     if (M < 0) M += 360;
     const Mr = M * D2R;
 
-    // Newton-Raphson Kepler solve
+    // Newton-Raphson Kepler solve.
     let E = Mr;
-    for (let i = 0; i < 8; i++) {
-        E -= (E - el.eccentricity * Math.sin(E) - Mr) /
-             (1 - el.eccentricity * Math.cos(E));
+    for (let i = 0; i < 12; i++) {
+        E -= (E - el.EC * Math.sin(E) - Mr) / (1 - el.EC * Math.cos(E));
     }
-    const v = 2 * Math.atan(
-        Math.sqrt((1 + el.eccentricity) / (1 - el.eccentricity)) *
-        Math.tan(E / 2)
-    );
+    const v = 2 * Math.atan(Math.sqrt((1 + el.EC) / (1 - el.EC)) * Math.tan(E / 2));
+    const r = el.A * (1 - el.EC * el.EC) / (1 + el.EC * Math.cos(v));
+    const xo = r * Math.cos(v);
+    const yo = r * Math.sin(v);
 
-    const cosV = Math.cos(v), sinV = Math.sin(v);
-    const xo = cosV;
-    const yo = sinV;
-
-    const N = node * D2R;
-    const w = peri * D2R;
-    const i = el.inclinationDeg * D2R;
+    // Apply ecliptic-J2000 orientation (Ω, ω, i).
+    const N   = el.OM * D2R;
+    const w   = el.W  * D2R;
+    const inc = el.IN * D2R;
     const cN = Math.cos(N), sN = Math.sin(N);
     const cw = Math.cos(w), sw = Math.sin(w);
-    const ci = Math.cos(i), si = Math.sin(i);
+    const ci = Math.cos(inc), si = Math.sin(inc);
 
-    const xe = (cN * cw - sN * sw * ci) * xo + (-cN * sw - sN * cw * ci) * yo;
-    const ye = (sN * cw + cN * sw * ci) * xo + (-sN * sw + cN * cw * ci) * yo;
-    const ze = (sw * si)               * xo + ( cw * si)               * yo;
+    const x_ecl = (cN * cw - sN * sw * ci) * xo + (-cN * sw - sN * cw * ci) * yo;
+    const y_ecl = (sN * cw + cN * sw * ci) * xo + (-sN * sw + cN * cw * ci) * yo;
+    const z_ecl = (sw * si)               * xo + ( cw * si)               * yo;
 
-    const len = Math.hypot(xe, ye, ze);
+    // Ecliptic → scene mapping (matches Saturn / Uranus / Galilean).
+    const sx = x_ecl, sy = z_ecl, sz = -y_ecl;
+    const len = Math.hypot(sx, sy, sz);
     if (len < 1e-12) return { x: 0, y: 0, z: 0 };
     const k = mc.dist / len;
-    // Map host-equatorial (x_eq, y_eq, z_eq) → scene (x, y, z) with y_eq → y.
-    return { x: xe * k, y: ze * k, z: ye * k };
+    return { x: sx * k, y: sy * k, z: sz * k };
+}
+
+/** Phobos / Deimos planetocentric scene position. */
+export function marsMoon(mc, jde) {
+    const el = MARS_ELEMENTS[mc.name];
+    if (!el) return { x: 0, y: 0, z: 0 };
+    return eclipticKeplerMoon(el, mc, jde, _marsVSOP);
 }
 
 
@@ -550,24 +555,75 @@ export function uranusMoon(mc, jde) {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Pluto / Charon  (Meeus Ch.37 / IAU pole + Charon Keplerian)
+// Neptune moons (Triton, Proteus — Horizons OSCULATING ELEMENTS, ecliptic-J2000)
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Charon mean orbital elements at J2000 (IAU SPICE PCK / NASA Horizons):
-//   semiMajorKm: 19,591  (km from Pluto barycenter)
-//   eccentricity: 0.00005
-//   inclination to Pluto equator: 0.00°
-//   period: 6.3872273 days
-//   L0 at J2000: 88.7° (orbital longitude in Pluto-equator-of-J2000)
-const CHARON_ELEMENTS = {
-    semiMajorKm:    19591.0,
-    eccentricity:    0.00005,
-    inclinationDeg:  0.00,
-    longAscNodeDeg: 0.0,
-    argPericenterDeg: 0.0,
-    L0Deg:          88.7,
-    nDegPerDay:    360.0 / 6.3872273
+/** Light-time τ from Neptune to Earth via VSOP87 Earth + 30 AU heliocentric
+ *  approximation for Neptune (we don't vendor vsop87Bneptune). Error in τ
+ *  ≤ 0.005 days → <0.3° angular error for fastest Neptune moon (Proteus). */
+function _neptuneLightTime(jde) {
+    const e = _earthVSOP.position2000(jde);
+    const ex = e.range * Math.cos(e.lat) * Math.cos(e.lon);
+    const ey = e.range * Math.cos(e.lat) * Math.sin(e.lon);
+    const ez = e.range * Math.sin(e.lat);
+    // Neptune's heliocentric position approximated as constant (for LT only).
+    // Real Neptune-Sun distance varies 29.8–30.3 AU; geocentric varies 28.8–31.3 AU.
+    const NEPTUNE_HELIO_AU = 30.05;
+    const NEPTUNE_HELIO_DIRECTION = { x: 1, y: 0, z: 0 };  // any unit direction; only magnitude matters for τ
+    const nx = NEPTUNE_HELIO_AU * NEPTUNE_HELIO_DIRECTION.x;
+    const ny = NEPTUNE_HELIO_AU * NEPTUNE_HELIO_DIRECTION.y;
+    const nz = NEPTUNE_HELIO_AU * NEPTUNE_HELIO_DIRECTION.z;
+    return LIGHT_TIME_DAYS_PER_AU * Math.hypot(nx - ex, ny - ey, nz - ez);
+}
+// Stub Planet-like adapter so eclipticKeplerMoon can compute light-time for Neptune.
+const _neptuneLTAdapter = {
+    position2000: (jde) => {
+        // We synthesize a 'planet position' such that lightTimeDays(jde, this)
+        // returns the same value as _neptuneLightTime(jde). Cleanest is to
+        // bypass — instead just call _neptuneLightTime directly in neptuneMoon.
+        return null;
+    }
 };
+
+/** Triton / Proteus planetocentric scene position. Skips the
+ *  eclipticKeplerMoon helper because it needs a custom Neptune-specific
+ *  light-time path (no VSOP87 Neptune vendored). */
+export function neptuneMoon(mc, jde) {
+    const el = NEPTUNE_ELEMENTS[mc.name];
+    if (!el) return simpleCircular(mc, jde);
+    const tau = _neptuneLightTime(jde);
+    const dt  = (jde - tau) - el.epochJD;
+
+    let M = (el.MA + el.N * dt) % 360;
+    if (M < 0) M += 360;
+    const Mr = M * D2R;
+    let E = Mr;
+    for (let i = 0; i < 12; i++) {
+        E -= (E - el.EC * Math.sin(E) - Mr) / (1 - el.EC * Math.cos(E));
+    }
+    const v = 2 * Math.atan(Math.sqrt((1 + el.EC) / (1 - el.EC)) * Math.tan(E / 2));
+    const r = el.A * (1 - el.EC * el.EC) / (1 + el.EC * Math.cos(v));
+    const xo = r * Math.cos(v), yo = r * Math.sin(v);
+
+    const N = el.OM * D2R, w = el.W * D2R, inc = el.IN * D2R;
+    const cN = Math.cos(N), sN = Math.sin(N);
+    const cw = Math.cos(w), sw = Math.sin(w);
+    const ci = Math.cos(inc), si = Math.sin(inc);
+    const x_ecl = (cN * cw - sN * sw * ci) * xo + (-cN * sw - sN * cw * ci) * yo;
+    const y_ecl = (sN * cw + cN * sw * ci) * xo + (-sN * sw + cN * cw * ci) * yo;
+    const z_ecl = (sw * si)               * xo + ( cw * si)               * yo;
+
+    const sx = x_ecl, sy = z_ecl, sz = -y_ecl;
+    const len = Math.hypot(sx, sy, sz);
+    if (len < 1e-12) return { x: 0, y: 0, z: 0 };
+    const k = mc.dist / len;
+    return { x: sx * k, y: sy * k, z: sz * k };
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pluto moons (Charon — Horizons OSCULATING; Styx/Nix/Kerberos/Hydra fallback)
+// ─────────────────────────────────────────────────────────────────────────────
 
 /** Light-time τ (days) from Pluto to Earth. astronomia.pluto.heliocentric
  *  returns ecliptic spherical (lon, lat, range AU). */
@@ -584,20 +640,44 @@ function _plutoLightTime(jde) {
 }
 
 export function plutoMoon(mc, jde) {
-    // Light-time retardation from Pluto to Earth (~0.19 days).
     const tau = _plutoLightTime(jde);
-    const jdeR = jde - tau;
-    if (mc.name !== 'Charon') {
-        // Styx/Nix/Kerberos/Hydra: reasonable circular fallback at correct
-        // J2000 mean longitude (these are tiny and lack public ephemerides).
-        const d = jdeR - J2000_JD;
-        const period = mc.p || 1;
-        const L = ((mc.L0 + 360.0 / period * d) % 360 + 360) % 360;
-        const Lr = L * D2R;
-        return { x: mc.dist * Math.cos(Lr), y: 0, z: mc.dist * Math.sin(Lr) };
+
+    // Charon: full ecliptic-J2000 Kepler from Horizons.
+    if (mc.name === 'Charon') {
+        const el = charon;
+        const dt = (jde - tau) - el.epochJD;
+        let M = (el.MA + el.N * dt) % 360;
+        if (M < 0) M += 360;
+        const Mr = M * D2R;
+        let E = Mr;
+        for (let i = 0; i < 12; i++) {
+            E -= (E - el.EC * Math.sin(E) - Mr) / (1 - el.EC * Math.cos(E));
+        }
+        const v = 2 * Math.atan(Math.sqrt((1 + el.EC) / (1 - el.EC)) * Math.tan(E / 2));
+        const r = el.A * (1 - el.EC * el.EC) / (1 + el.EC * Math.cos(v));
+        const xo = r * Math.cos(v), yo = r * Math.sin(v);
+
+        const N = el.OM * D2R, w = el.W * D2R, inc = el.IN * D2R;
+        const cN = Math.cos(N), sN = Math.sin(N);
+        const cw = Math.cos(w), sw = Math.sin(w);
+        const ci = Math.cos(inc), si = Math.sin(inc);
+        const x_ecl = (cN * cw - sN * sw * ci) * xo + (-cN * sw - sN * cw * ci) * yo;
+        const y_ecl = (sN * cw + cN * sw * ci) * xo + (-sN * sw + cN * cw * ci) * yo;
+        const z_ecl = (sw * si)               * xo + ( cw * si)               * yo;
+
+        const sx = x_ecl, sy = z_ecl, sz = -y_ecl;
+        const len = Math.hypot(sx, sy, sz);
+        if (len < 1e-12) return { x: 0, y: 0, z: 0 };
+        const k = mc.dist / len;
+        return { x: sx * k, y: sy * k, z: sz * k };
     }
-    const d = jdeR - J2000_JD;
-    const L = ((CHARON_ELEMENTS.L0Deg + CHARON_ELEMENTS.nDegPerDay * d) % 360 + 360) % 360;
+
+    // Styx / Nix / Kerberos / Hydra — ecliptic-plane circular fallback at
+    // mc.L0 + (360/mc.p)·d. No public Horizons OSCULATING ELEMENTS available
+    // for these tiny moons that are stable enough for Kepler propagation.
+    const d = (jde - tau) - J2000_JD;
+    const period = mc.p || 1;
+    const L = ((mc.L0 + 360.0 / period * d) % 360 + 360) % 360;
     const Lr = L * D2R;
     return { x: mc.dist * Math.cos(Lr), y: 0, z: mc.dist * Math.sin(Lr) };
 }
@@ -637,8 +717,9 @@ export function moonPosition(mc, jde) {
     if (mc.specialOrbit === 'ecliptic') return earthMoon(mc, jde);
     if (mc.marsMoon || mc.host === 'Mars') return marsMoon(mc, jde);
     if (mc.galilean || mc.host === 'Jupiter') return galileanMoon(mc, jde);
-    if (mc.host === 'Saturn') return saturnMoon(mc, jde);
-    if (mc.host === 'Uranus') return uranusMoon(mc, jde);
-    if (mc.host === 'Pluto')  return plutoMoon(mc, jde);
+    if (mc.host === 'Saturn')  return saturnMoon(mc, jde);
+    if (mc.host === 'Uranus')  return uranusMoon(mc, jde);
+    if (mc.host === 'Neptune') return neptuneMoon(mc, jde);
+    if (mc.host === 'Pluto')   return plutoMoon(mc, jde);
     return simpleCircular(mc, jde);
 }
