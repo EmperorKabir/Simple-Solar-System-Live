@@ -307,6 +307,7 @@
             getEffectiveDate, getEffectiveJ2000Days,
             formatUT, formatForInput, parseFromInput, addUT
         } from './js/TimeOverride.js';
+        import { resolveMoonOverlap } from './js/OverlapResolver.js';
         import { computePlanetPosition, computePlanetPositionVSOP87, VSOP87B, computeMoonPosition, computeBodyRotation, computeSunRotation } from './js/OrbitalEngine.js';
         import { phobos as PHOBOS_ELEMENTS, deimos as DEIMOS_ELEMENTS } from './js/data/martianMoons.js';
         const MARS_MOON_ELEMENTS = { phobos: PHOBOS_ELEMENTS, deimos: DEIMOS_ELEMENTS };
@@ -1116,7 +1117,46 @@
             planetMeshes.push(mMesh);
             activeMoons.push({ mesh: mMesh, config: mc });
         }
-        
+
+        // ── Pre-compute per-host static cfg for OverlapResolver ─────────────
+        // Static parts are: host body radius, host ring outer radius (0 if
+        // no ring), and the ring-plane normal in scene coords (= host pole
+        // direction after applying groupPivot's axial-tilt rotation to +Y).
+        // Neighbour list (with live world positions) is refreshed each frame
+        // because planet positions change with time.
+        const HOST_RING_OUTER_MULT = { Saturn: 2.27, Uranus: 2.00, Neptune: 2.67 };
+        const _hostStaticCfg = {};
+        const _Y_AXIS = new THREE.Vector3(0, 1, 0);
+        for (const [name, data] of Object.entries(planetsData)) {
+            const bodyR = data.size;
+            const ringMult = HOST_RING_OUTER_MULT[name] || 0;
+            const ringOuterR = ringMult > 0 ? bodyR * ringMult : 0;
+            // Pole direction in scene = qLon · qTilt · (0, 1, 0).
+            // The actual groupPivot quaternion was already constructed for
+            // each planet during scene build; recover it here from bodyMesh.parent.
+            const pole = new THREE.Vector3(0, 1, 0);
+            if (data.bodyMesh && data.bodyMesh.parent && data.bodyMesh.parent.quaternion) {
+                pole.applyQuaternion(data.bodyMesh.parent.quaternion).normalize();
+            }
+            _hostStaticCfg[name] = {
+                hostBodyR: bodyR,
+                hostRingOuterR: ringOuterR,
+                hostRingNormal: { x: pole.x, y: pole.y, z: pole.z }
+            };
+        }
+        // Build neighbour list: for each host, every OTHER planet (not its
+        // own host) that the moon could plausibly run into. Cheap to include
+        // every planet — the neighbour distance check rejects far ones quickly.
+        const _hostNeighbours = {};
+        const _allPlanetNames = Object.keys(planetsData);
+        for (const host of _allPlanetNames) {
+            _hostNeighbours[host] = _allPlanetNames.filter(n => n !== host);
+        }
+        // Scratch object reused per-frame to avoid GC churn.
+        const _resolverScratchNeighbours = [];
+        const _resolverScratchHostWorld = { x: 0, y: 0, z: 0 };
+        const _vecScratch = new THREE.Vector3();
+
         // ============================================================
         // 11. UI Controls
         // ============================================================
@@ -1564,7 +1604,37 @@
             // Moon positions — all routed through offline OrbitalEngine
             for (const mc of activeMoons) {
                 if (planets[mc.config.host] || mc.config.specialOrbit === "ecliptic") {
-                    const pos = computeMoonPosition(mc.config, dNow);
+                    let pos = computeMoonPosition(mc.config, dNow);
+                    // Conditional overlap-resolution: leaves pos unchanged
+                    // unless the moon would visually intersect host body /
+                    // rings or a neighbouring planet's body this frame.
+                    const hostName = mc.config.host;
+                    const hostStatic = _hostStaticCfg[hostName];
+                    if (hostStatic && hostName !== "Earth") {
+                        const hostMesh = planets[hostName];
+                        hostMesh.getWorldPosition(_vecScratch);
+                        _resolverScratchHostWorld.x = _vecScratch.x;
+                        _resolverScratchHostWorld.y = _vecScratch.y;
+                        _resolverScratchHostWorld.z = _vecScratch.z;
+                        _resolverScratchNeighbours.length = 0;
+                        for (const nbName of _hostNeighbours[hostName]) {
+                            const nbPlanet = planets[nbName];
+                            if (!nbPlanet) continue;
+                            nbPlanet.getWorldPosition(_vecScratch);
+                            _resolverScratchNeighbours.push({
+                                worldPos: { x: _vecScratch.x, y: _vecScratch.y, z: _vecScratch.z },
+                                bodyR: planetsData[nbName].size
+                            });
+                        }
+                        pos = resolveMoonOverlap(pos, {
+                            moonR: mc.config.size,
+                            hostBodyR: hostStatic.hostBodyR,
+                            hostRingOuterR: hostStatic.hostRingOuterR,
+                            hostRingNormal: hostStatic.hostRingNormal,
+                            hostWorldPos: _resolverScratchHostWorld,
+                            neighbours: _resolverScratchNeighbours
+                        });
+                    }
                     mc.mesh.position.set(pos.x, pos.y, pos.z);
                 }
             }

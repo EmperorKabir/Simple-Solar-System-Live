@@ -97,8 +97,13 @@ export function earthMoon(mc, jde) {
     const yKm = m.range * cosB * Math.sin(m.lon);
     const zKm = m.range * Math.sin(m.lat);
     const len = Math.hypot(xKm, yKm, zKm);
-    const k   = mc.dist / len;
-    return { x: xKm * k, y: yKm * k, z: zKm * k };
+    if (len < 1e-12) return { x: 0, y: 0, z: 0 };
+    const k = mc.dist / len;
+    // Ecliptic → scene mapping (matches every other moon evaluator):
+    //   scene_x = ecl_x, scene_y = ecl_z (ecliptic NORTH = scene UP), scene_z = -ecl_y.
+    // Previous (xKm, yKm, zKm) bug placed the Moon's in-plane direction
+    // along scene-up, throwing the Moon far below Earth.
+    return { x: xKm * k, y: zKm * k, z: -yKm * k };
 }
 
 
