@@ -142,6 +142,84 @@
         }
         body[data-ready="true"] #app-loader { opacity: 0; }
 
+        /* Warning icon — sits above the time panel, dark yellow triangle */
+        #warning-icon {
+            align-self: flex-start;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            margin-bottom: 2px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            pointer-events: auto;
+            -webkit-tap-highlight-color: transparent;
+            opacity: 0.85;
+            transition: opacity 0.15s ease, transform 0.1s ease;
+        }
+        #warning-icon:active { opacity: 1; transform: scale(0.92); }
+        #warning-icon svg { display: block; }
+
+        /* Warning modal — centred card with the accuracy notice */
+        #warning-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s ease;
+        }
+        #warning-modal.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #warning-modal-card {
+            background: #1a1a1a;
+            color: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(184, 134, 11, 0.6);
+            border-radius: 10px;
+            padding: 20px 22px 16px;
+            max-width: min(420px, calc(100vw - 48px));
+            font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+        #warning-modal-card .heading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #d4a017;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        #warning-modal-card .heading svg { flex: 0 0 22px; }
+        #warning-modal-card p {
+            margin: 0 0 14px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        #warning-modal-card button {
+            display: block;
+            margin-left: auto;
+            padding: 7px 18px;
+            background: rgba(184, 134, 11, 0.18);
+            border: 1px solid rgba(184, 134, 11, 0.55);
+            color: #f3d36b;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #warning-modal-card button:active { background: rgba(184, 134, 11, 0.32); }
+
         /* ── Time Override Panel (bottom-left) ───────────────────────── */
         #time-panel {
             position: absolute;
@@ -261,7 +339,29 @@
 
     <div id="app-loader">Loading…</div>
 
+    <div id="warning-modal" role="dialog" aria-modal="true" aria-labelledby="warning-modal-heading">
+        <div id="warning-modal-card">
+            <div class="heading" id="warning-modal-heading">
+                <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                    <path d="M12 2 L22.5 21 L1.5 21 Z" fill="#b8860b" stroke="#1a1300" stroke-width="0.6" stroke-linejoin="round"/>
+                    <rect x="11" y="9" width="2" height="7" rx="0.7" fill="#1a1300"/>
+                    <circle cx="12" cy="18.4" r="1.05" fill="#1a1300"/>
+                </svg>
+                Accuracy Notice
+            </div>
+            <p>Due to simplification of scaling, some moon positions may be slightly inaccurate. Orbital distances from the sun are also scaled down. This app should be used as an indicative guide rather than scientifically accurate.</p>
+            <button id="warning-modal-close" type="button">OK</button>
+        </div>
+    </div>
+
     <div id="time-panel">
+        <button id="warning-icon" type="button" aria-label="Accuracy notice" title="Accuracy notice">
+            <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+                <path d="M12 2 L22.5 21 L1.5 21 Z" fill="#b8860b" stroke="#1a1300" stroke-width="0.6" stroke-linejoin="round"/>
+                <rect x="11" y="9" width="2" height="7" rx="0.7" fill="#1a1300"/>
+                <circle cx="12" cy="18.4" r="1.05" fill="#1a1300"/>
+            </svg>
+        </button>
         <div id="time-display"><span class="live-tag">LIVE</span><span id="time-text">—</span></div>
         <div id="time-controls">
             <button class="time-btn" data-tnudge="-1mo" title="-1 month">−1mo</button>
@@ -1215,6 +1315,23 @@
                 setTimeOverride(addUT(base, delta));
                 refreshTimeDisplay();
             });
+        });
+
+        // ── Warning modal: tap icon to open, tap backdrop or OK to close ──
+        const warningIcon  = document.getElementById('warning-icon');
+        const warningModal = document.getElementById('warning-modal');
+        const warningClose = document.getElementById('warning-modal-close');
+        warningIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            warningModal.classList.add('visible');
+        });
+        warningClose.addEventListener('click', (e) => {
+            e.stopPropagation();
+            warningModal.classList.remove('visible');
+        });
+        warningModal.addEventListener('click', (e) => {
+            // Close only when the dark backdrop itself is tapped, not the card.
+            if (e.target === warningModal) warningModal.classList.remove('visible');
         });
 
         let plutoEnabled = true;
