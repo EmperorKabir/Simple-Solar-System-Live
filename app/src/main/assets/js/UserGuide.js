@@ -40,40 +40,72 @@ export const GUIDE_SECTIONS = [
         title: 'Time Travel',
         subsections: [
             { title: 'LIVE vs. JUMP',
-              body: 'By default, the app shows where everything is right now which is LIVE mode (in green). The moment you change the time, you switch to JUMP mode (in amber) and the solar system in the app freezes at that moment.' },
+              body: '<ul>' +
+                  '<li>By default, the app shows where everything is right now which is LIVE mode (in green).</li>' +
+                  '<li>The moment you change the time, you switch to JUMP mode (in amber) and the solar system in the app freezes at that moment.</li>' +
+                  '</ul>' },
             { title: 'Quick nudges',
-              body: 'The −/+ buttons jump backward or forward by hour, day, week, month, year, or decade. Tap once for a single jump. <strong>Hold any button to start auto-repeat</strong> (4 jumps per second); this will create a moving picture style effect of seeing how the solar system moves in faster time. Release to stop.' },
+              body: '<ul>' +
+                  '<li>The −/+ buttons jump backward or forward by hour, day, week, month, year, or decade.</li>' +
+                  '<li>Tap once for a single jump.</li>' +
+                  '<li><strong>Hold any button to start auto-repeat</strong> (4 jumps per second); this will create a moving picture style effect of seeing how the solar system moves in faster time. Release to stop.</li>' +
+                  '</ul>' },
             { title: 'Pick a date',
-              body: 'Tap the date/time field to open your phone’s native picker and jump to any moment.' },
+              body: '<ul>' +
+                  '<li>Tap the date/time field to open your phone’s native picker and jump to any moment.</li>' +
+                  '</ul>' },
             { title: 'Back to live',
-              body: 'Tap the green LIVE button to return to real-time.' }
+              body: '<ul>' +
+                  '<li>Tap the green LIVE button to return to real-time.</li>' +
+                  '</ul>' }
         ]
     },
     {
         title: 'Time Zones',
         subsections: [
             { title: 'Default zone',
-              body: 'On first launch, the app uses your phone’s system time zone. If the system zone can’t be detected, you’ll be asked to pick one.' },
+              body: '<ul>' +
+                  '<li>On first launch, the app uses your phone’s system time zone.</li>' +
+                  '<li>If the system zone can’t be detected, you’ll be asked to pick one.</li>' +
+                  '</ul>' },
             { title: 'Change zone',
-              body: 'Tap the small zone tag (e.g. UTC+01:00) next to the LIVE/JUMP indicator to switch. Your choice is remembered.' }
+              body: '<ul>' +
+                  '<li>Tap the small zone tag (e.g. UTC+01:00) next to the LIVE/JUMP indicator to switch.</li>' +
+                  '<li>Your choice is remembered.</li>' +
+                  '</ul>' }
         ]
     },
     {
         title: 'What You’re Looking At',
         subsections: [
             { title: 'Planetary positions',
-              body: 'Every planet sits at its real position in its orbit, scaled down so the whole system fits on screen. The faint grey rings are the orbital paths.' },
+              body: '<ul>' +
+                  '<li>Every planet sits at its real position in its orbit, scaled down so the whole system fits on screen.</li>' +
+                  '<li>The faint grey rings are the orbital paths.</li>' +
+                  '</ul>' },
             { title: 'Moons',
-              body: 'Each major moon orbits its parent planet at the right relative direction. Moon distances within a system are roughly proportional, but very-distant moons (like Saturn’s Iapetus) are pulled in a bit so they fit into the screen.' },
+              body: '<ul>' +
+                  '<li>Each major moon orbits its parent planet at the right relative direction.</li>' +
+                  '<li>Moon distances within a system are roughly proportional, but very-distant moons (like Saturn’s Iapetus) are pulled in a bit so they fit into the screen.</li>' +
+                  '</ul>' },
             { title: 'Labels',
-              body: 'Body names appear next to the bigger objects. They quietly fade out when they’re behind another body, when you zoom too far away or when two labels would otherwise sit on top of each other.' },
+              body: '<ul>' +
+                  '<li>Body names appear next to the bigger objects.</li>' +
+                  '<li>They quietly fade out when they’re behind another body, when you zoom too far away or when two labels would otherwise sit on top of each other.</li>' +
+                  '</ul>' },
             { title: 'Sun lighting',
-              body: 'The Sun lights every body realistically — you’ll see day/night sides correctly as bodies rotate.' }
+              body: '<ul>' +
+                  '<li>The Sun lights every body realistically — you’ll see day/night sides correctly as bodies rotate.</li>' +
+                  '</ul>' }
         ]
     },
     {
         title: 'Icons in the Corner',
-        body: 'A small ⚠ triangle and an ⓘ circle sit just above the time controls. The triangle is the accuracy notice — tap it for a reminder that distances are scaled. The ⓘ opens this guide.'
+        body: '<ul>' +
+            '<li>A small ⚠ triangle and an ⓘ circle sit just above the time controls.</li>' +
+            '<li>The triangle is the accuracy notice — tap it for a reminder that distances are scaled.</li>' +
+            '<li>The ⓘ opens this guide.</li>' +
+            '</ul>'
     },
     {
         title: 'Restrictions and Disclaimer',
