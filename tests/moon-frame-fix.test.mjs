@@ -19,11 +19,12 @@ function check(name, ours, target, toleranceDeg) {
     console.log(`  ${name.padEnd(30)} |err|=${errKm.toFixed(0).padStart(8)} km (${errPct.toFixed(2)}%)  angle=${angDeg.toFixed(3).padStart(7)}°  ${status}`);
 }
 
-console.log(`=== Verification at epoch JD ${horizons.epoch_jd_tdb} ===`);
+console.log(`=== Verification at epoch JD ${horizons.epoch_jd_tdb} (or per-vector jd if provided) ===`);
 for (const [name, el] of Object.entries(horizons.moons)) {
     const elNorm = { ...el, epoch_jd: horizons.epoch_jd_tdb };
-    const ours = keplerEclipticXYZ(elNorm, horizons.epoch_jd_tdb);
-    check(`${name} @ epoch`, ours, horizons.vectors_at_epoch[name], 0.5);
+    const target = horizons.vectors_at_epoch[name];
+    const ours = keplerEclipticXYZ(elNorm, target.jd ?? horizons.epoch_jd_tdb);
+    check(`${name} @ ${target.jd ?? horizons.epoch_jd_tdb}`, ours, target, 0.5);
 }
 
 console.log('');

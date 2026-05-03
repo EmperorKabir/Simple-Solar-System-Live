@@ -105,6 +105,43 @@
             opacity: 0 !important;
         }
 
+        /* Hide everything (planets, labels, HUD) until textures finish loading. */
+        .planet-label, #header-layer, #time-panel, #ui-container {
+            opacity: 0;
+            transition: opacity 0.25s ease-in;
+        }
+        body[data-ready="true"] .planet-label,
+        body[data-ready="true"] #header-layer,
+        body[data-ready="true"] #time-panel,
+        body[data-ready="true"] #ui-container {
+            opacity: 1;
+        }
+        /* Re-honour the existing zoom-based hide once ready. */
+        body[data-ready="true"] .planet-label.hidden-label {
+            opacity: 0 !important;
+        }
+
+        /* Loading overlay — full-screen black with centred 'Loading…' */
+        #app-loader {
+            position: fixed;
+            inset: 0;
+            background: #020202;
+            color: rgba(255, 255, 255, 0.85);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            user-select: none;
+            pointer-events: none;
+            transition: opacity 0.22s ease-out;
+        }
+        body[data-ready="true"] #app-loader { opacity: 0; }
+
         /* ── Time Override Panel (bottom-left) ───────────────────────── */
         #time-panel {
             position: absolute;
@@ -221,6 +258,8 @@
     <div id="ui-container">
         <div id="hud-telemetry" style="display:none; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 5px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">ORBIT: -- DAYS<br>DAY: -- HOURS</div>
     </div>
+
+    <div id="app-loader">Loading…</div>
 
     <div id="time-panel">
         <div id="time-display"><span class="live-tag">LIVE</span><span id="time-text">—</span></div>
@@ -790,14 +829,34 @@
         // Proteus has no dedicated texture file — use a generic grey
         // (In the original code, "Proteus" was referenced but no texture file exists)
 
+        // Load every texture in parallel and track completion. Each texture
+        // object is created synchronously (so the rest of the scene-build
+        // can reference tex[k] immediately), but its image fills in async.
+        // The Promise.all below triggers the loader-overlay fade-out once
+        // every image has actually decoded — preventing the "labels alone
+        // on black, then planets pop in" sequence.
         const tex = {};
-        for(let k in urls) {
-            tex[k] = tLoad.load(urls[k]);
-            tex[k].colorSpace = THREE.SRGBColorSpace;
-            if (renderer.capabilities.getMaxAnisotropy) {
-                tex[k].anisotropy = renderer.capabilities.getMaxAnisotropy();
-            }
+        const texLoadPromises = [];
+        for (let k in urls) {
+            texLoadPromises.push(new Promise((resolve) => {
+                tex[k] = tLoad.load(
+                    urls[k],
+                    () => resolve(),                  // onLoad
+                    undefined,                        // onProgress (unused)
+                    () => resolve()                   // onError → still resolve so one bad texture can't freeze the loader
+                );
+                tex[k].colorSpace = THREE.SRGBColorSpace;
+                if (renderer.capabilities.getMaxAnisotropy) {
+                    tex[k].anisotropy = renderer.capabilities.getMaxAnisotropy();
+                }
+            }));
         }
+        Promise.all(texLoadPromises).then(() => {
+            // Reveal scene + labels + HUD; loader overlay fades via CSS.
+            document.body.dataset.ready = "true";
+            const loader = document.getElementById('app-loader');
+            if (loader) setTimeout(() => loader.remove(), 260);
+        });
 
 
         // ============================================================
@@ -943,7 +1002,7 @@
                     uv.setXY(i, (vec.length() - satRingInner) / (satRingOuter - satRingInner), 1.0); 
                 }
                 const ringMesh = new THREE.Mesh(ringGeom, new THREE.MeshStandardMaterial({
-                    map: tLoad.load(urls.SaturnRing), side: THREE.DoubleSide, transparent: true
+                    map: tex.SaturnRing, side: THREE.DoubleSide, transparent: true
                 }));
                 ringMesh.rotation.x = Math.PI / 2; 
                 ringMesh.name = "_ring_Saturn";

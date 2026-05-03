@@ -33,6 +33,7 @@ import * as plutoMod   from './lib/astronomia/pluto.js';
 import { phobos, deimos } from './data/martianMoons.js';
 import { triton, proteus } from './data/neptuneMoons.js';
 import { charon } from './data/plutoMoons.js';
+import { miranda, ariel, umbriel, titania, oberon } from './data/uranusMoons.js';
 import { Planet } from './lib/astronomia/planetposition.js';
 import vsop87Bearth   from './lib/astronomia/data/vsop87Bearth.js';
 import vsop87Bmars    from './lib/astronomia/data/vsop87Bmars.js';
@@ -492,66 +493,18 @@ const GUST86_LAMBDA_PERT = {
  * @returns {{x:number,y:number,z:number}} scene-frame position relative to
  *   Uranus pivot, magnitude == mc.dist.
  */
+const URANUS_ELEMENTS = { Miranda: miranda, Ariel: ariel, Umbriel: umbriel, Titania: titania, Oberon: oberon };
+
 export function uranusMoon(mc, jde) {
-    const idx = GUST86_INDEX[mc.name];
-    if (idx == null) return { x: 0, y: 0, z: 0 };
-
-    // Light-time retardation to Earth so positions match Stellarium.
-    const tau = lightTimeDays(jde, _uranusVSOP);
-    const t = (jde - tau) - GUST86_EPOCH_JD;
-
-    // Base mean longitudes for all 5 moons (used in perturbation arguments).
-    const an = [
-        GUST86_PHN[0] + GUST86_FQN[0] * t,
-        GUST86_PHN[1] + GUST86_FQN[1] * t,
-        GUST86_PHN[2] + GUST86_FQN[2] * t,
-        GUST86_PHN[3] + GUST86_FQN[3] * t,
-        GUST86_PHN[4] + GUST86_FQN[4] * t
-    ];
-
-    // Add lambda perturbation series for this moon (Stellarium gust86.c).
-    let lam = an[idx];
-    const series = GUST86_LAMBDA_PERT[idx];
-    for (let s = 0; s < series.length; s++) {
-        const r = series[s];
-        const arg = r[0]*an[0] + r[1]*an[1] + r[2]*an[2] + r[3]*an[3] + r[4]*an[4];
-        lam += r[5] * Math.sin(arg);
-    }
-
-    // Primary inclination contribution (Stellarium gust86.c primary terms):
-    //   elem[4] = sin(i/2) cos(Ω) = AMP · cos(ai_phase)
-    //   elem[5] = sin(i/2) sin(Ω) = AMP · sin(ai_phase)
-    // From these recover (i, Ω); place moon at (cos u, sin u, 0) in orbital
-    // plane (u = λ - Ω), then rotate by inclination i around line of nodes
-    // to get planetocentric Cartesian in the GUST86 frame.
-    const ai = GUST86_PHI[GUST86_INCL_PHASE_IDX[idx]] +
-               GUST86_FQI[GUST86_INCL_PHASE_IDX[idx]] * t;
-    const amp = GUST86_INCL_AMPLITUDE[idx];
-    const sinHalfI = Math.abs(amp);  // magnitude of sin(i/2)
-    const Omega = (amp >= 0) ? ai : (ai + Math.PI);  // sign flips the node by π
-    const sinI = 2 * sinHalfI * Math.sqrt(1 - sinHalfI * sinHalfI);
-    const cosI = 1 - 2 * sinHalfI * sinHalfI;
-    const u = lam - Omega;
-    const cu = Math.cos(u),  su = Math.sin(u);
-    const cO = Math.cos(Omega), sO = Math.sin(Omega);
-    const xU = cu * cO - su * cosI * sO;
-    const yU = cu * sO + su * cosI * cO;
-    const zU = su * sinI;
-
-    // Rotate GUST86 uranicentric → VSOP87 J2000 ecliptic
-    const M = GUST86_TO_VSOP87;
-    const xEcl = M[0][0] * xU + M[0][1] * yU + M[0][2] * zU;
-    const yEcl = M[1][0] * xU + M[1][1] * yU + M[1][2] * zU;
-    const zEcl = M[2][0] * xU + M[2][1] * yU + M[2][2] * zU;
-
-    // Unit vector in ecliptic; scale to mc.dist preserving direction.
-    const len = Math.hypot(xEcl, yEcl, zEcl);
-    if (len < 1e-12) return { x: 0, y: 0, z: 0 };
-    const k = mc.dist / len;
-
-    // Ecliptic → scene: scene_x = ecl_x, scene_y = ecl_z, scene_z = -ecl_y.
-    return { x: xEcl * k, y: zEcl * k, z: -yEcl * k };
+    const el = URANUS_ELEMENTS[mc.name];
+    if (!el) return { x: 0, y: 0, z: 0 };
+    return eclipticKeplerMoon(el, mc, jde, _uranusVSOP);
 }
+
+// Legacy GUST86 constants and helpers retained above for reference but are
+// no longer used by the rendering pipeline. The Horizons OSCULATING
+// ELEMENTS path (eclipticKeplerMoon) supersedes them with sub-degree
+// agreement vs Horizons VECTORS at the published epoch.
 
 
 // ─────────────────────────────────────────────────────────────────────────────
