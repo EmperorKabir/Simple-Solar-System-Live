@@ -220,6 +220,140 @@
         }
         #warning-modal-card button:active { background: rgba(184, 134, 11, 0.32); }
 
+        /* Top-row container holding warning + info icons side-by-side. */
+        #icon-row { display: flex; gap: 8px; align-self: flex-start; }
+
+        /* Info icon — blue letter "i" with blue border, mirror of warning icon */
+        #info-icon {
+            width: 26px; height: 26px; padding: 0; margin-bottom: 0;
+            background: transparent; border: none; cursor: pointer;
+            pointer-events: auto; -webkit-tap-highlight-color: transparent;
+            opacity: 0.85; transition: opacity 0.15s ease, transform 0.1s ease;
+        }
+        #info-icon:active { opacity: 1; transform: scale(0.92); }
+        #info-icon svg { display: block; }
+
+        /* Info / Guide modal (mirror of warning-modal but blue-accented) */
+        #info-modal {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7);
+            z-index: 60; display: flex; align-items: center; justify-content: center;
+            padding: 24px; opacity: 0; pointer-events: none;
+            transition: opacity 0.18s ease;
+        }
+        #info-modal.visible { opacity: 1; pointer-events: auto; }
+        #info-modal-card {
+            background: #1a1a1a; color: rgba(255,255,255,0.92);
+            border: 1px solid rgba(58, 122, 217, 0.6); border-radius: 10px;
+            padding: 18px 20px 12px;
+            max-width: min(480px, calc(100vw - 48px));
+            max-height: calc(100vh - 64px); overflow-y: auto;
+            font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+        #info-modal-heading {
+            font-size: 14px; font-weight: 700; color: #6fa9ff;
+            text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px;
+        }
+        .guide-section {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 4px 0;
+        }
+        .guide-section:last-of-type { border-bottom: none; }
+        .guide-section > summary {
+            cursor: pointer; font-size: 14px; font-weight: 600; color: #e7eef9;
+            padding: 8px 4px; list-style: none; user-select: none;
+            display: flex; justify-content: space-between; align-items: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .guide-section > summary::-webkit-details-marker { display: none; }
+        .guide-section > summary::after {
+            content: '▸'; transition: transform 0.15s; color: #6fa9ff;
+            font-size: 12px; margin-left: 8px;
+        }
+        .guide-section[open] > summary::after { transform: rotate(90deg); }
+        .guide-section p { font-size: 13px; line-height: 1.5; margin: 4px 4px 8px; color: rgba(255,255,255,0.85); }
+        .guide-section h4 { font-size: 13px; font-weight: 600; color: #c8d8f0; margin: 8px 4px 2px; }
+        #info-modal-card #info-modal-close {
+            display: block; margin: 12px 0 0 auto;
+            padding: 7px 18px; background: rgba(58, 122, 217, 0.18);
+            border: 1px solid rgba(58, 122, 217, 0.55); color: #b9d2ff;
+            border-radius: 5px; font-size: 13px; font-weight: 600;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+        #info-modal-card #info-modal-close:active { background: rgba(58, 122, 217, 0.32); }
+
+        /* Time-zone picker modal */
+        #tz-modal {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7);
+            z-index: 70; display: flex; align-items: center; justify-content: center;
+            padding: 24px; opacity: 0; pointer-events: none;
+            transition: opacity 0.18s ease;
+        }
+        #tz-modal.visible { opacity: 1; pointer-events: auto; }
+        #tz-modal-card {
+            background: #1a1a1a; color: rgba(255,255,255,0.92);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+            padding: 16px 18px;
+            max-width: min(360px, calc(100vw - 48px));
+            max-height: calc(100vh - 64px); overflow-y: auto;
+            font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+        #tz-modal-heading {
+            font-size: 13px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1.3px; margin-bottom: 6px;
+        }
+        #tz-modal-card p { font-size: 12px; line-height: 1.4; color: rgba(255,255,255,0.7); margin: 0 0 10px; }
+        #tz-modal-list {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+            margin: 8px 0 12px;
+        }
+        .tz-option {
+            padding: 7px 6px; background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.18); border-radius: 4px;
+            color: white; font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace;
+            cursor: pointer; text-align: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .tz-option.selected { background: rgba(58, 122, 217, 0.30); border-color: rgba(58, 122, 217, 0.7); }
+        .tz-option:active { background: rgba(58, 122, 217, 0.45); }
+        #tz-system-btn, #tz-cancel-btn {
+            display: inline-block; margin: 4px 4px 0 0;
+            padding: 6px 14px; background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.25); color: white;
+            border-radius: 5px; font-size: 12px; font-weight: 600;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+        #tz-system-btn { background: rgba(111,255,138,0.14); border-color: rgba(111,255,138,0.45); color: #d6ffe1; }
+        #tz-cancel-btn { float: right; }
+
+        /* Tappable zone chip in time-display */
+        #zone-chip {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 1px 6px;
+            background: rgba(58, 122, 217, 0.18);
+            border: 1px solid rgba(58, 122, 217, 0.55);
+            color: #b9d2ff;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            vertical-align: middle;
+        }
+        #zone-chip:active { background: rgba(58, 122, 217, 0.32); }
+
+        /* Time button held-down visual feedback (during auto-repeat) */
+        .time-btn.holding {
+            background: rgba(58, 122, 217, 0.25);
+            border-color: rgba(58, 122, 217, 0.55);
+        }
+
+        /* Label hidden by overlap rule — stacks with .hidden-label cleanly. */
+        .planet-label.label-overlapped { opacity: 0 !important; }
+
         /* ── Time Override Panel (bottom-left) ───────────────────────── */
         #time-panel {
             position: absolute;
@@ -339,6 +473,24 @@
 
     <div id="app-loader">Loading…</div>
 
+    <div id="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-modal-heading">
+        <div id="info-modal-card">
+            <div id="info-modal-heading">App Guide</div>
+            <div id="info-modal-body"></div>
+            <button id="info-modal-close" type="button">Close</button>
+        </div>
+    </div>
+
+    <div id="tz-modal" role="dialog" aria-modal="true" aria-labelledby="tz-modal-heading">
+        <div id="tz-modal-card">
+            <div id="tz-modal-heading">Select your time zone</div>
+            <p>Times in the app will be shown in this zone. Internal calculations stay in UT.</p>
+            <div id="tz-modal-list"></div>
+            <button id="tz-system-btn" type="button">Use system time zone</button>
+            <button id="tz-cancel-btn" type="button">Cancel</button>
+        </div>
+    </div>
+
     <div id="warning-modal" role="dialog" aria-modal="true" aria-labelledby="warning-modal-heading">
         <div id="warning-modal-card">
             <div class="heading" id="warning-modal-heading">
@@ -355,21 +507,35 @@
     </div>
 
     <div id="time-panel">
-        <button id="warning-icon" type="button" aria-label="Accuracy notice" title="Accuracy notice">
-            <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
-                <path d="M12 2 L22.5 21 L1.5 21 Z" fill="#b8860b" stroke="#1a1300" stroke-width="0.6" stroke-linejoin="round"/>
-                <rect x="11" y="9" width="2" height="7" rx="0.7" fill="#1a1300"/>
-                <circle cx="12" cy="18.4" r="1.05" fill="#1a1300"/>
-            </svg>
-        </button>
-        <div id="time-display"><span class="live-tag">LIVE</span><span id="time-text">—</span></div>
+        <div id="icon-row">
+            <button id="warning-icon" type="button" aria-label="Accuracy notice" title="Accuracy notice">
+                <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+                    <path d="M12 2 L22.5 21 L1.5 21 Z" fill="#b8860b" stroke="#1a1300" stroke-width="0.6" stroke-linejoin="round"/>
+                    <rect x="11" y="9" width="2" height="7" rx="0.7" fill="#1a1300"/>
+                    <circle cx="12" cy="18.4" r="1.05" fill="#1a1300"/>
+                </svg>
+            </button>
+            <button id="info-icon" type="button" aria-label="App guide" title="App guide">
+                <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10.4" fill="rgba(40,90,200,0.15)" stroke="#3a7ad9" stroke-width="1.6"/>
+                    <text x="12" y="17.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="700" fill="#3a7ad9">i</text>
+                </svg>
+            </button>
+        </div>
+        <div id="time-display"><span class="live-tag">LIVE</span><span id="time-text">—</span><span id="zone-chip" title="Change time zone">UTC</span></div>
         <div id="time-controls">
-            <button class="time-btn" data-tnudge="-1mo" title="-1 month">−1mo</button>
-            <button class="time-btn" data-tnudge="-1d"  title="-1 day">−1d</button>
-            <button class="time-btn" data-tnudge="-1h"  title="-1 hour">−1h</button>
-            <button class="time-btn" data-tnudge="+1h"  title="+1 hour">+1h</button>
-            <button class="time-btn" data-tnudge="+1d"  title="+1 day">+1d</button>
-            <button class="time-btn" data-tnudge="+1mo" title="+1 month">+1mo</button>
+            <button class="time-btn" data-tnudge="-1dec" title="-1 decade">−1dec</button>
+            <button class="time-btn" data-tnudge="-1y"   title="-1 year">−1y</button>
+            <button class="time-btn" data-tnudge="-1mo"  title="-1 month">−1mo</button>
+            <button class="time-btn" data-tnudge="-1w"   title="-1 week">−1w</button>
+            <button class="time-btn" data-tnudge="-1d"   title="-1 day">−1d</button>
+            <button class="time-btn" data-tnudge="-1h"   title="-1 hour">−1h</button>
+            <button class="time-btn" data-tnudge="+1h"   title="+1 hour">+1h</button>
+            <button class="time-btn" data-tnudge="+1d"   title="+1 day">+1d</button>
+            <button class="time-btn" data-tnudge="+1w"   title="+1 week">+1w</button>
+            <button class="time-btn" data-tnudge="+1mo"  title="+1 month">+1mo</button>
+            <button class="time-btn" data-tnudge="+1y"   title="+1 year">+1y</button>
+            <button class="time-btn" data-tnudge="+1dec" title="+1 decade">+1dec</button>
         </div>
         <div id="time-input-row">
             <input id="time-picker" type="datetime-local" step="1" />
@@ -405,9 +571,14 @@
         import {
             setTimeOverride, clearTimeOverride, isLive,
             getEffectiveDate, getEffectiveJ2000Days,
-            formatUT, formatForInput, parseFromInput, addUT
+            formatUT, formatForInput, parseFromInput, addUT,
+            detectSystemTimeZone, loadStoredZone, saveStoredZone,
+            resolveEffectiveOffsetMin, zoneTagFromOffset,
+            formatLocal, formatForInputLocal, parseFromLocalInput
         } from './js/TimeOverride.js';
         import { resolveMoonOverlap } from './js/OverlapResolver.js';
+        import { computeHiddenByOverlap } from './js/LabelOverlap.js';
+        import { renderGuide } from './js/UserGuide.js';
         import { computePlanetPosition, computePlanetPositionVSOP87, VSOP87B, computeMoonPosition, computeBodyRotation, computeSunRotation } from './js/OrbitalEngine.js';
         import { phobos as PHOBOS_ELEMENTS, deimos as DEIMOS_ELEMENTS } from './js/data/martianMoons.js';
         const MARS_MOON_ELEMENTS = { phobos: PHOBOS_ELEMENTS, deimos: DEIMOS_ELEMENTS };
@@ -1267,17 +1438,20 @@
         const timeText      = document.getElementById('time-text');
         const timeDisplay   = document.getElementById('time-display');
         const timeTagSpan   = timeDisplay.querySelector('.live-tag');
+        const zoneChip      = document.getElementById('zone-chip');
         const timePicker    = document.getElementById('time-picker');
         const timeLiveBtn   = document.getElementById('time-live-btn');
         const timeBtns      = document.querySelectorAll('#time-controls .time-btn');
 
         function refreshTimeDisplay() {
             const d = getEffectiveDate();
-            timeText.textContent = formatUT(d);
+            const offsetMin = resolveEffectiveOffsetMin();
+            timeText.textContent = formatLocal(d, offsetMin);
+            zoneChip.textContent = zoneTagFromOffset(offsetMin);
             // Keep the picker showing whatever moment the engine is using,
-            // so users can edit incrementally without re-typing.
+            // in the user's chosen local zone.
             if (document.activeElement !== timePicker) {
-                timePicker.value = formatForInput(d);
+                timePicker.value = formatForInputLocal(d, offsetMin);
             }
             // Tag color: green LIVE, amber OVERRIDE.
             if (isLive()) {
@@ -1293,7 +1467,8 @@
         setInterval(() => { if (isLive()) refreshTimeDisplay(); }, 250);
 
         timePicker.addEventListener('change', () => {
-            const d = parseFromInput(timePicker.value);
+            const offsetMin = resolveEffectiveOffsetMin();
+            const d = parseFromLocalInput(timePicker.value, offsetMin);
             if (d) { setTimeOverride(d); refreshTimeDisplay(); }
         });
         timeLiveBtn.addEventListener('click', () => {
@@ -1301,20 +1476,120 @@
             refreshTimeDisplay();
         });
         const NUDGE = {
+            '-1dec':{ years: -10 }, '+1dec':{ years: +10 },
+            '-1y':  { years: -1  }, '+1y':  { years: +1  },
             '-1mo': { months: -1 }, '+1mo': { months: +1 },
+            '-1w':  { weeks:  -1 }, '+1w':  { weeks:  +1 },
             '-1d':  { days:   -1 }, '+1d':  { days:   +1 },
             '-1h':  { hours:  -1 }, '+1h':  { hours:  +1 }
         };
-        timeBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
+        // Hold-to-repeat: brief tap = one nudge; hold > 750ms = 4 Hz repeat.
+        const HOLD_DELAY_MS  = 750;
+        const REPEAT_INTERVAL_MS = 250;
+        function attachNudge(btn) {
+            let holdTimer = null;
+            let repeatTimer = null;
+            let didRepeat = false;
+            const fire = () => {
                 const delta = NUDGE[btn.dataset.tnudge];
                 if (!delta) return;
-                // Anchor on the currently-visible UT (live or override),
-                // then switch to override mode at base+delta.
                 const base = getEffectiveDate();
                 setTimeOverride(addUT(base, delta));
                 refreshTimeDisplay();
+            };
+            const cancel = () => {
+                if (holdTimer)   { clearTimeout(holdTimer);   holdTimer = null; }
+                if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = null; }
+                btn.classList.remove('holding');
+            };
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                didRepeat = false;
+                holdTimer = setTimeout(() => {
+                    holdTimer = null;
+                    didRepeat = true;
+                    btn.classList.add('holding');
+                    fire();
+                    repeatTimer = setInterval(fire, REPEAT_INTERVAL_MS);
+                }, HOLD_DELAY_MS);
             });
+            btn.addEventListener('pointerup', () => {
+                if (!didRepeat) fire();   // brief tap → single nudge
+                cancel();
+            });
+            btn.addEventListener('pointerleave', cancel);
+            btn.addEventListener('pointercancel', cancel);
+        }
+        timeBtns.forEach(attachNudge);
+
+        // ── Time-zone picker ──
+        const TZ_OFFSET_OPTIONS = [
+            -720, -660, -600, -540, -510, -480, -420, -360, -300, -270, -240, -210,
+            -180, -150, -120,  -60,    0,   60,  120,  180,  210,  240,  270,  300,
+             330,  360,  390,  420,  480,  540,  570,  600,  630,  660,  720,  780,
+             840
+        ];
+        const tzModal     = document.getElementById('tz-modal');
+        const tzList      = document.getElementById('tz-modal-list');
+        const tzSystemBtn = document.getElementById('tz-system-btn');
+        const tzCancelBtn = document.getElementById('tz-cancel-btn');
+        function buildTzList() {
+            tzList.innerHTML = '';
+            const stored = loadStoredZone();
+            const currentMin = resolveEffectiveOffsetMin();
+            for (const m of TZ_OFFSET_OPTIONS) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'tz-option';
+                btn.textContent = zoneTagFromOffset(m);
+                if (stored !== null && stored !== 'system' && parseInt(stored, 10) === m) {
+                    btn.classList.add('selected');
+                } else if ((stored === null || stored === 'system') && m === currentMin) {
+                    btn.classList.add('selected');
+                }
+                btn.addEventListener('click', () => {
+                    saveStoredZone(m);
+                    tzModal.classList.remove('visible');
+                    refreshTimeDisplay();
+                });
+                tzList.appendChild(btn);
+            }
+        }
+        function showTzPicker() { buildTzList(); tzModal.classList.add('visible'); }
+        zoneChip.addEventListener('click', (e) => { e.stopPropagation(); showTzPicker(); });
+        tzSystemBtn.addEventListener('click', () => {
+            saveStoredZone('system');
+            tzModal.classList.remove('visible');
+            refreshTimeDisplay();
+        });
+        tzCancelBtn.addEventListener('click', () => tzModal.classList.remove('visible'));
+        tzModal.addEventListener('click', (e) => { if (e.target === tzModal) tzModal.classList.remove('visible'); });
+
+        // First-launch: if no stored zone AND system zone undetectable, prompt.
+        (function initTimeZone() {
+            const stored = loadStoredZone();
+            if (stored !== null) return;          // user has chosen before
+            const sys = detectSystemTimeZone();
+            if (sys) { saveStoredZone('system'); refreshTimeDisplay(); return; }
+            showTzPicker();
+        })();
+
+        // ── Info / guide modal ──
+        const infoIcon  = document.getElementById('info-icon');
+        const infoModal = document.getElementById('info-modal');
+        const infoClose = document.getElementById('info-modal-close');
+        let infoRendered = false;
+        infoIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!infoRendered) {
+                renderGuide(document.getElementById('info-modal-body'));
+                infoRendered = true;
+            }
+            infoModal.classList.add('visible');
+        });
+        infoClose.addEventListener('click', () => infoModal.classList.remove('visible'));
+        infoModal.addEventListener('click', (e) => {
+            if (e.target === infoModal) infoModal.classList.remove('visible');
         });
 
         // ── Warning modal: tap icon to open, tap backdrop or OK to close ──
@@ -1865,7 +2140,55 @@
                 }
             }
             
-            labelRenderer.render(scene, camera); 
+            labelRenderer.render(scene, camera);
+
+            // ── Label-overlap fade (every 6 frames ≈ 10 Hz) ──
+            // For each visible label (i.e. NOT already hidden by zoom or
+            // occlusion), compute its on-screen rect and the rendered
+            // radius of its body. computeHiddenByOverlap then returns the
+            // ids of labels that should fade out via .label-overlapped.
+            // This stacks orthogonally with .hidden-label (either class
+            // hides the label) so existing logic is preserved.
+            if (frameCount % 6 === 0) {
+                const labelInfo = [];
+                const camPos = camera.position;
+                for (const lblDiv of labelsList) {
+                    if (!lblDiv) continue;
+                    if (lblDiv.classList.contains('hidden-label')) {
+                        lblDiv.classList.remove('label-overlapped');
+                        continue;
+                    }
+                    const r = lblDiv.getBoundingClientRect();
+                    if (r.width === 0 || r.height === 0) continue;
+                    const objName = lblDiv.dataset.bodyName;
+                    let bodyMesh = null, bodyRadius = 0;
+                    if (objName === 'Sun') { bodyMesh = sun; bodyRadius = sunVisualRadius; }
+                    else if (planets[objName]) {
+                        bodyMesh = planets[objName];
+                        bodyRadius = planetsData[objName].size;
+                    } else {
+                        const moon = activeMoons.find(m => m.config.name === objName);
+                        if (moon) { bodyMesh = moon.mesh; bodyRadius = moon.config.size; }
+                    }
+                    if (!bodyMesh) continue;
+                    bodyMesh.getWorldPosition(_labelWorldPos);
+                    const dist = camPos.distanceTo(_labelWorldPos);
+                    // Projected on-screen radius in pixels:
+                    //   r_px = bodyRadius * (viewportH / 2) / tan(fov/2) / dist
+                    const fovRad = camera.fov * Math.PI / 180.0;
+                    const renderedRadius = bodyRadius * (window.innerHeight * 0.5) / Math.tan(fovRad * 0.5) / Math.max(dist, 1e-6);
+                    labelInfo.push({
+                        id: objName,
+                        rect: { x: r.x, y: r.y, w: r.width, h: r.height },
+                        renderedRadius,
+                        element: lblDiv
+                    });
+                }
+                const hidden = computeHiddenByOverlap(labelInfo);
+                for (const li of labelInfo) {
+                    li.element.classList.toggle('label-overlapped', hidden.has(li.id));
+                }
+            }
         }
 
         window.addEventListener('resize', () => {

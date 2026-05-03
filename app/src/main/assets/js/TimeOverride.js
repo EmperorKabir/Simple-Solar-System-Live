@@ -66,11 +66,87 @@ export function parseFromInput(value) {
     return isFinite(d.getTime()) ? d : null;
 }
 
-/** Add hours/days/months to a Date as UT (months are calendar-aware). */
-export function addUT(date, { hours = 0, days = 0, months = 0 } = {}) {
+/** Add hours/days/weeks/months/years to a Date as UT (months/years calendar-aware). */
+export function addUT(date, { hours = 0, days = 0, weeks = 0, months = 0, years = 0 } = {}) {
     const d = new Date(date.getTime());
+    if (years)  d.setUTCFullYear(d.getUTCFullYear() + years);
     if (months) d.setUTCMonth(d.getUTCMonth() + months);
+    if (weeks)  d.setUTCDate(d.getUTCDate() + weeks * 7);
     if (days)   d.setUTCDate(d.getUTCDate() + days);
     if (hours)  d.setUTCHours(d.getUTCHours() + hours);
     return d;
+}
+
+// ── Time-zone helpers ───────────────────────────────────────────────────────
+const TZ_STORAGE_KEY = 'slss.timezone';
+
+/** Detect the system zone via Intl. Returns { name, offsetMin } or null. */
+export function detectSystemTimeZone() {
+    try {
+        const name = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (!name) return null;
+        const offsetMin = -(new Date()).getTimezoneOffset();
+        return { name, offsetMin };
+    } catch (e) { return null; }
+}
+
+/** Stored choice: 'system' or numeric offset minutes string, or null if unset. */
+export function loadStoredZone() {
+    try { return localStorage.getItem(TZ_STORAGE_KEY); } catch (e) { return null; }
+}
+export function saveStoredZone(value) {
+    try { localStorage.setItem(TZ_STORAGE_KEY, String(value)); } catch (e) {}
+}
+
+/** Resolve the effective offset in minutes ahead of UT. */
+export function resolveEffectiveOffsetMin() {
+    const stored = loadStoredZone();
+    if (stored && stored !== 'system') {
+        const n = parseInt(stored, 10);
+        if (Number.isFinite(n)) return n;
+    }
+    const sys = detectSystemTimeZone();
+    return sys ? sys.offsetMin : 0;
+}
+
+function _zoneTagFromOffset(offsetMin) {
+    const sign = offsetMin >= 0 ? '+' : '-';
+    const a = Math.abs(offsetMin);
+    const oh = String(Math.floor(a / 60)).padStart(2, '0');
+    const om = String(a % 60).padStart(2, '0');
+    return `UTC${sign}${oh}:${om}`;
+}
+export { _zoneTagFromOffset as zoneTagFromOffset };
+
+/** Format a Date as wall-clock at the given UT offset, e.g. "2026-05-03 14:23:09 UTC+01:00". */
+export function formatLocal(date, offsetMin) {
+    const tagged = new Date(date.getTime() + offsetMin * 60_000);
+    const Y = tagged.getUTCFullYear();
+    const M = String(tagged.getUTCMonth() + 1).padStart(2, '0');
+    const D = String(tagged.getUTCDate()).padStart(2, '0');
+    const h = String(tagged.getUTCHours()).padStart(2, '0');
+    const m = String(tagged.getUTCMinutes()).padStart(2, '0');
+    const s = String(tagged.getUTCSeconds()).padStart(2, '0');
+    return `${Y}-${M}-${D} ${h}:${m}:${s} ${_zoneTagFromOffset(offsetMin)}`;
+}
+
+/** Format Date for <input type="datetime-local"> in the user's chosen zone. */
+export function formatForInputLocal(date, offsetMin) {
+    const tagged = new Date(date.getTime() + offsetMin * 60_000);
+    const Y = tagged.getUTCFullYear();
+    const M = String(tagged.getUTCMonth() + 1).padStart(2, '0');
+    const D = String(tagged.getUTCDate()).padStart(2, '0');
+    const h = String(tagged.getUTCHours()).padStart(2, '0');
+    const m = String(tagged.getUTCMinutes()).padStart(2, '0');
+    const s = String(tagged.getUTCSeconds()).padStart(2, '0');
+    return `${Y}-${M}-${D}T${h}:${m}:${s}`;
+}
+
+/** Parse a datetime-local input value as a wall clock at the given UT offset. */
+export function parseFromLocalInput(value, offsetMin) {
+    if (!value) return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(value);
+    if (!m) return null;
+    const localMs = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0));
+    return new Date(localMs - offsetMin * 60_000);
 }
