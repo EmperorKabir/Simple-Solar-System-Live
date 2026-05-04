@@ -2274,8 +2274,9 @@
         const _labelHostWorld = new THREE.Vector3();
         const _labelRayDir = new THREE.Vector3();
 
+        let _rafId = 0;
         function animate() {
-            requestAnimationFrame(animate);
+            _rafId = requestAnimationFrame(animate);
             frameCount++;
             // Time query routed through offline OrbitalTimeUtils
             const dNow = getEffectiveJ2000Days();
@@ -2510,6 +2511,10 @@
                 if (window.__slssCaptured) return;
                 window.__slssCaptured = true;
                 _slssLog('capture-enter');
+                // Free CPU after the bitmap is composed — neither widget nor
+                // wallpaper need an ongoing animation loop once the snapshot
+                // has been taken (next refresh re-loads the page).
+                if (_rafId) cancelAnimationFrame(_rafId);
                 try {
                     renderer.render(scene, camera);
                     _slssLog('capture-render-done');
