@@ -763,6 +763,18 @@
         document.body.dataset.labels = LABELS_ENABLED ? 'on' : 'off';
         function _renderHeight() { return window.innerHeight * (1 - CAMERA_OFFSET_Y); }
 
+        // SLSS_DIAG: surface-mode timing milestones, routed through SnapshotBridge
+        // so they show up in the same logcat tag as the Kotlin renderer.
+        const _slssT0 = performance.now();
+        const _slssLog = (msg) => {
+            const line = 'SLSS_DIAG t=' + (performance.now() - _slssT0).toFixed(0) + 'ms ' + msg;
+            if (SURFACE !== 'main' && window.SnapshotBridge && window.SnapshotBridge.onSnapshotError) {
+                window.SnapshotBridge.onSnapshotError(line);
+            } else {
+                console.log(line);
+            }
+        };
+
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / _renderHeight(), 0.1, 2000);
         // Initial position will be set by calcResetView() after planets are created
 
@@ -1296,6 +1308,7 @@
             }));
         }
         Promise.all(texLoadPromises).then(() => {
+            _slssLog('textures-ready');
             // Reveal scene + labels + HUD; loader overlay fades via CSS.
             document.body.dataset.ready = "true";
             const loader = document.getElementById('app-loader');
@@ -2450,8 +2463,10 @@
         //      are invisible because canvas.toDataURL never sees them.
         if (SURFACE === 'widget' || SURFACE === 'wallpaper') {
             const _capture = () => {
+                _slssLog('capture-enter');
                 try {
                     renderer.render(scene, camera);
+                    _slssLog('capture-render-done');
                     const sceneCanvas = renderer.domElement;
                     const dpr = window.devicePixelRatio || 1;
                     // Export raw WebGL scene PNG. Compositing offset/labels is done in
@@ -2485,6 +2500,7 @@
                         sceneCssH: sceneCanvas.clientHeight || (sceneCanvas.height / dpr)
                     };
                     if (window.SnapshotBridge && window.SnapshotBridge.onSnapshotJson) {
+                        _slssLog('capture-bridge-call');
                         window.SnapshotBridge.onSnapshotJson(JSON.stringify(meta));
                     }
                 } catch (e) {
