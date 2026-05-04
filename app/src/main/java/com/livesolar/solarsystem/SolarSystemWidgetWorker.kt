@@ -28,10 +28,22 @@ class SolarSystemWidgetWorker(
         val mgr = AppWidgetManager.getInstance(applicationContext)
         val opts: Bundle = mgr.getAppWidgetOptions(appWidgetId)
         val density = applicationContext.resources.displayMetrics.density
-        val widthDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 320)
-        val heightDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 320)
-        val widthPx = (widthDp * density).toInt().coerceAtLeast(1)
-        val heightPx = (heightDp * density).toInt().coerceAtLeast(1)
+        // Android publishes MIN/MAX width/height in different fields per orientation.
+        // Portrait → MAX_WIDTH × MIN_HEIGHT; landscape → MIN_WIDTH × MAX_HEIGHT.
+        val portrait = applicationContext.resources.configuration.orientation ==
+            android.content.res.Configuration.ORIENTATION_PORTRAIT
+        val widthDp = if (portrait)
+            opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 320)
+        else
+            opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 320)
+        val heightDp = if (portrait)
+            opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 320)
+        else
+            opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 320)
+        // Clamp to 2048 px — RemoteViews bitmap cap above which IPC marshalling fails.
+        val maxPx = 2048
+        val widthPx = (widthDp * density).toInt().coerceIn(1, maxPx)
+        val heightPx = (heightDp * density).toInt().coerceIn(1, maxPx)
 
         val params = SurfaceSettings(applicationContext, SurfaceSettings.widgetNamespace(appWidgetId))
             .urlParams("widget")
