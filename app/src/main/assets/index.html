@@ -785,6 +785,10 @@
             const v = parseFloat(_surfaceParams.get('offsetY') || '0');
             return Number.isFinite(v) ? Math.min(0.7, Math.max(0, v)) : 0;
         })();
+        const CAMERA_TILT = (() => {
+            const v = parseFloat(_surfaceParams.get('tilt') || '0');
+            return Number.isFinite(v) ? Math.min(0.7, Math.max(0, v)) : 0;
+        })();
         document.body.dataset.surface = SURFACE;
         document.body.dataset.labels = LABELS_ENABLED ? 'on' : 'off';
         function _renderHeight() { return window.innerHeight * (1 - CAMERA_OFFSET_Y); }
@@ -2210,9 +2214,18 @@
             const vFOV = (Math.PI / 180.0) * camera.fov;
             const hFOV = 2 * Math.atan(Math.tan(vFOV / 2) * camera.aspect);
             const activeFOV = (camera.aspect < 1.0) ? hFOV : vFOV;
-            const requiredDist = (distRadius * 1.1) / Math.tan(activeFOV / 2);
-            camera.position.set(0, requiredDist, 0);
-            controls.target.set(0,0,0);
+            // Tighter framing in surface mode (no chrome competing for space).
+            const surfaceMargin = (SURFACE === 'main') ? 1.1 : 1.02;
+            const requiredDist = (distRadius * surfaceMargin) / Math.tan(activeFOV / 2);
+            // Camera tilt: 0 % = top-down (along +Y); 70 % = ~63° pitch toward
+            // the orbital plane. Look-at = origin, world up = +Y.
+            const tiltAngleRad = CAMERA_TILT * Math.PI * 0.5;
+            const cosT = Math.cos(tiltAngleRad);
+            const sinT = Math.sin(tiltAngleRad);
+            camera.position.set(0, requiredDist * cosT, requiredDist * sinT);
+            controls.target.set(0, 0, 0);
+            camera.up.set(0, 1, 0);
+            camera.lookAt(0, 0, 0);
             viewMode = "GALAXY";
             targetPlanet = null;
             lastResetCamDistance = requiredDist;
