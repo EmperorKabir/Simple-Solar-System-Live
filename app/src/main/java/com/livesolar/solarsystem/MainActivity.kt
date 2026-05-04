@@ -109,15 +109,17 @@ class MainActivity : Activity() {
             return JSONObject()
                 .put("home", JSONObject()
                     .put("offsetY", home.offsetY)
+                    .put("tilt", home.tilt)
                     .put("labels", home.labelsEnabled))
                 .put("lock", JSONObject()
                     .put("offsetY", lock.offsetY)
+                    .put("tilt", lock.tilt)
                     .put("labels", lock.labelsEnabled))
                 .toString()
         }
 
         @JavascriptInterface
-        fun saveSettings(target: String, offsetY: Float, labels: Boolean) {
+        fun saveSettings(target: String, offsetY: Float, tilt: Float, labels: Boolean) {
             val (ns, def) = when (target) {
                 "home" -> SurfaceSettings.HOME_WALLPAPER_NAMESPACE to SurfaceSettings.DEFAULT_HOME_OFFSET_Y
                 "lock" -> SurfaceSettings.LOCK_WALLPAPER_NAMESPACE to SurfaceSettings.DEFAULT_LOCK_OFFSET_Y
@@ -125,6 +127,7 @@ class MainActivity : Activity() {
             }
             SurfaceSettings(activity, ns, def).apply {
                 this.offsetY = offsetY
+                this.tilt = tilt
                 this.labelsEnabled = labels
             }
         }

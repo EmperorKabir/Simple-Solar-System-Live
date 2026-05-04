@@ -617,6 +617,19 @@
                     </select>
                 </div>
                 <div class="wp-row">
+                    <label>Camera tilt (0% top-down → 70% nearly side-on)</label>
+                    <select class="wp-select" data-prop="tilt">
+                        <option value="0.0">0%</option>
+                        <option value="0.1">10%</option>
+                        <option value="0.2">20%</option>
+                        <option value="0.3">30%</option>
+                        <option value="0.4">40%</option>
+                        <option value="0.5">50%</option>
+                        <option value="0.6">60%</option>
+                        <option value="0.7">70%</option>
+                    </select>
+                </div>
+                <div class="wp-row">
                     <label>Show planet labels</label>
                     <button type="button" class="wp-toggle" data-prop="labels">On</button>
                 </div>
@@ -627,6 +640,19 @@
                 <div class="wp-row">
                     <label>Vertical offset (empty space at top)</label>
                     <select class="wp-select" data-prop="offsetY">
+                        <option value="0.0">0%</option>
+                        <option value="0.1">10%</option>
+                        <option value="0.2">20%</option>
+                        <option value="0.3">30%</option>
+                        <option value="0.4">40%</option>
+                        <option value="0.5">50%</option>
+                        <option value="0.6">60%</option>
+                        <option value="0.7">70%</option>
+                    </select>
+                </div>
+                <div class="wp-row">
+                    <label>Camera tilt (0% top-down → 70% nearly side-on)</label>
+                    <select class="wp-select" data-prop="tilt">
                         <option value="0.0">0%</option>
                         <option value="0.1">10%</option>
                         <option value="0.2">20%</option>
@@ -1812,8 +1838,10 @@
             for (const target of ['home', 'lock']) {
                 const section = wallpaperModal.querySelector('.wp-section[data-target="' + target + '"]');
                 if (!section || !parsed[target]) continue;
-                const sel = section.querySelector('.wp-select[data-prop="offsetY"]');
-                if (sel) sel.value = (Math.round(parsed[target].offsetY * 10) / 10).toFixed(1);
+                const oSel = section.querySelector('.wp-select[data-prop="offsetY"]');
+                if (oSel) oSel.value = (Math.round(parsed[target].offsetY * 10) / 10).toFixed(1);
+                const tSel = section.querySelector('.wp-select[data-prop="tilt"]');
+                if (tSel) tSel.value = (Math.round((parsed[target].tilt || 0) * 10) / 10).toFixed(1);
                 const tog = section.querySelector('.wp-toggle[data-prop="labels"]');
                 if (tog) {
                     const on = !!parsed[target].labels;
@@ -1823,17 +1851,19 @@
             }
         }
         function _wpReadSection(section) {
-            const sel = section.querySelector('.wp-select[data-prop="offsetY"]');
-            const tog = section.querySelector('.wp-toggle[data-prop="labels"]');
+            const oSel = section.querySelector('.wp-select[data-prop="offsetY"]');
+            const tSel = section.querySelector('.wp-select[data-prop="tilt"]');
+            const tog  = section.querySelector('.wp-toggle[data-prop="labels"]');
             return {
-                offsetY: parseFloat(sel.value),
-                labels: !tog.classList.contains('off')
+                offsetY: parseFloat(oSel.value),
+                tilt:    parseFloat(tSel ? tSel.value : '0'),
+                labels:  !tog.classList.contains('off')
             };
         }
         function _wpSave(target, section) {
             if (!wallpaperBridgeAvailable) return;
             const v = _wpReadSection(section);
-            window.WallpaperPicker.saveSettings(target, v.offsetY, v.labels);
+            window.WallpaperPicker.saveSettings(target, v.offsetY, v.tilt, v.labels);
         }
         wallpaperIcon.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1847,6 +1877,8 @@
         wallpaperModal.querySelectorAll('.wp-section').forEach((section) => {
             const target = section.dataset.target;
             section.querySelector('.wp-select[data-prop="offsetY"]').addEventListener('change', () => _wpSave(target, section));
+            const tiltSel = section.querySelector('.wp-select[data-prop="tilt"]');
+            if (tiltSel) tiltSel.addEventListener('change', () => _wpSave(target, section));
             const toggle = section.querySelector('.wp-toggle[data-prop="labels"]');
             toggle.addEventListener('click', () => {
                 const isOff = toggle.classList.toggle('off');
