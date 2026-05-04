@@ -62,6 +62,30 @@ abstract class SurfaceSettingsActivity : Activity() {
             }
         }
 
+        val tiltLabel = TextView(this).apply {
+            text = "Camera tilt (0% = top-down, 70% = nearly side-on):"
+            setPadding(0, pad, 0, pad / 4)
+        }
+        val tiltSpinner = Spinner(this).apply {
+            val a = ArrayAdapter(
+                this@SurfaceSettingsActivity,
+                android.R.layout.simple_spinner_item,
+                SurfaceSettings.TILT_LABELS
+            )
+            a.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            adapter = a
+            val currentIdx = SurfaceSettings.TILT_OPTIONS.indexOfFirst {
+                kotlin.math.abs(it - settings.tilt) < 0.01f
+            }.coerceAtLeast(0)
+            setSelection(currentIdx)
+            onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                    settings.tilt = SurfaceSettings.TILT_OPTIONS[pos]
+                }
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }
+        }
+
         val labelsSwitch = Switch(this).apply {
             text = "Show body labels"
             isChecked = settings.labelsEnabled
@@ -85,6 +109,8 @@ abstract class SurfaceSettingsActivity : Activity() {
             addView(title)
             addView(offsetLabel)
             addView(spinner)
+            addView(tiltLabel)
+            addView(tiltSpinner)
             addView(labelsSwitch)
             addView(saveBtn)
         }
