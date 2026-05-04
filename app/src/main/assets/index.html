@@ -2246,14 +2246,56 @@
         animate();
 
         // ── Surface-mode snapshot bridge ──
-        // For widget / wallpaper rendering: after Three.js has rendered a
-        // few frames + textures have decoded, capture the WebGL canvas as
-        // a PNG data-URL and hand it to the Kotlin SnapshotBridge.
+        // Compose the scene + labels onto a FULL-viewport 2D canvas so that:
+        //   1. Camera vertical offset is preserved (scene drawn at bottom of
+        //      composite; top 'CAMERA_OFFSET_Y' fraction stays black).
+        //   2. CSS2D labels (which are HTML divs, not canvas pixels) get
+        //      manually drawn into the bitmap via ctx.fillText so they
+        //      actually appear in the captured PNG. Without this, labels
+        //      are invisible because canvas.toDataURL never sees them.
         if (SURFACE === 'widget' || SURFACE === 'wallpaper') {
-            const _snapshot = () => {
+            const _capture = () => {
                 try {
-                    renderer.render(scene, camera);  // ensure a fresh frame is in the back buffer
-                    const dataUrl = renderer.domElement.toDataURL('image/png');
+                    renderer.render(scene, camera);   // ensure fresh back buffer
+                    const fullW = window.innerWidth;
+                    const fullH = window.innerHeight;
+                    const sceneCanvas = renderer.domElement;
+                    const sceneRenderH = sceneCanvas.height;     // already in CSS px (renderer.setSize)
+                    const offsetTopPx = Math.round(fullH * CAMERA_OFFSET_Y);
+
+                    const composite = document.createElement('canvas');
+                    composite.width = fullW;
+                    composite.height = fullH;
+                    const ctx = composite.getContext('2d');
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, fullW, fullH);
+                    // Draw the WebGL scene into the lower (1 - offsetY) of the composite.
+                    ctx.drawImage(sceneCanvas, 0, offsetTopPx, fullW, fullH - offsetTopPx);
+
+                    // Render visible labels onto the composite.
+                    if (LABELS_ENABLED) {
+                        ctx.font = "600 12px -apple-system, BlinkMacSystemFont, Roboto, sans-serif";
+                        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                        ctx.shadowColor = 'rgba(0,0,0,0.95)';
+                        ctx.shadowBlur = 3;
+                        ctx.shadowOffsetY = 1;
+                        ctx.textBaseline = 'top';
+                        const labels = document.querySelectorAll('.planet-label');
+                        for (const lbl of labels) {
+                            // Honour existing zoom-distance / occlusion / overlap fade rules.
+                            if (lbl.classList.contains('hidden-label')) continue;
+                            if (lbl.classList.contains('label-overlapped')) continue;
+                            const cs = window.getComputedStyle(lbl);
+                            if (cs.opacity === '0' || cs.display === 'none' || cs.visibility === 'hidden') continue;
+                            const r = lbl.getBoundingClientRect();
+                            if (r.width <= 0 || r.height <= 0) continue;
+                            ctx.fillText(lbl.textContent || '', r.left, r.top);
+                        }
+                        ctx.shadowBlur = 0;
+                        ctx.shadowOffsetY = 0;
+                    }
+
+                    const dataUrl = composite.toDataURL('image/png');
                     if (window.SnapshotBridge && window.SnapshotBridge.onSnapshot) {
                         window.SnapshotBridge.onSnapshot(dataUrl);
                     }
@@ -2263,8 +2305,8 @@
                     }
                 }
             };
-            // Wait for textures + first render. 1800 ms is comfortable for cold launches.
-            setTimeout(_snapshot, 1800);
+            // Wait for textures + first render. 1800 ms covers cold launches.
+            setTimeout(_capture, 1800);
         }
     </script>
 </body>
