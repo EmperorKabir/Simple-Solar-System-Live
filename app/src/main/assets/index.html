@@ -2332,8 +2332,9 @@
             // Dynamic hitbox scaling — scale hitbox mesh based on camera distance.
             // At galaxy view (far), hitboxes are larger (2.5×) for easy tapping.
             // At planet close-up (near), hitboxes shrink to 1.0× to prevent overlap.
-            // Throttled to every 3 frames for performance.
-            if (frameCount % 3 === 0) {
+            // Throttled to every 3 frames for performance. Skipped in widget /
+            // wallpaper surfaces — no taps possible there.
+            if (SURFACE === 'main' && frameCount % 3 === 0) {
                 const camOriginDist = camera.position.length(); // distance from origin
                 // Interpolation: at distance > 60, scale = 2.5; at distance < 8, scale = 1.0
                 const farDist = 60.0;
@@ -2379,8 +2380,9 @@
             controls.update();
             renderer.render(scene, camera);
             
-            // Throttled Label Occlusion (every 5 frames)
-            if (frameCount % 5 === 0) {
+            // Throttled Label Occlusion (every 5 frames). Skipped in surface
+            // mode — _capture handles its own dedupe once per render.
+            if (SURFACE === 'main' && frameCount % 5 === 0) {
                 const cameraPos = camera.position;
                 for (let i = 0; i < labelsList.length; i++) {
                     const lblDiv = labelsList[i];
@@ -2439,14 +2441,10 @@
             
             labelRenderer.render(scene, camera);
 
-            // ── Label-overlap fade (every 6 frames ≈ 10 Hz) ──
-            // For each visible label (i.e. NOT already hidden by zoom or
-            // occlusion), compute its on-screen rect and the rendered
-            // radius of its body. computeHiddenByOverlap then returns the
-            // ids of labels that should fade out via .label-overlapped.
-            // This stacks orthogonally with .hidden-label (either class
-            // hides the label) so existing logic is preserved.
-            if (frameCount % 6 === 0) {
+            // Label-overlap fade (every 6 frames ≈ 10 Hz). Stacks orthogonally
+            // with .hidden-label so the zoom/occlusion logic above still wins.
+            // Skipped in surface mode — _capture runs its own dedupe pass.
+            if (SURFACE === 'main' && frameCount % 6 === 0) {
                 const labelInfo = [];
                 const camPos = camera.position;
                 for (const lblDiv of labelsList) {
