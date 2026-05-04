@@ -22,13 +22,16 @@ android {
     }
 
     // Release-signing config reads keystore details from the user's
-    // ~/.gradle/gradle.properties (NEVER committed). gradle-keystore-setup.ps1
-    // generates the keystore and prints the four lines you paste in there.
+    // ~/.gradle/gradle.properties (NEVER committed). The signing config is
+    // wired up whenever the referenced keystore file actually exists on disk
+    // — more robust than checking the gradle property alone, which can be
+    // missed on a stale daemon or cached configuration phase.
+    val releaseKeystorePath = (project.findProperty("RELEASE_STORE_FILE") as String?) ?: ""
+    val releaseKeystoreExists = releaseKeystorePath.isNotEmpty() && file(releaseKeystorePath).exists()
     signingConfigs {
         create("release") {
-            val keystorePath = (project.findProperty("RELEASE_STORE_FILE") as String?) ?: ""
-            if (keystorePath.isNotEmpty()) {
-                storeFile = file(keystorePath)
+            if (releaseKeystoreExists) {
+                storeFile = file(releaseKeystorePath)
                 storePassword = project.findProperty("RELEASE_STORE_PASSWORD") as String?
                 keyAlias = project.findProperty("RELEASE_KEY_ALIAS") as String?
                 keyPassword = project.findProperty("RELEASE_KEY_PASSWORD") as String?
@@ -41,8 +44,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Apply the release signing config only if the keystore property is set.
-            if ((project.findProperty("RELEASE_STORE_FILE") as String?)?.isNotEmpty() == true) {
+            if (releaseKeystoreExists) {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
