@@ -2528,14 +2528,37 @@
                     if (LABELS_ENABLED) {
                         // Widget/wallpaper labels: planets + Sun only. Moons are too
                         // cramped at fixed wide view and would overlap unreadably.
+                        // Same overlap-dedupe rule as the main animate loop: when two
+                        // labels' on-screen rects overlap, hide the one belonging to
+                        // the smaller-rendered body.
                         const PLANET_LABELS = new Set(['Sun','Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto']);
                         const all = document.querySelectorAll('.planet-label');
+                        const cand = [];
+                        const fovRad = camera.fov * Math.PI / 180.0;
+                        const _wp = new THREE.Vector3();
                         for (const lbl of all) {
                             const name = lbl.dataset.bodyName || (lbl.textContent || '').trim();
                             if (!PLANET_LABELS.has(name)) continue;
                             const r = lbl.getBoundingClientRect();
                             if (r.width <= 0 || r.height <= 0) continue;
-                            labels.push({ text: name, x: r.left, y: r.top });
+                            let bodyMesh = null, bodyRadius = 0;
+                            if (name === 'Sun') { bodyMesh = sun; bodyRadius = sunVisualRadius; }
+                            else if (planets[name]) { bodyMesh = planets[name]; bodyRadius = planetsData[name].size; }
+                            if (!bodyMesh) continue;
+                            bodyMesh.getWorldPosition(_wp);
+                            const dist = camera.position.distanceTo(_wp);
+                            const rPx = bodyRadius * (window.innerHeight * 0.5) / Math.tan(fovRad * 0.5) / Math.max(dist, 1e-6);
+                            cand.push({
+                                id: name,
+                                rect: { x: r.x, y: r.y, w: r.width, h: r.height },
+                                renderedRadius: rPx,
+                                xOut: r.left, yOut: r.top
+                            });
+                        }
+                        const hidden = computeHiddenByOverlap(cand);
+                        for (const c of cand) {
+                            if (hidden.has(c.id)) continue;
+                            labels.push({ text: c.id, x: c.xOut, y: c.yOut });
                         }
                     }
                     const meta = {
