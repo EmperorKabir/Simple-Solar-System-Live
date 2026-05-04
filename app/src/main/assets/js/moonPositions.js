@@ -27,7 +27,6 @@
  */
 
 import * as astroMoon  from './lib/astronomia/moonposition.js';
-import * as jupMoons   from './lib/astronomia/jupitermoons.js';
 import { Qs as SatQs } from './lib/astronomia/saturnmoons.js';
 import * as plutoMod   from './lib/astronomia/pluto.js';
 import { phobos, deimos } from './data/martianMoons.js';
@@ -338,166 +337,10 @@ export function saturnMoon(mc, jde) {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Uranian moons  (Miranda, Ariel, Umbriel, Titania, Oberon)
-//
-// Constants verbatim from Stellarium's GUST86 implementation
-// (src/core/planetsephems/gust86.c — the canonical Laskar & Jacobson 1987
-// Uranian satellite ephemeris). Originally extracted by sub-agent 1E and
-// recovered from git history (file OuterSystemMoonData.kt @ d33ca70~1).
-//
-//   Mean longitude:  λ_i(t) = PHN[i] + FQN[i] * t      (radians)
-//   t = JD - GUST86_EPOCH = JD - 2444239.5  (1980-01-01.0 TDB)
-//
-// Frame: GUST86 uranicentric (Uranus's equatorial plane, equinox-of-1980 X
-// axis). Position in GUST86 frame for a quasi-circular orbit is taken as
-// (cos λ, sin λ, 0) — eccentricities for these moons are <0.005, neglected
-// for visual purposes (the user's complaint is about ORIENTATION).
-//
-// To get scene-ecliptic, multiply by GUST86_TO_VSOP87, the canonical 3x3
-// matrix from Stellarium that maps GUST86 uranicentric → VSOP87 (J2000
-// ecliptic dynamical equinox).
+// Uranian moons (Miranda, Ariel, Umbriel, Titania, Oberon)
+// Horizons OSCULATING ELEMENTS via eclipticKeplerMoon, sub-degree vs Horizons.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GUST86_EPOCH_JD = 2444239.5;
-
-// PHN — mean-motion phases at GUST86_EPOCH (rad). Stellarium gust86.c.
-const GUST86_PHN = [-0.238051, 3.098046, 2.285402, 0.856359, -0.915592];
-// FQN — mean motions (rad/day). Stellarium gust86.c.
-const GUST86_FQN = [4.44519055, 2.492952519, 1.516148111, 0.721718509, 0.46669212];
-
-// Index in the FQN/PHN arrays: 0=Miranda, 1=Ariel, 2=Umbriel, 3=Titania, 4=Oberon.
-const GUST86_INDEX = { Miranda: 0, Ariel: 1, Umbriel: 2, Titania: 3, Oberon: 4 };
-
-// GUST86 → VSOP87 rotation matrix (row-major), Stellarium gust86.c constant.
-// Maps uranicentric ecliptic-of-1980 → VSOP87 ecliptic-of-J2000.
-const GUST86_TO_VSOP87 = [
-    [ 9.753206632086812015e-01,  6.194425668001473004e-02,  2.119257251551559653e-01],
-    [-2.006444610981783542e-01, -1.519328516640849367e-01,  9.678110398294910731e-01],
-    [ 9.214881523275189928e-02, -9.864478281437795399e-01, -1.357544776485127136e-01]
-];
-
-// Inclination phase frequencies (rad/day) and phases at GUST86_EPOCH (rad)
-// — Stellarium gust86.c. Used to evaluate elem[4] = sin(i/2)cos(Ω) and
-// elem[5] = sin(i/2)sin(Ω) for each moon.
-const GUST86_FQI = [
-    -20.309 * Math.PI / (180.0 * 365.25),
-     -6.288 * Math.PI / (180.0 * 365.25),
-     -2.836 * Math.PI / (180.0 * 365.25),
-     -1.843 * Math.PI / (180.0 * 365.25),
-     -0.259 * Math.PI / (180.0 * 365.25)
-];
-const GUST86_PHI = [5.702313, 0.395757, 0.589326, 1.746237, 4.206896];
-
-// Primary inclination amplitudes (sin(i/2) magnitudes). Stellarium gust86.c
-// uses a per-moon table of 5 amplitudes acting on phases ai0..ai4; the
-// dominant term of each moon corresponds to its own actual inclination.
-// Index in the array = [Miranda primary, Ariel primary, Umbriel primary,
-// Titania primary, Oberon primary], paired with the inclination phase
-// index used by GUST86 (Miranda uses ai[0], Ariel uses ai[1], etc.).
-const GUST86_INCL_AMPLITUDE = [3.787171e-2, 3.5825e-4, 1.11336e-3, 6.8572e-4, 4.5169e-4];
-const GUST86_INCL_PHASE_IDX = [0, 1, 2, 3, 4];
-
-// Per-moon mean-longitude perturbation series — verbatim from Stellarium
-// gust86.c (recovered from OuterSystemMoonData.kt @ d33ca70~1).
-// Each row: [m0, m1, m2, m3, m4, amplitude] where multipliers act on
-// the base mean longitudes an[i] = PHN[i] + FQN[i] * t (rad).
-//   λ_corrected = λ_base + Σ amplitude · sin(m0·an0 + m1·an1 + … + m4·an4)
-const GUST86_LAMBDA_PERT = {
-    // Miranda
-    0: [
-        [1, -3,  2, 0, 0,  0.02547217 ],
-        [2, -6,  4, 0, 0, -0.00308831 ],
-        [3, -9,  6, 0, 0, -3.181e-4   ],
-        [4,-12,  8, 0, 0, -3.749e-5   ],
-        [1, -1,  0, 0, 0, -5.785e-5   ],
-        [2, -2,  0, 0, 0, -6.232e-5   ],
-        [3, -3,  0, 0, 0, -2.795e-5   ]
-    ],
-    // Ariel
-    1: [
-        [1, -3,  2, 0, 0, -0.0018605  ],
-        [2, -6,  4, 0, 0,  2.1999e-4  ],
-        [3, -9,  6, 0, 0,  2.31e-5    ],
-        [4,-12,  8, 0, 0,  4.3e-6     ],
-        [0,  1, -1, 0, 0, -9.011e-5   ],
-        [0,  2, -2, 0, 0, -9.107e-5   ],
-        [0,  3, -3, 0, 0, -4.275e-5   ],
-        [0,  2,  0,-2, 0, -1.649e-5   ]
-    ],
-    // Umbriel
-    2: [
-        [1, -3,  2, 0, 0,  6.6057e-4  ],
-        [2, -6,  4, 0, 0, -7.651e-5   ],
-        [3, -9,  6, 0, 0, -8.96e-6    ],
-        [4,-12,  8, 0, 0, -2.53e-6    ],
-        [0,  0,  1,-4, 3, -5.291e-5   ],
-        [0,  0,  1,-2, 0,  1.4791e-4  ],
-        [0,  1, -1, 0, 0,  9.776e-5   ],
-        [0,  2, -2, 0, 0,  7.313e-5   ],
-        [0,  3, -3, 0, 0,  3.471e-5   ],
-        [0,  4, -4, 0, 0,  1.889e-5   ],
-        [0,  0,  1,-1, 0, -6.789e-5   ],
-        [0,  0,  2,-2, 0, -8.286e-5   ],
-        [0,  0,  3,-3, 0, -3.381e-5   ],
-        [0,  0,  4,-4, 0, -1.579e-5   ],
-        [0,  0,  1, 0,-1, -1.021e-5   ],
-        [0,  0,  2, 0,-2, -1.708e-5   ]
-    ],
-    // Titania
-    3: [
-        [0,  0,  1,-4, 3,  2.061e-5   ],
-        [0,  0,  1,-2, 0, -4.079e-5   ],
-        [0,  0,  0, 2,-3, -5.183e-5   ],
-        [0,  0,  0, 2,-3,  1.5987e-4  ],
-        [0,  0,  0, 2,-3, -3.505e-5   ],
-        [0,  1,  0,-1, 0,  4.054e-5   ],
-        [0,  0,  1,-1, 0,  4.617e-5   ],
-        [0,  0,  0, 1,-1, -3.1776e-4  ],
-        [0,  0,  0, 2,-2, -3.0559e-4  ],
-        [0,  0,  0, 3,-3, -1.4836e-4  ],
-        [0,  0,  0, 4,-4, -8.292e-5   ],
-        [0,  0,  0, 5,-5, -4.998e-5   ],
-        [0,  0,  0, 6,-6, -3.156e-5   ],
-        [0,  0,  0, 7,-7, -2.056e-5   ],
-        [0,  0,  0, 8,-8, -1.369e-5   ]
-    ],
-    // Oberon
-    4: [
-        [0,  0,  1,-4, 3, -7.82e-6    ],
-        [0,  0,  0, 2,-3,  5.129e-5   ],
-        [0,  0,  0, 2,-3, -1.5824e-4  ],
-        [0,  0,  0, 2,-3,  3.451e-5   ],
-        [0,  1,  0, 0,-1,  4.751e-5   ],
-        [0,  0,  1, 0,-1,  3.896e-5   ],
-        [0,  0,  0, 1,-1,  3.5973e-4  ],
-        [0,  0,  0, 2,-2,  2.8278e-4  ],
-        [0,  0,  0, 3,-3,  1.386e-4   ],
-        [0,  0,  0, 4,-4,  7.803e-5   ],
-        [0,  0,  0, 5,-5,  4.729e-5   ],
-        [0,  0,  0, 6,-6,  3e-5       ],
-        [0,  0,  0, 7,-7,  1.962e-5   ],
-        [0,  0,  0, 8,-8,  1.311e-5   ]
-    ]
-};
-
-/**
- * Uranian moon planetocentric position in scene-ecliptic frame.
- *
- *   1. Mean longitude  λ = PHN[i] + FQN[i] * (jde - 2444239.5)
- *   2. GUST86 uranicentric position = (cos λ, sin λ, 0) (circular approx)
- *   3. Multiply by GUST86_TO_VSOP87 → VSOP87 ecliptic-of-J2000
- *   4. Map ecliptic → scene: (x_ecl, z_ecl, -y_ecl)
- *   5. Scale to mc.dist
- *
- * Constants are Context7-grade: verbatim from the canonical Stellarium
- * gust86.c source (Laskar & Jacobson 1987 GUST86 theory). No LLM-derived
- * orbital elements.
- *
- * @param {object} mc — moonSystemConfig entry with mc.name and mc.dist.
- * @param {number} jde — Julian ephemeris day.
- * @returns {{x:number,y:number,z:number}} scene-frame position relative to
- *   Uranus pivot, magnitude == mc.dist.
- */
 const URANUS_ELEMENTS = { Miranda: miranda, Ariel: ariel, Umbriel: umbriel, Titania: titania, Oberon: oberon };
 
 export function uranusMoon(mc, jde) {
@@ -505,11 +348,6 @@ export function uranusMoon(mc, jde) {
     if (!el) return { x: 0, y: 0, z: 0 };
     return eclipticKeplerMoon(el, mc, jde, _uranusVSOP);
 }
-
-// Legacy GUST86 constants and helpers retained above for reference but are
-// no longer used by the rendering pipeline. The Horizons OSCULATING
-// ELEMENTS path (eclipticKeplerMoon) supersedes them with sub-degree
-// agreement vs Horizons VECTORS at the published epoch.
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -533,16 +371,6 @@ function _neptuneLightTime(jde) {
     const nz = NEPTUNE_HELIO_AU * NEPTUNE_HELIO_DIRECTION.z;
     return LIGHT_TIME_DAYS_PER_AU * Math.hypot(nx - ex, ny - ey, nz - ez);
 }
-// Stub Planet-like adapter so eclipticKeplerMoon can compute light-time for Neptune.
-const _neptuneLTAdapter = {
-    position2000: (jde) => {
-        // We synthesize a 'planet position' such that lightTimeDays(jde, this)
-        // returns the same value as _neptuneLightTime(jde). Cleanest is to
-        // bypass — instead just call _neptuneLightTime directly in neptuneMoon.
-        return null;
-    }
-};
-
 /** Triton / Proteus planetocentric scene position. Skips the
  *  eclipticKeplerMoon helper because it needs a custom Neptune-specific
  *  light-time path (no VSOP87 Neptune vendored). */
