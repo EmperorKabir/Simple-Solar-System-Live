@@ -2,11 +2,14 @@ package com.livesolar.solarsystem
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Canvas
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
+import android.util.Base64
 import android.view.View
+import android.view.WindowManager
+import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -17,16 +20,19 @@ import androidx.webkit.WebViewAssetLoader
 /**
  * Offscreen WebView → Bitmap helper.
  *
- * Loads index.html with the supplied URL params at the requested pixel
- * size, waits long enough for textures to decode + Three.js to render
- * its first frame, then captures the WebView's surface to a Bitmap and
- * destroys the WebView.
+ * Three.js uses WebGL, which webView.draw(canvas) cannot capture (that
+ * call only captures the WebView's view hierarchy, not WebGL output).
+ * Instead we use a JS bridge:
+ *   1. JS renders the scene (with preserveDrawingBuffer enabled in
+ *      surface mode), calls canvas.toDataURL('image/png'), and posts
+ *      the data-URL to window.SnapshotBridge.onSnapshot.
+ *   2. We decode the base64 PNG into a Bitmap on the Kotlin side.
  *
- * Must be invoked on the main looper. WebView requires LAYER_TYPE_SOFTWARE
- * for draw(canvas) to work reliably across Android versions.
+ * Must be invoked on the main looper. Hardware acceleration left ON
+ * because WebGL requires it.
  */
 object WebViewBitmapRenderer {
-    private const val FIRST_FRAME_DELAY_MS = 1800L
+    private const val OVERALL_TIMEOUT_MS = 8000L
 
     fun render(
         context: Context,
@@ -44,47 +50,68 @@ object WebViewBitmapRenderer {
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(context))
             .build()
 
-        @Suppress("DEPRECATION")  // setLayerType deprecated for hardware accel only — software still required for offscreen draw
-        val wv = WebView(context.applicationContext)
-        wv.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
-        wv.measure(
-            View.MeasureSpec.makeMeasureSpec(widthPx, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(heightPx, View.MeasureSpec.EXACTLY)
-        )
-        wv.layout(0, 0, widthPx, heightPx)
-        wv.settings.javaScriptEnabled = true
-        wv.settings.domStorageEnabled = true
-        wv.settings.useWideViewPort = false
-        wv.settings.loadWithOverviewMode = false
-        wv.setBackgroundColor(Color.BLACK)
-
         val handler = Handler(Looper.getMainLooper())
         var done = false
+        var wv: WebView? = null
 
-        wv.webChromeClient = WebChromeClient()
-        wv.webViewClient = object : WebViewClient() {
-            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
-                assetLoader.shouldInterceptRequest(request.url)
-
-            override fun onPageFinished(view: WebView, url: String?) {
-                handler.postDelayed({
-                    if (done) return@postDelayed
-                    done = true
-                    var bm: Bitmap? = null
-                    try {
-                        bm = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888)
-                        bm.eraseColor(Color.BLACK)
-                        wv.draw(Canvas(bm))
-                    } catch (t: Throwable) {
-                        bm = null
-                    } finally {
-                        try { wv.destroy() } catch (_: Throwable) {}
-                        onResult(bm)
-                    }
-                }, FIRST_FRAME_DELAY_MS)
+        val bridge = SnapshotBridge { dataUrl ->
+            if (done) return@SnapshotBridge
+            done = true
+            handler.post {
+                try {
+                    val bm = decodeDataUrl(dataUrl, widthPx, heightPx)
+                    onResult(bm)
+                } catch (t: Throwable) {
+                    onResult(null)
+                } finally {
+                    try { wv?.destroy() } catch (_: Throwable) {}
+                }
             }
         }
 
-        wv.loadUrl("https://appassets.androidplatform.net/assets/index.html$urlParams")
+        wv = WebView(context.applicationContext).apply {
+            measure(
+                View.MeasureSpec.makeMeasureSpec(widthPx, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(heightPx, View.MeasureSpec.EXACTLY)
+            )
+            layout(0, 0, widthPx, heightPx)
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            settings.useWideViewPort = false
+            settings.loadWithOverviewMode = false
+            setBackgroundColor(Color.BLACK)
+            // Hardware accel is required for WebGL — leave the WebView in its default layer mode.
+            addJavascriptInterface(bridge, "SnapshotBridge")
+            webChromeClient = WebChromeClient()
+            webViewClient = object : WebViewClient() {
+                override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
+                    assetLoader.shouldInterceptRequest(request.url)
+            }
+        }
+
+        // Hard timeout — if JS never posts a snapshot, give up and report failure.
+        handler.postDelayed({
+            if (done) return@postDelayed
+            done = true
+            try { wv?.destroy() } catch (_: Throwable) {}
+            onResult(null)
+        }, OVERALL_TIMEOUT_MS)
+
+        wv?.loadUrl("https://appassets.androidplatform.net/assets/index.html$urlParams")
+    }
+
+    private fun decodeDataUrl(dataUrl: String, widthPx: Int, heightPx: Int): Bitmap? {
+        val commaIdx = dataUrl.indexOf("base64,")
+        if (commaIdx < 0) return null
+        val base64 = dataUrl.substring(commaIdx + 7)
+        val bytes = Base64.decode(base64, Base64.DEFAULT)
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    }
+
+    private class SnapshotBridge(val onSnapshot: (String) -> Unit) {
+        @JavascriptInterface
+        fun onSnapshot(dataUrl: String) { onSnapshot.invoke(dataUrl) }
+        @JavascriptInterface
+        fun onSnapshotError(msg: String) { android.util.Log.e("SnapshotBridge", "JS reported: $msg") }
     }
 }

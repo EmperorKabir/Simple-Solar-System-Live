@@ -61,6 +61,22 @@
             android:name=".SolarSystemWallpaperConfigActivity"
             android:exported="true"
             android:theme="@android:style/Theme.DeviceDefault.Dialog" />
+
+        <!-- Separate launcher icon that immediately opens Android's
+             live-wallpaper preview for our service. Workaround for OEM
+             skins (e.g. Samsung One UI) that hide third-party live
+             wallpapers from their wallpaper picker. -->
+        <activity
+            android:name=".SolarSystemWallpaperLauncher"
+            android:exported="true"
+            android:label="Solar Wallpaper"
+            android:icon="@mipmap/ic_launcher"
+            android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

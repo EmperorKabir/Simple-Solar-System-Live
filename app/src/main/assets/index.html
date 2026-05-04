@@ -631,7 +631,10 @@
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / _renderHeight(), 0.1, 2000);
         // Initial position will be set by calcResetView() after planets are created
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+        // preserveDrawingBuffer needed in surface mode so canvas.toDataURL()
+        // returns valid pixels for the offscreen Bitmap capture.
+        const _preserveBuf = (SURFACE !== 'main');
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance", preserveDrawingBuffer: _preserveBuf });
         renderer.setSize(window.innerWidth, _renderHeight());
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -2241,6 +2244,28 @@
         });
 
         animate();
+
+        // ── Surface-mode snapshot bridge ──
+        // For widget / wallpaper rendering: after Three.js has rendered a
+        // few frames + textures have decoded, capture the WebGL canvas as
+        // a PNG data-URL and hand it to the Kotlin SnapshotBridge.
+        if (SURFACE === 'widget' || SURFACE === 'wallpaper') {
+            const _snapshot = () => {
+                try {
+                    renderer.render(scene, camera);  // ensure a fresh frame is in the back buffer
+                    const dataUrl = renderer.domElement.toDataURL('image/png');
+                    if (window.SnapshotBridge && window.SnapshotBridge.onSnapshot) {
+                        window.SnapshotBridge.onSnapshot(dataUrl);
+                    }
+                } catch (e) {
+                    if (window.SnapshotBridge && window.SnapshotBridge.onSnapshotError) {
+                        window.SnapshotBridge.onSnapshotError(String(e));
+                    }
+                }
+            };
+            // Wait for textures + first render. 1800 ms is comfortable for cold launches.
+            setTimeout(_snapshot, 1800);
+        }
     </script>
 </body>
 </html>
