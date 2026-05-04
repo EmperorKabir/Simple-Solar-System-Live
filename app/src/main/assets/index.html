@@ -1371,7 +1371,9 @@
             map: tex.Sun, emissive: 0xffffff, emissiveMap: tex.Sun,
             emissiveIntensity: 1.5, roughness: 1.0, metalness: 0.0
         });
-        const sun = new THREE.Mesh(new THREE.SphereGeometry(sunVisualRadius, 64, 64), sunMat);
+        const _bodySeg = (SURFACE === 'main') ? 64 : 24;
+        const _moonSeg = (SURFACE === 'main') ? 32 : 16;
+        const sun = new THREE.Mesh(new THREE.SphereGeometry(sunVisualRadius, _bodySeg, _bodySeg), sunMat);
         scene.add(sun);
         sun.name = "Sun";
         sun.add(createLabel("Sun", sunVisualRadius));
@@ -1407,7 +1409,7 @@
             }
             
             const pMat = new THREE.MeshStandardMaterial(matParams);
-            const bodyMesh = new THREE.Mesh(new THREE.SphereGeometry(data.size, 64, 64), pMat);
+            const bodyMesh = new THREE.Mesh(new THREE.SphereGeometry(data.size, _bodySeg, _bodySeg), pMat);
             bodyMesh.name = name + "_body";
             data.bodyMesh = bodyMesh;
             
@@ -1549,7 +1551,7 @@
         let earthMoonMesh = null;
 
         for (const mc of moonSystemConfig) {
-            const mGeom = mc.irregular ? createIrregularGeometry(mc.size) : new THREE.SphereGeometry(mc.size, 32, 32);
+            const mGeom = mc.irregular ? createIrregularGeometry(mc.size) : new THREE.SphereGeometry(mc.size, _moonSeg, _moonSeg);
             
             // Use correct texture — Proteus has no texture file, use grey material
             let mMat;
