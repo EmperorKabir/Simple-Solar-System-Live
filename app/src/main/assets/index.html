@@ -2462,7 +2462,10 @@
         //      actually appear in the captured PNG. Without this, labels
         //      are invisible because canvas.toDataURL never sees them.
         if (SURFACE === 'widget' || SURFACE === 'wallpaper') {
+            window.__slssCaptured = false;
             const _capture = () => {
+                if (window.__slssCaptured) return;
+                window.__slssCaptured = true;
                 _slssLog('capture-enter');
                 try {
                     renderer.render(scene, camera);
@@ -2509,8 +2512,13 @@
                     }
                 }
             };
-            // Wait for textures + first render. 1800 ms covers cold launches.
-            setTimeout(_capture, 1800);
+            // Event-driven: textures-ready + 2 rAF (so first WebGL pass with
+            // textures bound has actually completed). Hard 8 s fallback so the
+            // WorkManager job never hangs even if texture decode stalls.
+            Promise.all(texLoadPromises).then(() => {
+                requestAnimationFrame(() => requestAnimationFrame(_capture));
+            });
+            setTimeout(_capture, 8000);
         }
     </script>
 </body>
