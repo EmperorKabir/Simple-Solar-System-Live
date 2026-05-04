@@ -5,6 +5,9 @@ app/build/
 .idea/
 .kotlin/
 *.apk
+*.aab
+*.keystore
+*.jks
 local.properties
 .claude/settings.local.json
 tools/astronomia_src/
