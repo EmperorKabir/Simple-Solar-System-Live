@@ -14,6 +14,7 @@ import android.hardware.display.VirtualDisplay
 import android.media.ImageReader
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Base64
 import android.util.Log
 import android.view.ViewGroup
@@ -61,6 +62,8 @@ object WebViewBitmapRenderer {
         val app = context.applicationContext
         val handler = Handler(Looper.getMainLooper())
         var done = false
+        val tStart = SystemClock.elapsedRealtime()
+        Log.i(TAG, "SLSS_DIAG render start ${widthPx}x${heightPx} surface=${urlParams}")
 
         val imageReader = ImageReader.newInstance(widthPx, heightPx, PixelFormat.RGBA_8888, 2)
         val displayManager = app.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
@@ -96,6 +99,7 @@ object WebViewBitmapRenderer {
         val bridge = SnapshotBridge { json ->
             if (done) return@SnapshotBridge
             done = true
+            Log.i(TAG, "SLSS_DIAG snapshot received t=${SystemClock.elapsedRealtime() - tStart}ms chars=${json.length}")
             handler.post {
                 var bm: Bitmap? = null
                 try {
@@ -121,6 +125,9 @@ object WebViewBitmapRenderer {
         wv.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
                 assetLoader.shouldInterceptRequest(request.url)
+            override fun onPageFinished(view: WebView, url: String?) {
+                Log.i(TAG, "SLSS_DIAG onPageFinished t=${SystemClock.elapsedRealtime() - tStart}ms")
+            }
         }
         presentation.setContentView(wv)
         try { presentation.show() } catch (t: Throwable) {
@@ -131,7 +138,7 @@ object WebViewBitmapRenderer {
         handler.postDelayed({
             if (done) return@postDelayed
             done = true
-            Log.w(TAG, "render timeout — JS bridge never fired")
+            Log.w(TAG, "SLSS_DIAG TIMEOUT t=${SystemClock.elapsedRealtime() - tStart}ms (JS bridge never fired)")
             cleanup(); onResult(null)
         }, OVERALL_TIMEOUT_MS)
 

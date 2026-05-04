@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.RemoteViews
 import androidx.concurrent.futures.CallbackToFutureAdapter
 import androidx.work.ListenableWorker
@@ -35,8 +36,11 @@ class SolarSystemWidgetWorker(
         val params = SurfaceSettings(applicationContext, SurfaceSettings.widgetNamespace(appWidgetId))
             .urlParams("widget")
 
+        Log.i("SolarRenderer", "SLSS_DIAG Worker startWork id=$appWidgetId widthDp=$widthDp heightDp=$heightDp density=$density")
+
         Handler(Looper.getMainLooper()).post {
             WebViewBitmapRenderer.render(applicationContext, widthPx, heightPx, params) { bitmap ->
+                Log.i("SolarRenderer", "SLSS_DIAG Worker bitmap=${bitmap?.width}x${bitmap?.height} null=${bitmap == null}")
                 if (bitmap != null) {
                     try {
                         val rv = RemoteViews(applicationContext.packageName, R.layout.widget_initial)
