@@ -2263,10 +2263,20 @@
                     const sceneRenderH = sceneCanvas.height;     // already in CSS px (renderer.setSize)
                     const offsetTopPx = Math.round(fullH * CAMERA_OFFSET_Y);
 
+                    // High-DPI: composite must be sized at DEVICE pixels, not CSS pixels.
+                    // The WebView reports CSS-pixel viewport (window.innerWidth ≈ requestedPx / dpr)
+                    // because of the <meta viewport width=device-width>. If we make the composite
+                    // CSS-pixel-sized, the resulting PNG comes out at e.g. 1123×1012 and
+                    // ImageView fitXY then upscales 2× → blurry. Fix: composite at fullW*dpr ×
+                    // fullH*dpr, then ctx.scale(dpr, dpr) so the rest of the drawing code writes
+                    // in CSS-pixel coords (matching getBoundingClientRect for labels) but the
+                    // backing buffer ends up at device-pixel resolution.
+                    const dpr = window.devicePixelRatio || 1;
                     const composite = document.createElement('canvas');
-                    composite.width = fullW;
-                    composite.height = fullH;
+                    composite.width = Math.round(fullW * dpr);
+                    composite.height = Math.round(fullH * dpr);
                     const ctx = composite.getContext('2d');
+                    ctx.scale(dpr, dpr);
                     ctx.fillStyle = '#000';
                     ctx.fillRect(0, 0, fullW, fullH);
                     // Draw the WebGL scene into the lower (1 - offsetY) of the composite.

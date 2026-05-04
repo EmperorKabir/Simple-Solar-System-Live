@@ -60,6 +60,7 @@ object WebViewBitmapRenderer {
             handler.post {
                 try {
                     val bm = decodeDataUrl(dataUrl, widthPx, heightPx)
+                    android.util.Log.d("SLSS", "snapshot bitmap=${bm?.width}x${bm?.height} requested ${widthPx}x${heightPx}")
                     onResult(bm)
                 } catch (t: Throwable) {
                     onResult(null)
