@@ -19,15 +19,20 @@ class SurfaceSettings(
         get() = prefs.getFloat("offsetY", defaultOffsetY)
         set(value) = prefs.edit().putFloat("offsetY", value.coerceIn(0f, 0.7f)).apply()
 
+    var tilt: Float
+        get() = prefs.getFloat("tilt", DEFAULT_TILT)
+        set(value) = prefs.edit().putFloat("tilt", value.coerceIn(0f, 0.7f)).apply()
+
     var labelsEnabled: Boolean
         get() = prefs.getBoolean("labels", true)
         set(value) = prefs.edit().putBoolean("labels", value).apply()
 
     /** URL params for index.html in widget/wallpaper mode. */
     fun urlParams(surface: String): String {
-        val rounded = (offsetY * 10).toInt() / 10f
+        val offset = (offsetY * 10).toInt() / 10f
+        val tiltR  = (tilt    * 10).toInt() / 10f
         val labels = if (labelsEnabled) "on" else "off"
-        return "?surface=$surface&offsetY=$rounded&labels=$labels"
+        return "?surface=$surface&offsetY=$offset&tilt=$tiltR&labels=$labels"
     }
 
     companion object {
@@ -36,9 +41,14 @@ class SurfaceSettings(
         const val LOCK_WALLPAPER_NAMESPACE = "wallpaper_lock"
         const val DEFAULT_HOME_OFFSET_Y = 0.0f
         const val DEFAULT_LOCK_OFFSET_Y = 0.3f
+        const val DEFAULT_TILT = 0.0f
 
         /** Eight 10%-stepped values exposed in the picker UI. */
         val OFFSET_OPTIONS = floatArrayOf(0.0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f)
         val OFFSET_LABELS = arrayOf("0%", "10%", "20%", "30%", "40%", "50%", "60%", "70%")
+
+        /** Tilt: 0 % = top-down (camera at +Y), 70 % = ~63° pitch toward orbital plane. */
+        val TILT_OPTIONS = floatArrayOf(0.0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f)
+        val TILT_LABELS  = arrayOf("0%", "10%", "20%", "30%", "40%", "50%", "60%", "70%")
     }
 }
