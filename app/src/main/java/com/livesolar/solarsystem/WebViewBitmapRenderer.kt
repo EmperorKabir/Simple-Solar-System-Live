@@ -30,17 +30,15 @@ import org.json.JSONObject
  * Offscreen WebView → Bitmap renderer for the home-screen widget and live
  * wallpapers.
  *
- * Architecture (verified on-device 2026-05-04):
- *   - Plain `new WebView(context)` outside any window cannot host WebGL —
- *     produces an all-black bitmap.
- *   - Hosting the WebView inside a Presentation on a VirtualDisplay backed
- *     by an ImageReader Surface gives it a real Window context and WebGL
- *     works.
- *   - `ctx.drawImage(WebGLcanvas, ...)` to a 2D canvas in JS silently fails
- *     in this Presentation context. We side-step that by exporting the raw
- *     WebGL canvas PNG plus a JSON of label positions and compositing the
- *     final Bitmap natively (offset region + scene + labels) using
- *     android.graphics.Canvas.
+ * Why the Presentation+VirtualDisplay path: a plain `new WebView(ctx)` outside
+ * any window cannot host WebGL (returns an all-black bitmap). The WebView
+ * needs a real Window context, which a Presentation on a VirtualDisplay
+ * backed by an ImageReader surface provides.
+ *
+ * Why native compositing: `ctx.drawImage(WebGLcanvas, ...)` to a JS 2D canvas
+ * silently produces a black bitmap inside this Presentation context, so we
+ * export the raw WebGL canvas PNG plus a JSON of label positions and composite
+ * the final Bitmap (offset region + scene + labels) via android.graphics.Canvas.
  *
  * Must be invoked on the main looper.
  */

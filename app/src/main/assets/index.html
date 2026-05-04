@@ -880,23 +880,17 @@
         ];
 
         // Attach Phobos/Deimos full element sets to their moonSystemConfig entries
-        // so OrbitalEngine.computeMarsMoonPosition() can run a true Kepler propagation.
+        // so the moon dispatcher can run a true Kepler propagation.
         for (const mc of moonSystemConfig) {
             if (mc.marsMoon && mc.elementsKey) {
                 mc.elements = MARS_MOON_ELEMENTS[mc.elementsKey];
             }
         }
 
-        // texOffset (deg) corrects for the texture-authoring convention vs the
-        // Three.js SphereGeometry UV mapping (verified from the bundled
-        // three.module.js source — class SphereGeometry, lines 39771-39784):
-        //   vertex.x = -radius * cos(phi) * sin(theta)
-        //   uv.x = u  → so u=0 maps to body-local -X, u=0.5 maps to +X.
-        // Standard NASA / Solar-System-Scope textures place the prime meridian
-        // at the image CENTER (u=0.5), which already lands on body-local +X —
-        // exactly where IAU W=0 expects it. Therefore texOffset = 0 is correct
-        // for this texture pack. (Earlier commit 819de10 set this to 180 based
-        // on incorrect reasoning; reverted here after Context7 + source check.)
+        // texOffset (deg) corrects texture-authoring convention vs SphereGeometry
+        // UV mapping (u=0.5 maps to body-local +X, where IAU W=0 expects the
+        // prime meridian). The bundled NASA-style textures already place PM at
+        // image centre, so 0° is correct.
         const rawPlanetsData = {
             Mercury: { order: 1, a: 0.3871, e: 0.2056, i: 7.00, L: 252.25, w: 77.45, node: 48.33, n: 4.0923344, period: 0.240846, size: 0.35,
                 rotPeriod: 58.6, obliquity: 0.034, W0: 329.5469, Wd: 6.1385025, poleLon: 281.01, texOffset: 0.0 },
@@ -1229,7 +1223,6 @@
             return _adapterVec.set(pos.x, pos.y, pos.z);
         }
 
-        // (moonSystemConfig already defined above, before VisualScaleEngine)
 
         // ============================================================
         // 5. Texture Loading — All local files
