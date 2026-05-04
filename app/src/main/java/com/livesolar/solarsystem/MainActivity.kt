@@ -2,13 +2,14 @@ package com.livesolar.solarsystem
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.WallpaperManager
+import android.content.ComponentName
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.WindowInsets
-import android.util.Log
-import android.webkit.ConsoleMessage
-import android.webkit.WebChromeClient
+import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -16,6 +17,7 @@ import android.webkit.WebViewClient
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.webkit.WebViewAssetLoader
+import org.json.JSONObject
 
 class MainActivity : Activity() {
 
@@ -63,13 +65,8 @@ class MainActivity : Activity() {
                     injectSafeAreaInsets(view)
                 }
             }
-            // TEMP DIAG: bridge WebView console.log to logcat (tag: WebConsole)
-            webChromeClient = object : WebChromeClient() {
-                override fun onConsoleMessage(cm: ConsoleMessage): Boolean {
-                    Log.i("WebConsole", "${cm.message()} @ ${cm.sourceId()}:${cm.lineNumber()}")
-                    return true
-                }
-            }
+
+            addJavascriptInterface(WallpaperPickerBridge(this@MainActivity), "WallpaperPicker")
 
             loadUrl("https://appassets.androidplatform.net/assets/index.html")
         }
@@ -91,6 +88,70 @@ class MainActivity : Activity() {
         }
 
         setContentView(webView)
+    }
+
+    /**
+     * JS-side bridge for the in-app wallpaper picker. Exposes per-surface
+     * settings (home / lock) to JS and lets JS launch Android's live-wallpaper
+     * preview pre-selecting our service.
+     */
+    class WallpaperPickerBridge(private val activity: Activity) {
+        @JavascriptInterface
+        fun getSettings(): String {
+            val home = SurfaceSettings(
+                activity, SurfaceSettings.HOME_WALLPAPER_NAMESPACE,
+                SurfaceSettings.DEFAULT_HOME_OFFSET_Y
+            )
+            val lock = SurfaceSettings(
+                activity, SurfaceSettings.LOCK_WALLPAPER_NAMESPACE,
+                SurfaceSettings.DEFAULT_LOCK_OFFSET_Y
+            )
+            return JSONObject()
+                .put("home", JSONObject()
+                    .put("offsetY", home.offsetY)
+                    .put("labels", home.labelsEnabled))
+                .put("lock", JSONObject()
+                    .put("offsetY", lock.offsetY)
+                    .put("labels", lock.labelsEnabled))
+                .toString()
+        }
+
+        @JavascriptInterface
+        fun saveSettings(target: String, offsetY: Float, labels: Boolean) {
+            val (ns, def) = when (target) {
+                "home" -> SurfaceSettings.HOME_WALLPAPER_NAMESPACE to SurfaceSettings.DEFAULT_HOME_OFFSET_Y
+                "lock" -> SurfaceSettings.LOCK_WALLPAPER_NAMESPACE to SurfaceSettings.DEFAULT_LOCK_OFFSET_Y
+                else -> return
+            }
+            SurfaceSettings(activity, ns, def).apply {
+                this.offsetY = offsetY
+                this.labelsEnabled = labels
+            }
+        }
+
+        @JavascriptInterface
+        fun applyWallpaper(target: String) {
+            val cls = when (target) {
+                "home" -> SolarSystemHomeWallpaperService::class.java
+                "lock" -> SolarSystemLockWallpaperService::class.java
+                else -> return
+            }
+            val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
+                putExtra(
+                    WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+                    ComponentName(activity, cls)
+                )
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            activity.runOnUiThread {
+                try { activity.startActivity(intent) } catch (_: Throwable) {
+                    try { activity.startActivity(
+                        Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ) } catch (_: Throwable) {}
+                }
+            }
+        }
     }
 
     private fun injectSafeAreaInsets(webView: WebView) {

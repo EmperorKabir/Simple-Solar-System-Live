@@ -9,15 +9,18 @@ import android.service.wallpaper.WallpaperService
 import android.view.SurfaceHolder
 
 /**
- * Live wallpaper that paints the chromeless solar system every 10 minutes.
- * The same engine works for home and lock screens — Android lets the user
- * pick which surface(s) to apply the wallpaper to.
+ * Base live-wallpaper service that paints the chromeless solar system
+ * every 10 minutes. Subclasses pick a namespace + default vertical
+ * camera offset so home and lock screens can be configured separately.
  *
- * On reboot, Android re-creates the engine automatically if the user has
- * this service selected as their wallpaper, so no BOOT_COMPLETED receiver
- * is needed.
+ * On reboot, Android re-creates the engine automatically when this
+ * service is the user's selected wallpaper, so no BOOT_COMPLETED
+ * receiver is needed.
  */
-class SolarSystemWallpaperService : WallpaperService() {
+abstract class SolarSystemWallpaperService : WallpaperService() {
+
+    abstract fun namespace(): String
+    abstract fun defaultOffsetY(): Float
 
     override fun onCreateEngine(): Engine = SolarEngine()
 
@@ -27,6 +30,7 @@ class SolarSystemWallpaperService : WallpaperService() {
         private var heightPx = 0
         private var visible = false
         private var lastBitmap: Bitmap? = null
+        private var lastParams: String? = null
         private var rendering = false
         private val refreshIntervalMs = 10L * 60 * 1000
 
@@ -47,8 +51,14 @@ class SolarSystemWallpaperService : WallpaperService() {
             super.onVisibilityChanged(v)
             visible = v
             if (v) {
-                // Re-paint last known bitmap immediately when becoming visible
-                paintToSurface(lastBitmap)
+                // If user changed offset/labels while the wallpaper was hidden,
+                // re-render rather than re-painting the stale cached bitmap.
+                val current = currentParams()
+                if (current != lastParams) {
+                    renderAndPaint()
+                } else {
+                    paintToSurface(lastBitmap)
+                }
                 handler.removeCallbacks(refreshRunnable)
                 handler.postDelayed(refreshRunnable, refreshIntervalMs)
             } else {
@@ -67,11 +77,14 @@ class SolarSystemWallpaperService : WallpaperService() {
             super.onDestroy()
         }
 
+        private fun currentParams(): String =
+            SurfaceSettings(applicationContext, namespace(), defaultOffsetY()).urlParams("wallpaper")
+
         private fun renderAndPaint() {
             if (widthPx <= 0 || heightPx <= 0 || rendering) return
             rendering = true
-            val settings = SurfaceSettings(applicationContext, SurfaceSettings.WALLPAPER_NAMESPACE)
-            val params = settings.urlParams("wallpaper")
+            val params = currentParams()
+            lastParams = params
             WebViewBitmapRenderer.render(applicationContext, widthPx, heightPx, params) { bm ->
                 rendering = false
                 if (bm != null) {
@@ -96,4 +109,14 @@ class SolarSystemWallpaperService : WallpaperService() {
             }
         }
     }
+}
+
+class SolarSystemHomeWallpaperService : SolarSystemWallpaperService() {
+    override fun namespace() = SurfaceSettings.HOME_WALLPAPER_NAMESPACE
+    override fun defaultOffsetY() = SurfaceSettings.DEFAULT_HOME_OFFSET_Y
+}
+
+class SolarSystemLockWallpaperService : SolarSystemWallpaperService() {
+    override fun namespace() = SurfaceSettings.LOCK_WALLPAPER_NAMESPACE
+    override fun defaultOffsetY() = SurfaceSettings.DEFAULT_LOCK_OFFSET_Y
 }

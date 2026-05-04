@@ -27,29 +27,32 @@ class SolarSystemWidgetWorker(
         val mgr = AppWidgetManager.getInstance(applicationContext)
         val opts: Bundle = mgr.getAppWidgetOptions(appWidgetId)
         val density = applicationContext.resources.displayMetrics.density
-        // MAX_WIDTH/HEIGHT is the largest the widget could be at this layout — pick that for crisp output.
         val widthDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 320)
         val heightDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 320)
         val widthPx = (widthDp * density).toInt().coerceAtLeast(1)
         val heightPx = (heightDp * density).toInt().coerceAtLeast(1)
 
-        val settings = SurfaceSettings(applicationContext, SurfaceSettings.widgetNamespace(appWidgetId))
-        val urlParams = settings.urlParams("widget")
+        val params = SurfaceSettings(applicationContext, SurfaceSettings.widgetNamespace(appWidgetId))
+            .urlParams("widget")
 
         Handler(Looper.getMainLooper()).post {
-            WebViewBitmapRenderer.render(applicationContext, widthPx, heightPx, urlParams) { bitmap ->
+            WebViewBitmapRenderer.render(applicationContext, widthPx, heightPx, params) { bitmap ->
                 if (bitmap != null) {
-                    val rv = RemoteViews(applicationContext.packageName, R.layout.widget_initial)
-                    rv.setImageViewBitmap(R.id.widget_image, bitmap)
-                    val tapIntent = Intent(applicationContext, MainActivity::class.java).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    try {
+                        val rv = RemoteViews(applicationContext.packageName, R.layout.widget_initial)
+                        rv.setImageViewBitmap(R.id.widget_image, bitmap)
+                        val tapIntent = Intent(applicationContext, MainActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        val pi = PendingIntent.getActivity(
+                            applicationContext, appWidgetId, tapIntent,
+                            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                        )
+                        rv.setOnClickPendingIntent(R.id.widget_image, pi)
+                        mgr.updateAppWidget(appWidgetId, rv)
+                    } catch (_: Throwable) {
+                        // best-effort; next periodic refresh will retry
                     }
-                    val pi = PendingIntent.getActivity(
-                        applicationContext, appWidgetId, tapIntent,
-                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-                    )
-                    rv.setOnClickPendingIntent(R.id.widget_image, pi)
-                    mgr.updateAppWidget(appWidgetId, rv)
                 }
                 completer.set(Result.success())
             }

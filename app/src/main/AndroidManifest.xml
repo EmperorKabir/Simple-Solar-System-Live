@@ -11,7 +11,6 @@
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
         tools:targetApi="31">
 
-        <!-- Main app -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -44,11 +43,11 @@
             </intent-filter>
         </activity>
 
-        <!-- Live wallpaper (works for home and lock screen) -->
+        <!-- Live wallpaper for the home screen. -->
         <service
-            android:name=".SolarSystemWallpaperService"
+            android:name=".SolarSystemHomeWallpaperService"
             android:exported="true"
-            android:label="@string/wallpaper_label"
+            android:label="@string/wallpaper_label_home"
             android:permission="android.permission.BIND_WALLPAPER">
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
@@ -57,26 +56,21 @@
                 android:name="android.service.wallpaper"
                 android:resource="@xml/wallpaper" />
         </service>
-        <activity
-            android:name=".SolarSystemWallpaperConfigActivity"
-            android:exported="true"
-            android:theme="@android:style/Theme.DeviceDefault.Dialog" />
 
-        <!-- Separate launcher icon that immediately opens Android's
-             live-wallpaper preview for our service. Workaround for OEM
-             skins (e.g. Samsung One UI) that hide third-party live
-             wallpapers from their wallpaper picker. -->
-        <activity
-            android:name=".SolarSystemWallpaperLauncher"
+        <!-- Live wallpaper for the lock screen (separate so the user can
+             configure home and lock independently). -->
+        <service
+            android:name=".SolarSystemLockWallpaperService"
             android:exported="true"
-            android:label="Solar Wallpaper"
-            android:icon="@mipmap/ic_launcher"
-            android:theme="@android:style/Theme.NoDisplay">
+            android:label="@string/wallpaper_label_lock"
+            android:permission="android.permission.BIND_WALLPAPER">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.service.wallpaper.WallpaperService" />
             </intent-filter>
-        </activity>
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/wallpaper" />
+        </service>
     </application>
 
 </manifest>

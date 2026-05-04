@@ -231,13 +231,15 @@
         body[data-surface="widget"] #warning-modal,
         body[data-surface="widget"] #info-modal,
         body[data-surface="widget"] #tz-modal,
+        body[data-surface="widget"] #wallpaper-modal,
         body[data-surface="wallpaper"] #header-layer,
         body[data-surface="wallpaper"] #hud-telemetry,
         body[data-surface="wallpaper"] #time-panel,
         body[data-surface="wallpaper"] #app-loader,
         body[data-surface="wallpaper"] #warning-modal,
         body[data-surface="wallpaper"] #info-modal,
-        body[data-surface="wallpaper"] #tz-modal { display: none !important; }
+        body[data-surface="wallpaper"] #tz-modal,
+        body[data-surface="wallpaper"] #wallpaper-modal { display: none !important; }
         body[data-labels="off"] .planet-label { display: none !important; }
         /* Pin canvas to bottom of viewport when offsetY > 0; the top portion
            remains the body's black background (matches deep space). */
@@ -309,6 +311,83 @@
             cursor: pointer; -webkit-tap-highlight-color: transparent;
         }
         #info-modal-card #info-modal-close:active { background: rgba(58, 122, 217, 0.32); }
+
+        /* Wallpaper icon — purple, mirror of info icon */
+        #wallpaper-icon {
+            width: 26px; height: 26px; padding: 0; margin-bottom: 0;
+            background: transparent; border: none; cursor: pointer;
+            pointer-events: auto; -webkit-tap-highlight-color: transparent;
+            opacity: 0.85; transition: opacity 0.15s ease, transform 0.1s ease;
+        }
+        #wallpaper-icon:active { opacity: 1; transform: scale(0.92); }
+        #wallpaper-icon svg { display: block; }
+
+        /* Wallpaper picker modal */
+        #wallpaper-modal {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7);
+            z-index: 65; display: flex; align-items: center; justify-content: center;
+            padding: 24px; opacity: 0; pointer-events: none;
+            transition: opacity 0.18s ease;
+        }
+        #wallpaper-modal.visible { opacity: 1; pointer-events: auto; }
+        #wallpaper-modal-card {
+            background: #1a1a1a; color: rgba(255,255,255,0.92);
+            border: 1px solid rgba(160, 110, 220, 0.6); border-radius: 10px;
+            padding: 18px 20px 14px;
+            max-width: min(440px, calc(100vw - 48px));
+            max-height: calc(100vh - 64px); overflow-y: auto;
+            font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+        #wallpaper-modal-heading {
+            font-size: 14px; font-weight: 700; color: #c5a6ee;
+            text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;
+        }
+        .wp-section {
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+        }
+        .wp-section h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #d8c8f3; }
+        .wp-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+        .wp-row label { color: rgba(255,255,255,0.75); }
+        .wp-select {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.22);
+            color: white; border-radius: 4px;
+            padding: 5px 8px; font-size: 12px;
+            font-family: inherit;
+        }
+        .wp-toggle {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(160, 110, 220, 0.18);
+            border: 1px solid rgba(160, 110, 220, 0.55);
+            color: #d8c0f5; border-radius: 4px;
+            font-size: 12px; font-weight: 600;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+        .wp-toggle.off { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.55); }
+        .wp-apply {
+            display: block; width: 100%; margin-top: 8px;
+            padding: 8px 14px;
+            background: rgba(160, 110, 220, 0.22);
+            border: 1px solid rgba(160, 110, 220, 0.55);
+            color: #e6d5fb; border-radius: 5px;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+        .wp-apply:active { background: rgba(160, 110, 220, 0.36); }
+        #wallpaper-modal-close {
+            display: block; margin: 4px 0 0 auto;
+            padding: 6px 16px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.20);
+            color: rgba(255,255,255,0.75); border-radius: 5px;
+            font-size: 12px; font-weight: 600;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
 
         /* Time-zone picker modal */
         #tz-modal {
@@ -519,6 +598,55 @@
         </div>
     </div>
 
+    <div id="wallpaper-modal" role="dialog" aria-modal="true" aria-labelledby="wallpaper-modal-heading">
+        <div id="wallpaper-modal-card">
+            <div id="wallpaper-modal-heading">Set as wallpaper</div>
+            <div class="wp-section" data-target="home">
+                <h4>Home screen</h4>
+                <div class="wp-row">
+                    <label>Vertical offset (empty space at top)</label>
+                    <select class="wp-select" data-prop="offsetY">
+                        <option value="0.0">0%</option>
+                        <option value="0.1">10%</option>
+                        <option value="0.2">20%</option>
+                        <option value="0.3">30%</option>
+                        <option value="0.4">40%</option>
+                        <option value="0.5">50%</option>
+                        <option value="0.6">60%</option>
+                        <option value="0.7">70%</option>
+                    </select>
+                </div>
+                <div class="wp-row">
+                    <label>Show planet labels</label>
+                    <button type="button" class="wp-toggle" data-prop="labels">On</button>
+                </div>
+                <button type="button" class="wp-apply" data-action="apply">Set as home wallpaper</button>
+            </div>
+            <div class="wp-section" data-target="lock">
+                <h4>Lock screen</h4>
+                <div class="wp-row">
+                    <label>Vertical offset (empty space at top)</label>
+                    <select class="wp-select" data-prop="offsetY">
+                        <option value="0.0">0%</option>
+                        <option value="0.1">10%</option>
+                        <option value="0.2">20%</option>
+                        <option value="0.3">30%</option>
+                        <option value="0.4">40%</option>
+                        <option value="0.5">50%</option>
+                        <option value="0.6">60%</option>
+                        <option value="0.7">70%</option>
+                    </select>
+                </div>
+                <div class="wp-row">
+                    <label>Show planet labels</label>
+                    <button type="button" class="wp-toggle" data-prop="labels">On</button>
+                </div>
+                <button type="button" class="wp-apply" data-action="apply">Set as lock wallpaper</button>
+            </div>
+            <button id="wallpaper-modal-close" type="button">Close</button>
+        </div>
+    </div>
+
     <div id="warning-modal" role="dialog" aria-modal="true" aria-labelledby="warning-modal-heading">
         <div id="warning-modal-card">
             <div class="heading" id="warning-modal-heading">
@@ -547,6 +675,13 @@
                 <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
                     <circle cx="12" cy="12" r="10.4" fill="rgba(40,90,200,0.15)" stroke="#3a7ad9" stroke-width="1.6"/>
                     <text x="12" y="17.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="700" fill="#3a7ad9">i</text>
+                </svg>
+            </button>
+            <button id="wallpaper-icon" type="button" aria-label="Wallpaper settings" title="Set as wallpaper">
+                <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+                    <rect x="3.2" y="4.2" width="17.6" height="15.6" rx="2.2" fill="rgba(160,110,220,0.18)" stroke="#a06edc" stroke-width="1.5"/>
+                    <circle cx="9" cy="10" r="1.5" fill="#a06edc"/>
+                    <path d="M4 18 L9.5 13 L13 16 L17 11 L20 18 Z" fill="#a06edc" opacity="0.65"/>
                 </svg>
             </button>
         </div>
@@ -1653,6 +1788,73 @@
             if (e.target === warningModal) warningModal.classList.remove('visible');
         });
 
+        // ── Wallpaper picker modal ──
+        const wallpaperIcon  = document.getElementById('wallpaper-icon');
+        const wallpaperModal = document.getElementById('wallpaper-modal');
+        const wallpaperClose = document.getElementById('wallpaper-modal-close');
+        const wallpaperBridgeAvailable = !!(window.WallpaperPicker && window.WallpaperPicker.getSettings);
+        if (!wallpaperBridgeAvailable) {
+            // Hide the icon completely when running outside the host app (e.g.
+            // when the chromeless wallpaper engine loads index.html). Avoids a
+            // dead button.
+            wallpaperIcon.style.display = 'none';
+        }
+        function _wpRefreshUi() {
+            if (!wallpaperBridgeAvailable) return;
+            let parsed;
+            try { parsed = JSON.parse(window.WallpaperPicker.getSettings()); } catch (_) { return; }
+            for (const target of ['home', 'lock']) {
+                const section = wallpaperModal.querySelector('.wp-section[data-target="' + target + '"]');
+                if (!section || !parsed[target]) continue;
+                const sel = section.querySelector('.wp-select[data-prop="offsetY"]');
+                if (sel) sel.value = (Math.round(parsed[target].offsetY * 10) / 10).toFixed(1);
+                const tog = section.querySelector('.wp-toggle[data-prop="labels"]');
+                if (tog) {
+                    const on = !!parsed[target].labels;
+                    tog.textContent = on ? 'On' : 'Off';
+                    tog.classList.toggle('off', !on);
+                }
+            }
+        }
+        function _wpReadSection(section) {
+            const sel = section.querySelector('.wp-select[data-prop="offsetY"]');
+            const tog = section.querySelector('.wp-toggle[data-prop="labels"]');
+            return {
+                offsetY: parseFloat(sel.value),
+                labels: !tog.classList.contains('off')
+            };
+        }
+        function _wpSave(target, section) {
+            if (!wallpaperBridgeAvailable) return;
+            const v = _wpReadSection(section);
+            window.WallpaperPicker.saveSettings(target, v.offsetY, v.labels);
+        }
+        wallpaperIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            _wpRefreshUi();
+            wallpaperModal.classList.add('visible');
+        });
+        wallpaperClose.addEventListener('click', () => wallpaperModal.classList.remove('visible'));
+        wallpaperModal.addEventListener('click', (e) => {
+            if (e.target === wallpaperModal) wallpaperModal.classList.remove('visible');
+        });
+        wallpaperModal.querySelectorAll('.wp-section').forEach((section) => {
+            const target = section.dataset.target;
+            section.querySelector('.wp-select[data-prop="offsetY"]').addEventListener('change', () => _wpSave(target, section));
+            const toggle = section.querySelector('.wp-toggle[data-prop="labels"]');
+            toggle.addEventListener('click', () => {
+                const isOff = toggle.classList.toggle('off');
+                toggle.textContent = isOff ? 'Off' : 'On';
+                _wpSave(target, section);
+            });
+            section.querySelector('.wp-apply').addEventListener('click', () => {
+                _wpSave(target, section);
+                if (wallpaperBridgeAvailable) {
+                    window.WallpaperPicker.applyWallpaper(target);
+                }
+            });
+        });
+
         let plutoEnabled = true;
         const plutoToggle = document.getElementById('pluto-toggle');
         plutoToggle.addEventListener('click', () => {
@@ -2256,58 +2458,41 @@
         if (SURFACE === 'widget' || SURFACE === 'wallpaper') {
             const _capture = () => {
                 try {
-                    renderer.render(scene, camera);   // ensure fresh back buffer
-                    const fullW = window.innerWidth;
-                    const fullH = window.innerHeight;
+                    renderer.render(scene, camera);
                     const sceneCanvas = renderer.domElement;
-                    const sceneRenderH = sceneCanvas.height;     // already in CSS px (renderer.setSize)
-                    const offsetTopPx = Math.round(fullH * CAMERA_OFFSET_Y);
-
-                    // High-DPI: composite must be sized at DEVICE pixels, not CSS pixels.
-                    // The WebView reports CSS-pixel viewport (window.innerWidth ≈ requestedPx / dpr)
-                    // because of the <meta viewport width=device-width>. If we make the composite
-                    // CSS-pixel-sized, the resulting PNG comes out at e.g. 1123×1012 and
-                    // ImageView fitXY then upscales 2× → blurry. Fix: composite at fullW*dpr ×
-                    // fullH*dpr, then ctx.scale(dpr, dpr) so the rest of the drawing code writes
-                    // in CSS-pixel coords (matching getBoundingClientRect for labels) but the
-                    // backing buffer ends up at device-pixel resolution.
                     const dpr = window.devicePixelRatio || 1;
-                    const composite = document.createElement('canvas');
-                    composite.width = Math.round(fullW * dpr);
-                    composite.height = Math.round(fullH * dpr);
-                    const ctx = composite.getContext('2d');
-                    ctx.scale(dpr, dpr);
-                    ctx.fillStyle = '#000';
-                    ctx.fillRect(0, 0, fullW, fullH);
-                    // Draw the WebGL scene into the lower (1 - offsetY) of the composite.
-                    ctx.drawImage(sceneCanvas, 0, offsetTopPx, fullW, fullH - offsetTopPx);
-
-                    // Render visible labels onto the composite.
+                    // Export raw WebGL scene PNG. Compositing offset/labels is done in
+                    // native Kotlin Canvas because drawImage(WebGLcanvas, ...) silently
+                    // produces a black bitmap in some Presentation/VirtualDisplay
+                    // contexts (verified via on-device diag 2026-05-04).
+                    const sceneDataUrl = sceneCanvas.toDataURL('image/png');
+                    // Collect label positions/text for native compositing. Coordinates
+                    // are CSS pixels; native side multiplies by dpr.
+                    const labels = [];
                     if (LABELS_ENABLED) {
-                        ctx.font = "600 12px -apple-system, BlinkMacSystemFont, Roboto, sans-serif";
-                        ctx.fillStyle = 'rgba(255,255,255,0.95)';
-                        ctx.shadowColor = 'rgba(0,0,0,0.95)';
-                        ctx.shadowBlur = 3;
-                        ctx.shadowOffsetY = 1;
-                        ctx.textBaseline = 'top';
-                        const labels = document.querySelectorAll('.planet-label');
-                        for (const lbl of labels) {
-                            // Honour existing zoom-distance / occlusion / overlap fade rules.
-                            if (lbl.classList.contains('hidden-label')) continue;
-                            if (lbl.classList.contains('label-overlapped')) continue;
-                            const cs = window.getComputedStyle(lbl);
-                            if (cs.opacity === '0' || cs.display === 'none' || cs.visibility === 'hidden') continue;
+                        // Widget/wallpaper labels: planets + Sun only. Moons are too
+                        // cramped at fixed wide view and would overlap unreadably.
+                        const PLANET_LABELS = new Set(['Sun','Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto']);
+                        const all = document.querySelectorAll('.planet-label');
+                        for (const lbl of all) {
+                            const name = lbl.dataset.bodyName || (lbl.textContent || '').trim();
+                            if (!PLANET_LABELS.has(name)) continue;
                             const r = lbl.getBoundingClientRect();
                             if (r.width <= 0 || r.height <= 0) continue;
-                            ctx.fillText(lbl.textContent || '', r.left, r.top);
+                            labels.push({ text: name, x: r.left, y: r.top });
                         }
-                        ctx.shadowBlur = 0;
-                        ctx.shadowOffsetY = 0;
                     }
-
-                    const dataUrl = composite.toDataURL('image/png');
-                    if (window.SnapshotBridge && window.SnapshotBridge.onSnapshot) {
-                        window.SnapshotBridge.onSnapshot(dataUrl);
+                    const meta = {
+                        sceneDataUrl,
+                        labels,
+                        fullW: window.innerWidth,
+                        fullH: window.innerHeight,
+                        dpr,
+                        offsetY: CAMERA_OFFSET_Y,
+                        sceneCssH: sceneCanvas.clientHeight || (sceneCanvas.height / dpr)
+                    };
+                    if (window.SnapshotBridge && window.SnapshotBridge.onSnapshotJson) {
+                        window.SnapshotBridge.onSnapshotJson(JSON.stringify(meta));
                     }
                 } catch (e) {
                     if (window.SnapshotBridge && window.SnapshotBridge.onSnapshotError) {
