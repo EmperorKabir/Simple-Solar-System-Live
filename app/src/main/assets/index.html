@@ -1332,7 +1332,7 @@
                     () => resolve()                   // onError → still resolve so one bad texture can't freeze the loader
                 );
                 tex[k].colorSpace = THREE.SRGBColorSpace;
-                if (renderer.capabilities.getMaxAnisotropy) {
+                if (SURFACE === 'main' && renderer.capabilities.getMaxAnisotropy) {
                     tex[k].anisotropy = renderer.capabilities.getMaxAnisotropy();
                 }
             }));
@@ -1388,17 +1388,22 @@
         let earthGroupPivot = null;
 
         for (const [name, data] of Object.entries(planetsData)) {
-            // Draw orbit rings
-            const ringPoints = [];
-            for(let i = 0; i <= 360; i+=2) {
-                ringPoints.push(getOrbitPositionFast(data, (i / 360) * (data.period * 365.25), true).clone());
+            // Orbit rings: skipped in surface mode (1620 line verts of pure
+            // overhead at widget framing where the ring is invisible anyway).
+            if (SURFACE === 'main') {
+                const ringPoints = [];
+                for(let i = 0; i <= 360; i+=2) {
+                    ringPoints.push(getOrbitPositionFast(data, (i / 360) * (data.period * 365.25), true).clone());
+                }
+                const ring = new THREE.LineLoop(
+                    new THREE.BufferGeometry().setFromPoints(ringPoints),
+                    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 })
+                );
+                scene.add(ring);
+                ringLines[name] = ring;
+            } else {
+                ringLines[name] = null;
             }
-            const ring = new THREE.LineLoop(
-                new THREE.BufferGeometry().setFromPoints(ringPoints),
-                new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 })
-            );
-            scene.add(ring);
-            ringLines[name] = ring;
 
             // Planet material
             const matParams = { map: tex[name], roughness: 1.0, metalness: 0.0 };
