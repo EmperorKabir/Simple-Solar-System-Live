@@ -68,6 +68,11 @@ dependencies {
     // WebViewAssetLoader for secure local asset serving (enables ES modules in WebView)
     implementation("androidx.webkit:webkit:1.12.1")
 
+    // WorkManager — periodic widget refresh
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    // Required transitively by ListenableWorker.startWork
+    implementation("androidx.concurrent:concurrent-futures:1.2.0")
+
     // JUnit 5 — algorithmic-only unit tests for the JS engine's math (re-implemented in Kotlin)
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.2")

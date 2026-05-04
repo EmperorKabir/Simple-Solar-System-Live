@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Simple Live Solar System</string>
+    <string name="widget_label">Simple Live Solar System</string>
+    <string name="wallpaper_label">Simple Live Solar System</string>
+    <string name="wallpaper_description">Live planetary positions, refreshed every 10 minutes. Configurable vertical offset (so the clock has space) and label visibility.</string>
+</resources>

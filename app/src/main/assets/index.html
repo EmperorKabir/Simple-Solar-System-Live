@@ -223,6 +223,31 @@
         /* Top-row container holding warning + info icons side-by-side. */
         #icon-row { display: flex; gap: 8px; align-self: flex-start; }
 
+        /* Surface modes (widget / wallpaper). Main app behaviour unchanged. */
+        body[data-surface="widget"] #header-layer,
+        body[data-surface="widget"] #hud-telemetry,
+        body[data-surface="widget"] #time-panel,
+        body[data-surface="widget"] #app-loader,
+        body[data-surface="widget"] #warning-modal,
+        body[data-surface="widget"] #info-modal,
+        body[data-surface="widget"] #tz-modal,
+        body[data-surface="wallpaper"] #header-layer,
+        body[data-surface="wallpaper"] #hud-telemetry,
+        body[data-surface="wallpaper"] #time-panel,
+        body[data-surface="wallpaper"] #app-loader,
+        body[data-surface="wallpaper"] #warning-modal,
+        body[data-surface="wallpaper"] #info-modal,
+        body[data-surface="wallpaper"] #tz-modal { display: none !important; }
+        body[data-labels="off"] .planet-label { display: none !important; }
+        /* Pin canvas to bottom of viewport when offsetY > 0; the top portion
+           remains the body's black background (matches deep space). */
+        body[data-surface="widget"] canvas,
+        body[data-surface="wallpaper"] canvas {
+            position: absolute !important;
+            left: 0 !important; right: 0 !important;
+            top: auto !important; bottom: 0 !important;
+        }
+
         /* Info icon — blue letter "i" with blue border, mirror of warning icon */
         #info-icon {
             width: 26px; height: 26px; padding: 0; margin-bottom: 0;
@@ -590,17 +615,30 @@
         // 1. Core WebGL Engine Setup
         // ============================================================
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
+        // ── Surface mode (URL params: ?surface=widget|wallpaper&offsetY=0..0.7&labels=on|off) ──
+        // When 'surface' is absent the app behaves identically to today.
+        const _surfaceParams = new URLSearchParams(window.location.search);
+        const SURFACE = _surfaceParams.get('surface') || 'main';
+        const LABELS_ENABLED = _surfaceParams.get('labels') !== 'off';
+        const CAMERA_OFFSET_Y = (() => {
+            const v = parseFloat(_surfaceParams.get('offsetY') || '0');
+            return Number.isFinite(v) ? Math.min(0.7, Math.max(0, v)) : 0;
+        })();
+        document.body.dataset.surface = SURFACE;
+        document.body.dataset.labels = LABELS_ENABLED ? 'on' : 'off';
+        function _renderHeight() { return window.innerHeight * (1 - CAMERA_OFFSET_Y); }
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / _renderHeight(), 0.1, 2000);
         // Initial position will be set by calcResetView() after planets are created
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(window.innerWidth, _renderHeight());
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         document.body.appendChild(renderer.domElement);
         
         const labelRenderer = new CSS2DRenderer();
-        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.setSize(window.innerWidth, _renderHeight());
         labelRenderer.domElement.style.position = 'absolute';
         labelRenderer.domElement.style.top = '0px';
         labelRenderer.domElement.style.pointerEvents = 'none';
@@ -2195,10 +2233,11 @@
         }
 
         window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
+            const w = window.innerWidth, h = _renderHeight();
+            camera.aspect = w / h;
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(w, h);
+            labelRenderer.setSize(w, h);
         });
 
         animate();
