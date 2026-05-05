@@ -341,3 +341,21 @@ Three layered defences (apply in priority order; (a) is mandatory, (b) + (c) opt
 - Phase 1 (tilt math 0..1.0) can proceed mathematically; URL-param test sufficient for code-level verification
 - Final visual tilt verification waits for Phase 2 (rings restored) so the user can actually SEE the tilt against the orbital ellipses
 - No plan change needed; just sequence final visual checks together at end of Phase 2
+
+---
+
+## Phase 1-4 verified end-to-end (2026-05-05)
+
+User confirmed after final re-apply:
+- Widget Edit → Save toggles hide-Pluto correctly (mesh + ring + label all hidden)
+- Home wallpaper renders correctly post-reapply, hide-Pluto works
+- Lock wallpaper renders correctly post-reapply, hide-Pluto works
+- Tilt 100% reachable and visually matches user reference Image #3 once rings present
+- No white-bg recurrence reported (likely indirectly fixed by F1+F4 OOM mitigation)
+
+Open carry-overs for later phases:
+- Phase 6: fold-refresh (Samsung Freecess) + tile-mem warnings still firing on first widget render + 7-WebView pool count
+- Phase 6: stale slss.widget_47..52 pref cleanup
+- Phase 7: auto-preview UX redesign (replace tickbox)
+- Phase 8: label-overlap dedupe verification on surfaces
+- Phase 5 (white-bg): provisionally CLOSED — symptom not seen post-F1/F4; reopen if user reports recurrence

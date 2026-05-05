@@ -1,0 +1,9 @@
+﻿05-05 15:50:02.088  2376  3848 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+05-05 15:50:02.091  2376  3848 D InetDiagMessage: Destroyed 1 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+05-05 15:50:02.091  2376  3848 D InetDiagMessage: Destroyed live tcp sockets for uids={10454} in 6ms
+05-05 15:50:02.094  2376  3848 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+05-05 15:50:02.097  2376  3848 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+05-05 15:50:02.097  2376  3848 D InetDiagMessage: Destroyed live tcp sockets for uids={20454} in 6ms
+05-05 15:50:15.454  1897  1985 I SurfaceFlinger: Capture layer list: 	 Wallpaper BBQ wrapper 7_systemlock#31167(seamlessTransition:0)
+05-05 15:50:15.455  1897  2040 D RenderEngine: [SEC_SF_EFFECTS] drawLayersInternal,1483, Rendering layer Wallpaper BBQ wrapper 7_systemlock#31167 at index 1
+05-05 15:50:21.922 31179 31179 E YouTube : 	at org.chromium.net.impl.CronetUrlRequest.onError(PG:66)
