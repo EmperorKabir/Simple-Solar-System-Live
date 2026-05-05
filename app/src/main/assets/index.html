@@ -861,15 +861,6 @@
         // the need for the previously-shipped moon-label toggle.
         const MOONS_ENABLED = (SURFACE === 'main');
 
-        // F1: texture downscale factor for surface (widget/wallpaper) modes.
-        // Source planet textures (up to 8192x4096 RGBA = 128 MB GPU mem each)
-        // overflow the chromium WebView tile-memory budget and OOM-kill the
-        // renderer process when used in widgets/live wallpapers. Downscaling
-        // by 4x (16x memory reduction) at upload time keeps total texture
-        // memory under ~50 MB in surface mode while leaving the main app at
-        // full source resolution. Visual quality at widget render sizes
-        // (~660 px wide) is indistinguishable from full-res.
-        const TEX_DOWNSCALE = (SURFACE === 'main') ? 1 : 4;
         const CAMERA_TILT = (() => {
             const v = parseFloat(_surfaceParams.get('tilt') || '0');
             return Number.isFinite(v) ? Math.min(1.0, Math.max(0, v)) : 0;
@@ -1385,6 +1376,25 @@
            Kerberos: "textures/Kerberos.jpg"
         };
 
+        // Surface mode (widget/wallpaper) loads pre-sized 4096x2048 JPEG
+        // variants of the bodies whose source files are oversized for the
+        // chromium WebView tile budget. Source files (8K Mercury/Moon/Venus/
+        // Mars/Earth, 4K-PNG Io) are kept untouched for the main app's full
+        // pinch-zoom inspection. Pre-sizing means we no longer pay the cost
+        // of a runtime canvas resize per texture in surface mode (which
+        // previously decoded 128 MB of raw RGBA per oversized texture before
+        // shrinking).
+        if (SURFACE !== 'main') {
+            Object.assign(urls, {
+                Mercury: "textures/Mercury-4k.jpg",
+                Venus:   "textures/Venus-4k.jpg",
+                Earth:   "textures/Earth-4k.jpg",
+                Moon:    "textures/Moon-4k.jpg",
+                Mars:    "textures/Mars-4k.jpg",
+                Io:      "textures/Io-4k.jpg"
+            });
+        }
+
         // Proteus has no dedicated texture file — use a generic grey
         // (In the original code, "Proteus" was referenced but no texture file exists)
 
@@ -1400,26 +1410,7 @@
             texLoadPromises.push(new Promise((resolve) => {
                 tex[k] = tLoad.load(
                     urls[k],
-                    (loaded) => {
-                        // F1 downscale: in surface mode shrink the decoded
-                        // image before GPU upload to stay within chromium's
-                        // tile-memory budget. Main app keeps full resolution.
-                        if (TEX_DOWNSCALE > 1 && loaded.image && loaded.image.width > 0) {
-                            try {
-                                const w = Math.max(1, Math.floor(loaded.image.width  / TEX_DOWNSCALE));
-                                const h = Math.max(1, Math.floor(loaded.image.height / TEX_DOWNSCALE));
-                                const cv = (typeof OffscreenCanvas !== 'undefined')
-                                    ? new OffscreenCanvas(w, h)
-                                    : Object.assign(document.createElement('canvas'), { width: w, height: h });
-                                cv.getContext('2d').drawImage(loaded.image, 0, 0, w, h);
-                                loaded.image = cv;
-                                loaded.needsUpdate = true;
-                            } catch (e) {
-                                console.warn('F1 downscale failed for', urls[k], e);
-                            }
-                        }
-                        resolve();
-                    },
+                    () => resolve(),                  // onLoad
                     undefined,                        // onProgress (unused)
                     () => resolve()                   // onError → still resolve so one bad texture can't freeze the loader
                 );
