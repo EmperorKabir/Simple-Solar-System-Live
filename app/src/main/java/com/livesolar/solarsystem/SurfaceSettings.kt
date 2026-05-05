@@ -21,7 +21,7 @@ class SurfaceSettings(
 
     var tilt: Float
         get() = prefs.getFloat("tilt", DEFAULT_TILT)
-        set(value) = prefs.edit().putFloat("tilt", value.coerceIn(0f, 0.7f)).apply()
+        set(value) = prefs.edit().putFloat("tilt", value.coerceIn(0f, 1.0f)).apply()
 
     var labelsEnabled: Boolean
         get() = prefs.getBoolean("labels", true)
@@ -47,8 +47,8 @@ class SurfaceSettings(
         val OFFSET_OPTIONS = floatArrayOf(0.0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f)
         val OFFSET_LABELS = arrayOf("0%", "10%", "20%", "30%", "40%", "50%", "60%", "70%")
 
-        /** Tilt: 0 % = top-down (camera at +Y), 70 % = ~63° pitch toward orbital plane. */
-        val TILT_OPTIONS = floatArrayOf(0.0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f)
-        val TILT_LABELS  = arrayOf("0%", "10%", "20%", "30%", "40%", "50%", "60%", "70%")
+        /** Tilt: 0 % = top-down (camera at +Y), 100 % = side-on (90° pitch, camera in equatorial plane). */
+        val TILT_OPTIONS = floatArrayOf(0.0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f)
+        val TILT_LABELS  = arrayOf("0%", "10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%")
     }
 }

@@ -617,7 +617,7 @@
                     </select>
                 </div>
                 <div class="wp-row">
-                    <label>Camera tilt (0% top-down → 70% nearly side-on)</label>
+                    <label>Camera tilt (0% top-down → 100% side-on)</label>
                     <select class="wp-select" data-prop="tilt">
                         <option value="0.0">0%</option>
                         <option value="0.1">10%</option>
@@ -627,6 +627,9 @@
                         <option value="0.5">50%</option>
                         <option value="0.6">60%</option>
                         <option value="0.7">70%</option>
+                        <option value="0.8">80%</option>
+                        <option value="0.9">90%</option>
+                        <option value="1.0">100%</option>
                     </select>
                 </div>
                 <div class="wp-row">
@@ -651,7 +654,7 @@
                     </select>
                 </div>
                 <div class="wp-row">
-                    <label>Camera tilt (0% top-down → 70% nearly side-on)</label>
+                    <label>Camera tilt (0% top-down → 100% side-on)</label>
                     <select class="wp-select" data-prop="tilt">
                         <option value="0.0">0%</option>
                         <option value="0.1">10%</option>
@@ -661,6 +664,9 @@
                         <option value="0.5">50%</option>
                         <option value="0.6">60%</option>
                         <option value="0.7">70%</option>
+                        <option value="0.8">80%</option>
+                        <option value="0.9">90%</option>
+                        <option value="1.0">100%</option>
                     </select>
                 </div>
                 <div class="wp-row">
@@ -796,7 +802,7 @@
         const TEX_DOWNSCALE = (SURFACE === 'main') ? 1 : 4;
         const CAMERA_TILT = (() => {
             const v = parseFloat(_surfaceParams.get('tilt') || '0');
-            return Number.isFinite(v) ? Math.min(0.7, Math.max(0, v)) : 0;
+            return Number.isFinite(v) ? Math.min(1.0, Math.max(0, v)) : 0;
         })();
         document.body.dataset.surface = SURFACE;
         document.body.dataset.labels = LABELS_ENABLED ? 'on' : 'off';
