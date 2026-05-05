@@ -1,0 +1,100 @@
+﻿05-05 14:37:15.077  2376  2894 I WindowManager: notifyDisplayReady() >> KnoxZT startEnableTouchEvent called for Display Id : 233
+05-05 14:37:15.077  2376  2894 I WindowManager: TouchEventView is already added
+05-05 14:37:15.092  2376  2510 I WindowManager: Relayout Window{da87e95 u0 com.livesolar.solarsystem}: viewVisibility=0 req=2184x1968 ty=2030 d233
+05-05 14:37:15.093  2376  2510 I WindowManager: Relayout hash=da87e95, pid=25708, syncId=-1: mAttrs={(0,0)(fillxfill) gr=FILL CENTER sim={adjust=resize forwardNavigation} layoutInDisplayCutoutMode=always ty=PRIVATE_PRESENTATION wanim=0x1030317
+05-05 14:37:15.093  2376  2510 I WindowManager:   fl=81810500
+05-05 14:37:15.093  2376  2510 I WindowManager:   pfl=100088c0
+05-05 14:37:15.093  2376  2510 I WindowManager:   bhv=2
+05-05 14:37:15.093  2376  2510 I WindowManager:   fitSides=0
+05-05 14:37:15.093  2376  2510 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:37:15.093  2376  2510 I WindowManager:   dvrrWindowFrameRateHint=true naviIconColor=0}
+05-05 14:37:15.103  2376  4461 I WindowManager: Relayout Window{d040d25 u0 com.livesolar.solarsystem/com.livesolar.solarsystem.MainActivity}: viewVisibility=0 req=2184x1968 ty=1 d0
+05-05 14:37:15.103  2376  4461 I WindowManager: Cancelling animation restarting=true, leash=Surface(name=Surface(name=6e251b4 TaskbarWindow)/@0x9a26803 - animation-leash of insets_animation)/@0xdae1f06
+05-05 14:37:15.103  2376  4461 I WindowManager: Reparenting to original parent: Surface(name=WindowToken{7bde152 type=2024 android.os.BinderProxy@48ff513})/@0xb296380, destroy=false, surface=Surface(name=6e251b4 TaskbarWindow)/@0x9a26803
+05-05 14:37:15.103  2376  4461 I WindowManager: Reparenting to leash, surface=Surface(name=6e251b4 TaskbarWindow)/@0x9a26803, leashParent=Surface(name=WindowToken{7bde152 type=2024 android.os.BinderProxy@48ff513})/@0xb296380
+05-05 14:37:15.103  2376  4461 I WindowManager: Cancelling animation restarting=true, leash=Surface(name=Surface(name=af39384 StatusBar)/@0x7310f85 - animation-leash of insets_animation)/@0xcbc6bf4
+05-05 14:37:15.103  2376  4461 I WindowManager: Reparenting to original parent: Surface(name=WindowToken{95f0597 type=2000 android.os.BinderProxy@bb23931})/@0x87c51da, destroy=false, surface=Surface(name=af39384 StatusBar)/@0x7310f85
+05-05 14:37:15.103  2376  4461 I WindowManager: Reparenting to leash, surface=Surface(name=af39384 StatusBar)/@0x7310f85, leashParent=Surface(name=WindowToken{95f0597 type=2000 android.os.BinderProxy@bb23931})/@0x87c51da
+05-05 14:37:15.104  2376  4461 I WindowManager: Cancelling animation restarting=true, leash=Surface(name=Surface(name=bc1e92e NavigationBar0)/@0x80acce8 - animation-leash of insets_animation)/@0xe7d2592
+05-05 14:37:15.104  2376  4461 I WindowManager: Reparenting to original parent: Surface(name=WindowToken{743dfa9 type=2019 android.os.BinderProxy@cd6a0e2})/@0xa781f01, destroy=false, surface=Surface(name=bc1e92e NavigationBar0)/@0x80acce8
+05-05 14:37:15.104  2376  4461 I WindowManager: Reparenting to leash, surface=Surface(name=bc1e92e NavigationBar0)/@0x80acce8, leashParent=Surface(name=WindowToken{743dfa9 type=2019 android.os.BinderProxy@cd6a0e2})/@0xa781f01
+05-05 14:37:15.104  2376  4461 I WindowManager: Relayout hash=d040d25, pid=25708, syncId=-1: mAttrs={(0,0)(fillxfill) sim={adjust=resize} layoutInDisplayCutoutMode=always ty=BASE_APPLICATION wanim=0x1030306
+05-05 14:37:15.104  2376  4461 I WindowManager:   fl=81810100
+05-05 14:37:15.104  2376  4461 I WindowManager:   pfl=100088c0
+05-05 14:37:15.104  2376  4461 I WindowManager:   bhv=1
+05-05 14:37:15.104  2376  4461 I WindowManager:   fitSides=0
+05-05 14:37:15.104  2376  4461 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:37:15.104  2376  4461 I WindowManager:   dvrrWindowFrameRateHint=true naviIconColor=0}
+05-05 14:37:15.168  2376  7728 I WindowManager: Cancelling animation restarting=true, leash=Surface(name=Surface(name=40f8902 InputMethod)/@0xdea7c50 - animation-leash of insets_animation)/@0x94e589e
+05-05 14:37:15.168  2376  7728 I WindowManager: Reparenting to original parent: Surface(name=WindowToken{aebd3d8 type=2011 android.os.Binder@e1182bb})/@0x4977e49, destroy=false, surface=Surface(name=40f8902 InputMethod)/@0xdea7c50
+05-05 14:37:15.168  2376  7728 I WindowManager: Reparenting to leash, surface=Surface(name=40f8902 InputMethod)/@0xdea7c50, leashParent=Surface(name=WindowToken{aebd3d8 type=2011 android.os.Binder@e1182bb})/@0x4977e49
+05-05 14:37:15.238  2376  2897 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{138646008 u0 com.android.wallpaper.livepicker/.LiveWallpaperChange t366})/@0x8a62b15, destroy=true, surface=Surface(name=65c249c com.android.wallpaper.livepicker/com.android.wallpaper.livepicker.LiveWallpaperChange)/@0x7bfeccc
+05-05 14:37:15.238  2376  2897 E WindowManager: win=Window{65c249c u0 com.android.wallpaper.livepicker/com.android.wallpaper.livepicker.LiveWallpaperChange EXITING} destroySurfaces: appStopped=false cleanupOnResume=false win.mWindowRemovalAllowed=true win.mRemoveOnExit=true win.mViewVisibility=0 caller=com.android.server.wm.WindowState.onExitAnimationDone:224 com.android.server.wm.WindowState.onAnimationFinished:161 com.android.server.wm.WindowContainer$$ExternalSyntheticLambda8.onAnimationFinished:3 com.android.server.wm.SurfaceAnimator$$ExternalSyntheticLambda0.onAnimationFinished:69 com.android.server.wm.LocalAnimationAdapter$$ExternalSyntheticLambda0.run:10 android.os.Handler.handleCallback:995 android.os.Handler.dispatchMessage:103 
+05-05 14:37:15.360  2376  7728 I WindowManager: Relayout Window{a456b32 u0 com.android.wallpaper.livepicker/com.android.wallpaper.livepicker.LiveWallpaperChange}: viewVisibility=8 req=2184x1968 ty=1 d0
+05-05 14:37:15.361  2376  7728 I WindowManager: Relayout hash=a456b32, pid=21356, syncId=-1: mAttrs={(0,0)(fillxfill) sim={adjust=pan forwardNavigation} layoutInDisplayCutoutMode=always ty=BASE_APPLICATION fmt=TRANSPARENT wanim=0x1030317 colorMode=COLOR_MODE_WIDE_COLOR_GAMUT
+05-05 14:37:15.361  2376  7728 I WindowManager:   fl=81810100
+05-05 14:37:15.361  2376  7728 I WindowManager:   pfl=100088c0
+05-05 14:37:15.361  2376  7728 I WindowManager:   vsysui=700
+05-05 14:37:15.361  2376  7728 I WindowManager:   bhv=1
+05-05 14:37:15.361  2376  7728 I WindowManager:   fitSides=0
+05-05 14:37:15.361  2376  7728 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:37:15.361  2376  7728 I WindowManager:   dvrrWindowFrameRateHint=true naviIconColor=0}
+05-05 14:37:15.376  2376  2510 W WindowManager: Failed looking up window session=Session{79407cb 25708:u0a10567} callers=com.android.server.wm.Session.remove:10 android.view.IWindowSession$Stub.onTransact:804 com.android.server.wm.Session.onTransact:1 
+05-05 14:37:19.380 25708 25708 I WindowManager: WindowManagerGlobal#removeView, ty=2030, view=com.android.internal.policy.DecorView{592af3a V.E...... R....... 0,0-2184,1968}[], caller=android.view.WindowManagerGlobal.removeView:654 android.view.WindowManagerImpl.removeViewImmediate:216 android.app.Dialog.dismissDialog:850 
+05-05 14:37:19.390  2376  2894 I WindowManager: release() >> KnoxZT mIsKnoxZtStarted is false for Display Id : 233
+05-05 14:37:22.553  2376  4461 I WindowManager: Relayout Window{a3121e3 u0 GoogleDiscoverWindow}: viewVisibility=0 req=2184x1968 ty=4 d0
+05-05 14:37:22.556  2376  4461 I WindowManager: Relayout hash=a3121e3, pid=17306, syncId=-1: mAttrs={(0,0)(fillxfill) gr=LEFT CENTER_HORIZONTAL sim={adjust=resize} layoutInDisplayCutoutMode=always ty=DRAWN_APPLICATION fmt=TRANSPARENT wanim=0x1030306 alpha=0.0
+05-05 14:37:22.556  2376  4461 I WindowManager:   fl=81850118
+05-05 14:37:22.556  2376  4461 I WindowManager:   pfl=10008840
+05-05 14:37:22.556  2376  4461 I WindowManager:   bhv=1
+05-05 14:37:22.556  2376  4461 I WindowManager:   fitSides=0
+05-05 14:37:22.556  2376  4461 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:37:22.556  2376  4461 I WindowManager:   dvrrWindowFrameRateHint=true
+05-05 14:37:22.556  2376  4461 I WindowManager:  dimAmount=0.0 screenDimDuration=200000 naviIconColor=0}
+05-05 14:37:22.589  2376  4461 I WindowManager: Relayout Window{4550ffe u0 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity}: viewVisibility=0 req=2184x1968 ty=1 d0
+05-05 14:37:22.589  2376  4461 I WindowManager: Cancelling animation restarting=true, leash=Surface(name=Surface(name=6e251b4 TaskbarWindow)/@0x9a26803 - animation-leash of insets_animation)/@0x3a73705
+05-05 14:37:22.589  2376  4461 I WindowManager: Reparenting to original parent: Surface(name=WindowToken{7bde152 type=2024 android.os.BinderProxy@48ff513})/@0xb296380, destroy=false, surface=Surface(name=6e251b4 TaskbarWindow)/@0x9a26803
+05-05 14:37:22.589  2376  4461 I WindowManager: Reparenting to leash, surface=Surface(name=6e251b4 TaskbarWindow)/@0x9a26803, leashParent=Surface(name=WindowToken{7bde152 type=2024 android.os.BinderProxy@48ff513})/@0xb296380
+05-05 14:37:22.590  2376  4461 I WindowManager: Cancelling animation restarting=true, leash=Surface(name=Surface(name=af39384 StatusBar)/@0x7310f85 - animation-leash of insets_animation)/@0x5b4a98b
+05-05 14:37:22.590  2376  4461 I WindowManager: Reparenting to original parent: Surface(name=WindowToken{95f0597 type=2000 android.os.BinderProxy@bb23931})/@0x87c51da, destroy=false, surface=Surface(name=af39384 StatusBar)/@0x7310f85
+05-05 14:37:22.590  2376  4461 I WindowManager: Reparenting to leash, surface=Surface(name=af39384 StatusBar)/@0x7310f85, leashParent=Surface(name=WindowToken{95f0597 type=2000 android.os.BinderProxy@bb23931})/@0x87c51da
+05-05 14:37:22.590  2376  4461 I WindowManager: Cancelling animation restarting=true, leash=Surface(name=Surface(name=bc1e92e NavigationBar0)/@0x80acce8 - animation-leash of insets_animation)/@0x8e93e81
+05-05 14:37:22.590  2376  4461 I WindowManager: Reparenting to original parent: Surface(name=WindowToken{743dfa9 type=2019 android.os.BinderProxy@cd6a0e2})/@0xa781f01, destroy=false, surface=Surface(name=bc1e92e NavigationBar0)/@0x80acce8
+05-05 14:37:22.590  2376  4461 I WindowManager: Reparenting to leash, surface=Surface(name=bc1e92e NavigationBar0)/@0x80acce8, leashParent=Surface(name=WindowToken{743dfa9 type=2019 android.os.BinderProxy@cd6a0e2})/@0xa781f01
+05-05 14:37:22.590  2376  4461 I WindowManager: Relayout hash=4550ffe, pid=16169, syncId=-1: mAttrs={(0,0)(fillxfill) sim={adjust=nothing forwardNavigation} layoutInDisplayCutoutMode=always ty=BASE_APPLICATION fmt=TRANSPARENT wanim=0x1030306
+05-05 14:37:22.590  2376  4461 I WindowManager:   fl=81910100
+05-05 14:37:22.590  2376  4461 I WindowManager:   pfl=10008840
+05-05 14:37:22.590  2376  4461 I WindowManager:   bhv=2
+05-05 14:37:22.590  2376  4461 I WindowManager:   fitSides=0
+05-05 14:37:22.590  2376  4461 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:37:22.590  2376  4461 I WindowManager:   dvrrWindowFrameRateHint=true screenDimDuration=200000 naviIconColor=0}
+05-05 14:37:22.596  2376  4461 I WindowManager: Relayout Window{83382e u0 com.livesolar.solarsystem.SolarSystemHomeWallpaperService}: viewVisibility=0 req=-1x-1 ty=2013 d0
+05-05 14:37:22.597  2376  4461 I WindowManager: Relayout hash=83382e, pid=25708, syncId=-1: mAttrs={(0,0)(fillxfill) gr=TOP START CENTER layoutInDisplayCutoutMode=always ty=WALLPAPER fmt=RGBX_8888 wanim=0x1030328
+05-05 14:37:22.597  2376  4461 I WindowManager:   fl=10318
+05-05 14:37:22.597  2376  4461 I WindowManager:   pfl=4
+05-05 14:37:22.597  2376  4461 I WindowManager:   bhv=1
+05-05 14:37:22.597  2376  4461 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:37:22.597  2376  4461 I WindowManager:   dvrrWindowFrameRateHint=true naviIconColor=0}
+05-05 14:37:22.634  2376  5496 I WindowManager: Reparenting to leash, surface=Surface(name=RemoteWallpaperAnim:1:1)/@0xe38f3c6, leashParent=Surface(name=OneHanded:0:14)/@0x9aa4f87
+05-05 14:37:22.667  2376  3737 I WindowManager: Cancelling animation restarting=true, leash=Surface(name=Surface(name=40f8902 InputMethod)/@0xdea7c50 - animation-leash of insets_animation)/@0x533ccaa
+05-05 14:37:22.667  2376  3737 I WindowManager: Reparenting to original parent: Surface(name=WindowToken{aebd3d8 type=2011 android.os.Binder@e1182bb})/@0x4977e49, destroy=false, surface=Surface(name=40f8902 InputMethod)/@0xdea7c50
+05-05 14:37:22.668  2376  3737 I WindowManager: Reparenting to leash, surface=Surface(name=40f8902 InputMethod)/@0xdea7c50, leashParent=Surface(name=WindowToken{aebd3d8 type=2011 android.os.Binder@e1182bb})/@0x4977e49
+05-05 14:37:22.833  2376  5595 I WindowManager: Cancelling animation restarting=false, leash=Surface(name=Surface(name=RemoteWallpaperAnim:1:1)/@0xe38f3c6 - animation-leash of remote_wallpaper)/@0x7a8260f
+05-05 14:37:22.833  2376  5595 I WindowManager: Reparenting to original parent: Surface(name=OneHanded:0:14)/@0x9aa4f87, destroy=false, surface=Surface(name=RemoteWallpaperAnim:1:1)/@0xe38f3c6
+05-05 14:37:22.845  2376  5594 I WindowManager: Relayout Window{d040d25 u0 com.livesolar.solarsystem/com.livesolar.solarsystem.MainActivity}: viewVisibility=8 req=2184x1968 ty=1 d0
+05-05 14:37:22.846  2376  5594 I WindowManager: Relayout hash=d040d25, pid=25708, syncId=-1: mAttrs={(0,0)(fillxfill) sim={adjust=resize} layoutInDisplayCutoutMode=always ty=BASE_APPLICATION wanim=0x1030306
+05-05 14:37:22.846  2376  5594 I WindowManager:   fl=81810100
+05-05 14:37:22.846  2376  5594 I WindowManager:   pfl=100088c0
+05-05 14:37:22.846  2376  5594 I WindowManager:   bhv=1
+05-05 14:37:22.846  2376  5594 I WindowManager:   fitSides=0
+05-05 14:37:22.846  2376  5594 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:37:22.846  2376  5594 I WindowManager:   dvrrWindowFrameRateHint=true naviIconColor=0}
+05-05 14:37:22.855  2376  5594 I WindowManager: Relayout Window{d040d25 u0 com.livesolar.solarsystem/com.livesolar.solarsystem.MainActivity}: viewVisibility=8 req=2184x1968 ty=1 d0
+05-05 14:37:22.857  2376  5594 I WindowManager: Relayout hash=d040d25, pid=25708, syncId=-1: mAttrs={(0,0)(fillxfill) sim={adjust=pan} layoutInDisplayCutoutMode=always ty=BASE_APPLICATION wanim=0x1030306
+05-05 14:37:22.857  2376  5594 I WindowManager:   fl=81810100
+05-05 14:37:22.857  2376  5594 I WindowManager:   pfl=100088c0
+05-05 14:37:22.857  2376  5594 I WindowManager:   bhv=1
+05-05 14:37:22.857  2376  5594 I WindowManager:   fitSides=0
+05-05 14:37:22.857  2376  5594 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:37:22.857  2376  5594 I WindowManager:   dvrrWindowFrameRateHint=true naviIconColor=0}
+05-05 14:37:22.863  2376  5594 E WindowManager: win=Window{d040d25 u0 com.livesolar.solarsystem/com.livesolar.solarsystem.MainActivity} destroySurfaces: appStopped=true cleanupOnResume=false win.mWindowRemovalAllowed=false win.mRemoveOnExit=false win.mViewVisibility=8 caller=com.android.server.wm.ActivityRecord.destroySurfaces:25 com.android.server.wm.ActivityRecord.activityStopped:192 com.android.server.wm.ActivityClientController.activityStopped:97 android.app.IActivityClientController$Stub.onTransact:726 com.android.server.wm.ActivityClientController.onTransact:1 android.os.Binder.execTransactInternal:1462 android.os.Binder.execTransact:1401 

@@ -237,3 +237,34 @@ Three layered defences (apply in priority order; (a) is mandatory, (b) + (c) opt
 - F1+F4 confirmed effective at 1351×2289 px (worst-case render in the app)
 - Stale-bitmap-on-fold is a separate concern from the OOM
 - Auto-refresh-on-fold is a Phase 6 deliverable; design above
+
+---
+
+## P0-C — Apply home wallpaper, unfolded
+
+### Evidence captured
+- Inner display screencap: `wallpaper-home-unfolded.png` (569 KB)
+- Wallpaper service state: `wallpaper-state-home.txt` (29 KB)
+- Render logcat tail: `wallpaper-home-render.log` (15 KB)
+
+### Display state
+- Inner display unfolded: physical 1968×2184, density 311 override, displayId=0
+- Two displays enumerated (HWC 0 inner, HWC 3 cover); inner active
+
+### Wallpaper service binding (from `dumpsys wallpaper`)
+- `mWallpaperComponent=ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemHomeWallpaperService}` ✓
+- displayId=0 (inner display)
+- Service correctly attached as the home-screen wallpaper
+
+### Window flow (from WindowManager logcat)
+- 14:37:15 — MainActivity opened (req=2184×1968)
+- 14:37:22.596 — `SolarSystemHomeWallpaperService` relayout req=-1×-1 (SurfaceView reset before render binding) — normal lifecycle
+- 14:37:22.845 — MainActivity viewVisibility=8 (hidden as user backed out to home)
+
+### Logcat findings
+- ZERO `tile_manager`, `crash detected`, `kill OOM`, `Renderer process`, `out of memory` matches in the 100-line tail
+- F1+F4 holding up at wallpaper render path too
+
+### User-reported visual state
+- "home wallpaper applied" (no defects called out)
+- No explicit visual report of issues — assumed nominal pending P0-D comparison

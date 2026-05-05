@@ -1,0 +1,508 @@
+﻿mDefaultWallpaperComponent=ComponentInfo{com.android.systemui/com.android.systemui.wallpapers.ImageWallpaper}
+mImageWallpaper=ComponentInfo{com.android.systemui/com.android.systemui.wallpapers.ImageWallpaper}
+mLastWallpaper state:
+ User 0: id=48
+  mCropHint=Rect(0, 0 - 0, 0)
+  mName=
+  mAllowBackup=false
+  mLastWallpaper connection com.android.server.wallpaper.WallpaperManagerService$WallpaperConnection@9e735da:
+    mInfo.component=ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemHomeWallpaperService}
+     mDisplayId=0
+     mToken=android.os.Binder@9242f83
+     mEngine=android.service.wallpaper.IWallpaperEngine$Stub$Proxy@6e9c0f7
+    mService=android.service.wallpaper.IWallpaperService$Stub$Proxy@e44711c
+    mLastDiedTime=-44346619
+mLastLockWallpaper state:
+ User 0: id=44
+  mCropHint=Rect(0, 0 - 0, 0)
+  mName=
+  mAllowBackup=false
+  mLastLockWallpaper connection com.android.server.wallpaper.WallpaperManagerService$WallpaperConnection@52179ec:
+    mInfo.component=ComponentInfo{com.samsung.android.wallpaper.live/com.samsung.android.wallpaper.live.fold.FoldInteractive}
+     mDisplayId=0
+     mToken=android.os.Binder@b845ba1
+     mEngine=android.service.wallpaper.IWallpaperEngine$Stub$Proxy@8b50904
+    mService=android.service.wallpaper.IWallpaperService$Stub$Proxy@542e125
+    mLastDiedTime=-23801343
+Display state:
+  displayId=0
+  mWidth=2520  mHeight=2520
+  mPadding=Rect(0, 0 - 0, 0)
+WallpaperObserver:
+  mWallpaperObserver.mSemObserver.getWallpaperFileObserver() = com.samsung.android.server.wallpaper.SemWallpaperManagerService$SemWallpaperObserver$1@7766006
+  mWallpaperObserver.mSemObserver.getLockWallpaperFileObserver() = com.samsung.android.server.wallpaper.SemWallpaperManagerService$SemWallpaperObserver$1@52e03ff
+Num KeyguardListeners = 1
+Num CoverWallpaperListeners = 0
+SemWallpaperManagerService start
+  Orientation:2
+ Legibility Version:1.1.0
+  allowScreenRotate:false, false
+ Lid state:1
+ ------------ Snapshot History ------------
+userId = 0
+lastKey = 0
+CLEAR          key = -1           9 Aug 2025 16:17:31	{18 , 1 }
+CLEAR          key = -1           9 Aug 2025 16:20:01	{18 , 1 }
+CLEAR          key = -1          11 Aug 2025 01:38:11	{18 , 1 }
+CLEAR          key = -1          11 Aug 2025 01:39:17	{6  , 1 }
+CLEAR          key = -1          11 Aug 2025 01:50:18	{18 , 1 }
+CLEAR          key = -1          11 Aug 2025 02:02:04	{6  , 1 }
+CLEAR          key = -1          11 Aug 2025 02:02:25	{6  , 1 }
+CLEAR          key = -1          2 Sept 2025 01:17:05	{18 , 1 }
+CLEAR          key = -1          2 Sept 2025 01:17:48	{18 , 1 }
+CLEAR          key = -1          2 Sept 2025 01:18:08	{18 , 1 }
+CLEAR          key = -1          2 Sept 2025 16:00:04	{18 , 1 }
+CLEAR          key = -1           4 May 2026 15:47:05	{5  , 1 }
+CLEAR          key = -1           4 May 2026 15:47:53	{17 , 1 }	{18 , 1 }	{5  , 1 }	{6  , 1 }
+CLEAR          key = -1           4 May 2026 15:55:43	{5  , 1 }
+CLEAR          key = -1           4 May 2026 15:55:43	{6  , 1 }
+CLEAR          key = -1           4 May 2026 15:57:27	{5  , 1 }
+CLEAR          key = -1           4 May 2026 15:59:43	{5  , 1 }
+CLEAR          key = -1           4 May 2026 20:28:06	{6  , 1 }
+CLEAR          key = -1           4 May 2026 20:28:40	{5  , 1 }
+CLEAR          key = -1           4 May 2026 20:29:55	{5  , 1 }
+CLEAR          key = -1           4 May 2026 20:29:55	{6  , 1 }
+CLEAR          key = -1           4 May 2026 20:30:42	{6  , 1 }
+CLEAR          key = -1           4 May 2026 22:39:46	{17 , 1 }	{18 , 1 }	{5  , 1 }	{6  , 1 }
+CLEAR          key = -1           4 May 2026 22:41:54	{5  , 1 }
+CLEAR          key = -1           4 May 2026 22:41:54	{6  , 1 }
+CLEAR          key = -1           4 May 2026 22:43:09	{6  , 1 }
+CLEAR          key = -1           5 May 2026 01:42:24	{6  , 1 }
+CLEAR          key = -1           5 May 2026 01:45:25	{6  , 1 }
+CLEAR          key = -1           5 May 2026 01:46:02	{6  , 1 }
+CLEAR          key = -1           5 May 2026 01:46:41	{6  , 1 }
+CLEAR          key = -1           5 May 2026 14:37:15	{5  , 1 }
+ --------------LogArray--------------
+  logArray is null
+[Event history]
+    [05-05 01:46:41.278] semClearWallpaperLocked with 'android'.
+(android.os.HandlerThread(line 85) :run -> 
+android.os.Looper(line 363) :loop -> 
+android.os.Looper(line 273) :loopOnce -> 
+android.os.Handler(line 103) :dispatchMessage -> 
+android.os.Handler(line 995) :handleCallback -> 
+com.android.internal.content.PackageMonitor$$ExternalSyntheticLambda0(line 0) :run -> 
+com.android.internal.content.PackageMonitor(line 0) :$r8$lambda$bSKEInwdT6Kd7GAyzMZPsXTTqeQ -> 
+com.android.internal.content.PackageMonitor(line 435) :lambda$postHandlePackageEvent$0 -> 
+com.android.internal.content.PackageMonitor(line 548) :doHandlePackageEvent -> 
+com.android.internal.content.PackageMonitor(line 264) :onHandleForceStop -> 
+com.android.server.wallpaper.WallpaperManagerService$MyPackageMonitor(line 33) :onHandleForceStop -> 
+com.android.server.wallpaper.WallpaperManagerService$MyPackageMonitor(line 141) :doPackagesChangedLocked -> 
+com.samsung.android.server.wallpaper.SemWallpaperManagerService(line 8) :semClearWallpaperLocked -> 
+com.samsung.android.server.wallpaper.SemWallpaperManagerService(line 11) :semClearWallpaperLocked) 
+    [05-05 01:46:02.585] semClearWallpaperLocked with 'android'.
+(android.os.HandlerThread(line 85) :run -> 
+android.os.Looper(line 363) :loop -> 
+android.os.Looper(line 273) :loopOnce -> 
+android.os.Handler(line 103) :dispatchMessage -> 
+android.os.Handler(line 995) :handleCallback -> 
+com.android.internal.content.PackageMonitor$$ExternalSyntheticLambda0(line 0) :run -> 
+com.android.internal.content.PackageMonitor(line 0) :$r8$lambda$bSKEInwdT6Kd7GAyzMZPsXTTqeQ -> 
+com.android.internal.content.PackageMonitor(line 435) :lambda$postHandlePackageEvent$0 -> 
+com.android.internal.content.PackageMonitor(line 548) :doHandlePackageEvent -> 
+com.android.internal.content.PackageMonitor(line 264) :onHandleForceStop -> 
+com.android.server.wallpaper.WallpaperManagerService$MyPackageMonitor(line 33) :onHandleForceStop -> 
+com.android.server.wallpaper.WallpaperManagerService$MyPackageMonitor(line 141) :doPackagesChangedLocked -> 
+com.samsung.android.server.wallpaper.SemWallpaperManagerService(line 8) :semClearWallpaperLocked -> 
+com.samsung.android.server.wallpaper.SemWallpaperManagerService(line 11) :semClearWallpaperLocked) 
+    [05-05 01:45:25.027] semClearWallpaperLocked with 'android'.
+(android.os.HandlerThread(line 85) :run -> 
+android.os.Looper(line 363) :loop -> 
+android.os.Looper(line 273) :loopOnce -> 
+android.os.Handler(line 103) :dispatchMessage -> 
+android.os.Handler(line 995) :handleCallback -> 
+com.android.internal.content.PackageMonitor$$ExternalSyntheticLambda0(line 0) :run -> 
+com.android.internal.content.PackageMonitor(line 0) :$r8$lambda$bSKEInwdT6Kd7GAyzMZPsXTTqeQ -> 
+com.android.internal.content.PackageMonitor(line 435) :lambda$postHandlePackageEvent$0 -> 
+com.android.internal.content.PackageMonitor(line 548) :doHandlePackageEvent -> 
+com.android.internal.content.PackageMonitor(line 264) :onHandleForceStop -> 
+com.android.server.wallpaper.WallpaperManagerService$MyPackageMonitor(line 33) :onHandleForceStop -> 
+com.android.server.wallpaper.WallpaperManagerService$MyPackageMonitor(line 141) :doPackagesChangedLocked -> 
+com.samsung.android.server.wallpaper.SemWallpaperManagerService(line 8) :semClearWallpaperLocked -> 
+com.samsung.android.server.wallpaper.SemWallpaperManagerService(line 11) :semClearWallpaperLocked) 
+    [05-05 01:42:24.954] semClearWallpaperLocked with 'android'.
+(android.os.HandlerThread(line 85) :run -> 
+android.os.Looper(line 363) :loop -> 
+android.os.Looper(line 273) :loopOnce -> 
+android.os.Handler(line 103) :dispatchMessage -> 
+android.os.Handler(line 995) :handleCallback -> 
+com.android.internal.content.PackageMonitor$$ExternalSyntheticLambda0(line 0) :run -> 
+com.android.internal.content.PackageMonitor(line 0) :$r8$lambda$bSKEInwdT6Kd7GAyzMZPsXTTqeQ -> 
+com.android.internal.content.PackageMonitor(line 435) :lambda$postHandlePackageEvent$0 -> 
+com.android.internal.content.PackageMonitor(line 548) :doHandlePackageEvent -> 
+com.android.internal.content.PackageMonitor(line 264) :onHandleForceStop -> 
+com.android.server.wallpaper.WallpaperManagerService$MyPackageMonitor(line 33) :onHandleForceStop -> 
+com.android.server.wallpaper.WallpaperManagerService$MyPackageMonitor(line 141) :doPackagesChangedLocked -> 
+com.samsung.android.server.wallpaper.SemWallpaperManagerService(line 8) :semClearWallpaperLocked -> 
+com.samsung.android.server.wallpaper.SemWallpaperManagerService(line 11) :semClearWallpaperLocked) 
+    [05-04 15:59:43.410] semClearWallpaperLocked with 'android'.
+(android.os.HandlerThread(line 85) :run -> 
+android.os.Looper(line 363) :loop -> 
+android.os.Looper(line 273) :loopOnce -> 
+android.os.Handler(line 103) :dispatchMessage -> 
+android.os.Handler(line 995) :handleCallback -> 
+com.android.internal.content.PackageMonitor$$ExternalSyntheticLambda0(line 0) :run -> 
+com.android.internal.content.PackageMonitor(line 0) :$r8$lambda$bSKEInwdT6Kd7GAyzMZPsXTTqeQ -> 
+com.android.internal.content.PackageMonitor(line 435) :lambda$postHandlePackageEvent$0 -> 
+com.android.internal.content.PackageMonitor(line 548) :doHandlePackageEvent -> 
+com.android.internal.content.PackageMonitor(line 264) :onHandleForceStop -> 
+com.android.server.wallpaper.WallpaperManagerService$MyPackageMonitor(line 33) :onHandleForceStop -> 
+com.android.server.wallpaper.WallpaperManagerService$MyPackageMonitor(line 141) :doPackagesChangedLocked -> 
+com.samsung.android.server.wallpaper.SemWallpaperManagerService(line 8) :semClearWallpaperLocked -> 
+com.samsung.android.server.wallpaper.SemWallpaperManagerService(line 11) :semClearWallpaperLocked) 
+[End of event history]
+[State log]
+[Default wallpaper type from json]
+	[   17:     0]
+	[   18:     8]
+	[    5:     7]
+	[    6:     0]
+[Wallpaper Settings]
+	[ MAIN_LOCK:          CUSTOM( 0)] name = lockscreen_wallpaper_transparent
+	[  SUB_HOME:         UNKNOWN(-1)] name = sub_display_system_wallpaper_transparency
+	[ MAIN_HOME:          CUSTOM( 0)] name = android.wallpaper.settings_systemui_transparency
+	[  SUB_LOCK:    THEME_SINGLE( 3)] name = sub_display_lockscreen_wallpaper_transparency
+	[ MAIN_LOCK:         UNKNOWN(-1)] name = lockscreen_wallpaper
+	[  SUB_LOCK:         UNKNOWN(-1)] name = lockscreen_wallpaper_sub
+SemWallpaperManagerService end
+WallpaperDataManager
+Home Wallpaper
+ User 0: id=48, hash=@218788514
+  mWhich=5
+  mBindSource=SET_LIVE
+  mCropHint=Rect(0, 0 - 0, 0)
+  mName=
+  mMode=4
+  mSystemWasBoth=false
+  mAllowBackup=false
+  getWallpaperFile()=/data/system/users/0/wallpaper_orig
+  getCropFile()=/data/system/users/0/wallpaper
+  mWallpaperComponent=ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemHomeWallpaperService}
+  wallpaperObserver=com.samsung.android.server.wallpaper.SemWallpaperManagerService$SemWallpaperObserver$1@7766006
+  Wallpaper connection com.android.server.wallpaper.WallpaperManagerService$WallpaperConnection@9e735da:
+    mInfo.component=ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemHomeWallpaperService}
+     mWhich=5
+     mDisplayId=0
+     mToken=android.os.Binder@9242f83
+     mEngine=android.service.wallpaper.IWallpaperEngine$Stub$Proxy@6e9c0f7
+    mService=android.service.wallpaper.IWallpaperService$Stub$Proxy@e44711c
+    mLastDiedTime=-44346619
+  mSemWallpaperData=
+    mTimeCreated=null
+    mWidth=-1
+    mHeight=-1
+    mIsCopied=false
+    mIsPreloaded=false
+    mOrientation=0
+    mWhich=0x5
+    mWpType=7
+    mUri=null
+    mLastCallingPackage=com.android.wallpaper.livepicker
+    mExternalParams=null, mVideoFileName=null
+    mIsDesktopWallpaper=false
+    mPrimarySemColors=[version:22, which:5, adaptive dim:0.0/0, darkmode dim:0.0]
+	[STATUSBAR, Rect(46, 17 - 1920, 87):0/ffffffff/1.0/0.1, 0.0/0.0/0.0]
+	[BODY, Rect(69, 153 - 1897, 1786):0/ffffffff/1.0/0.1, 0.0/0.0/0.0]
+	[NAVIBAR, Rect(0, 2091 - 1967, 2182):0/ffffffff/1.0/0.1, 0.0/0.0/0.0]
+    mDlsSemColors=null
+    mSmartCropOriginalRect=null, mSmartCropRect=null
+    mWallpaperHistory=
+	history - [time]::[callingPkg]::[type]::[contents]
+	16 Jun 2025 11:03:08::android::default
+	4 May 2026 15:47:04::com.android.wallpaper.livepicker::live
+	4 May 2026 15:47:53::com.android.wallpaper.livepicker::live
+	4 May 2026 15:55:43::com.samsung.android.app.dressroom::live
+	4 May 2026 15:57:27::com.android.wallpaper.livepicker::live
+	4 May 2026 15:59:43::android(clear)::live
+	4 May 2026 20:28:40::com.android.wallpaper.livepicker::live
+	4 May 2026 20:29:55::com.samsung.android.app.dressroom::live
+	4 May 2026 22:39:46::com.android.wallpaper.livepicker::live
+	4 May 2026 22:41:54::com.samsung.android.app.dressroom::live
+	5 May 2026 14:37:15::com.android.wallpaper.livepicker::live
+    mLastClearCallstackWithNullPackage=null
+ User 0: id=6, hash=@40824614
+  mWhich=11
+  mBindSource=UNKNOWN
+  mCropHint=Rect(0, 0 - 0, 0)
+  mName=
+  mMode=8
+  mSystemWasBoth=false
+  mAllowBackup=false
+  getWallpaperFile()=/data/system/users/0/wallpaper_desktop_orig
+  getCropFile()=/data/system/users/0/wallpaper_desktop
+  mWallpaperComponent=ComponentInfo{com.android.systemui/com.android.systemui.wallpapers.ImageWallpaper}
+  wallpaperObserver=null
+  mSemWallpaperData=
+    mTimeCreated=null
+    mWidth=-1
+    mHeight=-1
+    mIsCopied=false
+    mIsPreloaded=true
+    mOrientation=0
+    mWhich=0x9
+    mWpType=0
+    mUri=null
+    mLastCallingPackage=android
+    mExternalParams=null
+    mIsDesktopWallpaper=true
+    mPrimarySemColors=[version:22, which:9, adaptive dim:0.0/0, darkmode dim:0.15]
+	[SeedColors, [-10908784]]
+	[STATUSBAR, Rect(52, 17 - 1026, 87):0/ffffffff/1.0/0.1, 0.0/0.0/0.0]
+	[BODY, Rect(37, 177 - 1042, 2064):0/fff2f2f2/2.9026353/0.5410367, 181.46341/0.31538463/0.50980395]
+	[NAVIBAR, Rect(0, 2415 - 1079, 2518):0/fff0f0f0/2.5127554/0.48011804, 191.6129/0.496/0.49019608]
+    mDlsSemColors=null
+    mSmartCropOriginalRect=null, mSmartCropRect=null
+    mWallpaperHistory=
+	history - [time]::[callingPkg]::[type]::[contents]
+	16 Jun 2025 11:03:08::android::default
+    mLastClearCallstackWithNullPackage=null
+ User 0: id=4, hash=@44703460
+  mWhich=17
+  mBindSource=UNKNOWN
+  mCropHint=Rect(0, 0 - 0, 0)
+  mName=
+  mMode=16
+  mSystemWasBoth=false
+  mAllowBackup=false
+  getWallpaperFile()=/data/system/users/0/wallpaper_sub_display_orig
+  getCropFile()=/data/system/users/0/wallpaper_sub_display
+  mWallpaperComponent=ComponentInfo{com.android.systemui/com.android.systemui.wallpapers.ImageWallpaper}
+  wallpaperObserver=null
+  Wallpaper connection com.android.server.wallpaper.WallpaperManagerService$WallpaperConnection@fb39519:
+     mWhich=17
+     mDisplayId=0
+     mToken=android.os.Binder@891e992
+     mEngine=android.service.wallpaper.IWallpaperEngine$Stub$Proxy@25c5bfe
+    mService=android.service.wallpaper.IWallpaperService$Stub$Proxy@94ce6c7
+    mLastDiedTime=-76879146
+  mSemWallpaperData=
+    mTimeCreated=null
+    mWidth=-1
+    mHeight=-1
+    mIsCopied=false
+    mIsPreloaded=true
+    mOrientation=0
+    mWhich=0x11
+    mWpType=0
+    mUri=android.resource://com.samsung.android.wallpaper.res/drawable/sub_wallpaper_004.png
+    mLastCallingPackage=android
+    mExternalParams=null
+    mIsDesktopWallpaper=false
+    mPrimarySemColors=[version:22, which:17, adaptive dim:0.0/0, darkmode dim:0.15456164]
+	[SeedColors, [-11632244]]
+	[STATUSBAR, Rect(46, 17 - 1032, 87):1/ffffffff/1.0/0.1, 0.0/0.0/0.0]
+	[BODY, Rect(36, 178 - 1041, 2072):0/fff5f5f5/3.0123305/0.55817664, 175.7143/0.27450982/0.6]
+	[NAVIBAR, Rect(0, 2427 - 1078, 2519):0/fff0f0f0/2.546851/0.48544544, 192.72728/0.49624062/0.52156866]
+    mDlsSemColors=null
+    mSmartCropOriginalRect=null, mSmartCropRect=null
+    mWallpaperHistory=
+	history - [time]::[callingPkg]::[type]::[contents]
+	16 Jun 2025 11:03:08::android::default
+    mLastClearCallstackWithNullPackage=null
+
+WallpaperDataManager
+Lock Wallpaper
+ User 0: id=44, hash=@128736051
+  mWhich=6
+  mBindSource=CONNECTION_TRY_TO_REBIND
+  mCropHint=Rect(0, 0 - 0, 0)
+  mName=
+  mMode=4
+  mSystemWasBoth=false
+  mAllowBackup=false
+  getWallpaperFile()=/data/system/users/0/wallpaper_lock_images/wallpaper_lock_orig
+  getCropFile()=/data/system/users/0/wallpaper_lock_images/wallpaper_lock
+  mWallpaperComponent=ComponentInfo{com.samsung.android.wallpaper.live/com.samsung.android.wallpaper.live.fold.FoldInteractive}
+  wallpaperObserver=com.samsung.android.server.wallpaper.SemWallpaperManagerService$SemWallpaperObserver$1@52e03ff
+  Wallpaper connection com.android.server.wallpaper.WallpaperManagerService$WallpaperConnection@52179ec:
+    mInfo.component=ComponentInfo{com.samsung.android.wallpaper.live/com.samsung.android.wallpaper.live.fold.FoldInteractive}
+     mWhich=6
+     mDisplayId=0
+     mToken=android.os.Binder@b845ba1
+     mEngine=android.service.wallpaper.IWallpaperEngine$Stub$Proxy@8b50904
+    mService=android.service.wallpaper.IWallpaperService$Stub$Proxy@542e125
+    mLastDiedTime=-23801344
+  mSemWallpaperData=
+    mTimeCreated=null
+    mWidth=-1
+    mHeight=-1
+    mIsCopied=false
+    mIsPreloaded=true
+    mOrientation=0
+    mWhich=0x6
+    mWpType=7
+    mUri=null
+    mLastCallingPackage=android(clear)
+    mExternalParams={
+  "serviceSettings": "BD|{\n  \"thumbnail_frame_no\": \"I|526\",\n  \"filename\": \"S|video_004.mp4\"\n}",
+  "isPreloaded": "B|true",
+  "isFixedOrientation": "B|false"
+}, mVideoFileName=null
+    mIsDesktopWallpaper=false
+    mPrimarySemColors=[version:22, which:6, adaptive dim:0.0/ff000000, darkmode dim:0.15107635]
+	[SeedColors, [-11300967]]
+	[STATUSBAR, Rect(46, 17 - 1920, 87):1/ffffffff/1.0/0.1, 0.0/0.0/0.0, DARK/ff444444, DARK/ff444444]
+	[BODY_TOP, Rect(672, 435 - 1294, 635):1/ff383838/3.2460077/0.36150193, 130.34483/0.15508021/0.73333335]
+	[BODY_MID, Rect(672, 903 - 1294, 942):1/ff373737/3.2899568/0.3724892, 149.14285/0.18817204/0.7294118]
+	[BODY_BOTTOM, Rect(97, 1961 - 1869, 2136):0/fff2f2f2/2.60009/0.49376407, 190.15384/0.4676259/0.54509807]
+	[NAVIBAR, Rect(1514, 2116 - 1556, 2159):0/fff2f2f2/2.6156158/0.49618995, 191.53847/0.53061223/0.5764706]
+	[BACKGROUND, Rect(0, 0 - 1967, 2182):0/fff4f4f4/3.007656/0.55744624, 180.0/0.30872482/0.58431375]
+    mDlsSemColors=null
+    mSmartCropOriginalRect=null, mSmartCropRect=null
+    mLandscapeColors=[version:22, which:6, adaptive dim:0.0/ff000000, darkmode dim:0.15]
+	[SeedColors, [-11038053]]
+	[STATUSBAR, Rect(46, 0 - 2136, 56):1/ffffffff/1.0/0.1, 0.0/0.0/0.0, DARK/ff444444, DARK/ff444444]
+	[BODY_TOP, Rect(779, 293 - 1401, 493):1/ff393939/3.242502/0.3606255, 128.27586/0.15425532/0.7372549]
+	[BODY_MID, Rect(779, 761 - 1401, 800):1/ff2e2e2e/3.3991823/0.39979556, 167.6923/0.23636363/0.64705884]
+	[BODY_BOTTOM, Rect(124, 1722 - 2058, 1920):0/fff3f3f3/2.6626706/0.50354224, 189.85074/0.44966444/0.58431375]
+	[NAVIBAR, Rect(2116, 410 - 2159, 452):0/fff2f2f2/2.604851/0.49450797, 191.2/0.5208333/0.5647059]
+	[BACKGROUND, Rect(0, 0 - 2182, 1967):0/fff4f4f4/3.007656/0.55744624, 181.27658/0.31756756/0.5803922]
+    mWallpaperHistory=
+	history - [time]::[callingPkg]::[type]::[contents]
+	16 Jun 2025 11:03:08::android::default
+	11 Aug 2025 01:39:17::com.android.systemui::video
+	11 Aug 2025 02:02:04::com.samsung.android.app.dressroom::video
+	11 Aug 2025 02:02:25::com.android.systemui::video
+	4 May 2026 15:47:53::com.android.wallpaper.livepicker::default
+	4 May 2026 15:55:43::com.samsung.android.app.dressroom::default
+	4 May 2026 20:28:05::com.android.wallpaper.livepicker::live
+	4 May 2026 20:29:55::com.samsung.android.app.dressroom::default
+	4 May 2026 20:30:42::com.samsung.android.app.dressroom::video::twolions.v24vid.wallpapervideo
+	4 May 2026 22:39:46::com.android.wallpaper.livepicker::default
+	4 May 2026 22:41:54::com.samsung.android.app.dressroom::default
+	4 May 2026 22:43:09::com.android.wallpaper.livepicker::live
+	5 May 2026 01:42:24::android(clear)::image
+	5 May 2026 01:45:25::android(clear)::image
+	5 May 2026 01:46:02::android(clear)::image
+	5 May 2026 01:46:41::android(clear)::image
+    mLastClearCallstackWithNullPackage=null
+ User 0: id=18, hash=@58562407
+  mWhich=10
+  mBindSource=UNKNOWN
+  mCropHint=Rect(0, 0 - 0, 0)
+  mName=
+  mMode=8
+  mSystemWasBoth=false
+  mAllowBackup=false
+  getWallpaperFile()=/data/system/users/0/wallpaper_lock_images/wallpaper_desktop_lock_orig
+  getCropFile()=/data/system/users/0/wallpaper_lock_images/wallpaper_desktop_lock
+  mWallpaperComponent=ComponentInfo{com.android.systemui/com.android.systemui.wallpapers.ImageWallpaper}
+  wallpaperObserver=null
+  mSemWallpaperData=
+    mTimeCreated=null
+    mWidth=-1
+    mHeight=-1
+    mIsCopied=false
+    mIsPreloaded=true
+    mOrientation=0
+    mWhich=0xa
+    mWpType=-1
+    mUri=null
+    mLastCallingPackage=android
+    mExternalParams=null
+    mIsDesktopWallpaper=true
+    mPrimarySemColors=[version:22, which:10, adaptive dim:0.0/0, darkmode dim:0.15]
+	[SeedColors, [-10908784]]
+	[STATUSBAR, Rect(52, 17 - 1026, 87):0/ffffffff/1.0/0.1, 0.0/0.0/0.0]
+	[BODY_TOP, Rect(188, 502 - 890, 728):0/fff7f7f7/2.9021635/0.54096305, 142.0/0.1764706/0.6666667]
+	[BODY_MID, Rect(188, 1031 - 890, 1074):0/ffebebeb/2.2861764/0.44471508, 197.14285/0.5764706/0.33333334]
+	[BODY_BOTTOM, Rect(109, 2263 - 969, 2465):0/fff0f0f0/2.5182877/0.48098242, 188.72726/0.45081967/0.47843137]
+	[NAVIBAR, Rect(818, 2443 - 866, 2492):0/fff0f0f0/2.5188196/0.48106557, 190.64517/0.496/0.49019608]
+	[BACKGROUND, Rect(0, 0 - 1079, 2518):0/fff2f2f2/2.8993502/0.54052347, 182.7907/0.33076924/0.50980395]
+    mDlsSemColors=null
+    mSmartCropOriginalRect=null, mSmartCropRect=null
+    mWallpaperHistory=
+	history - [time]::[callingPkg]::[type]::[contents]
+	16 Jun 2025 11:03:08::android::default
+    mLastClearCallstackWithNullPackage=null
+ User 0: id=22, hash=@3198797
+  mWhich=18
+  mBindSource=UNKNOWN
+  mCropHint=Rect(0, 0 - 0, 0)
+  mName=
+  mMode=16
+  mSystemWasBoth=false
+  mAllowBackup=true
+  getWallpaperFile()=/data/system/users/0/wallpaper_lock_images/wallpaper_sub_display_lock_orig
+  getCropFile()=/data/system/users/0/wallpaper_lock_images/wallpaper_sub_display_lock
+  mWallpaperComponent=ComponentInfo{com.android.systemui/com.android.systemui.wallpapers.ImageWallpaper}
+  wallpaperObserver=null
+  Wallpaper connection com.android.server.wallpaper.WallpaperManagerService$WallpaperConnection@2ae46c7:
+     mWhich=18
+     mDisplayId=0
+     mToken=android.os.Binder@c8509a8
+     mEngine=android.service.wallpaper.IWallpaperEngine$Stub$Proxy@9cebf5f
+    mService=android.service.wallpaper.IWallpaperService$Stub$Proxy@8f914f4
+    mLastDiedTime=-76879147
+  mSemWallpaperData=
+    mTimeCreated=null
+    mWidth=-1
+    mHeight=-1
+    mIsCopied=false
+    mIsPreloaded=false
+    mOrientation=0
+    mWhich=0x12
+    mWpType=8
+    mUri=null
+    mLastCallingPackage=com.samsung.android.app.dressroom
+    mExternalParams=null
+    mVideoFilePath=null, mVideoPkgName=twolions.v24vid.wallpapervideo, mVideoFileName=null, mVideoDefaultHasBeenUsed=true
+    mIsDesktopWallpaper=false
+    mPrimarySemColors=[version:22, which:18, adaptive dim:0.0/ff000000, darkmode dim:0.15]
+	[SeedColors, [-7839416]]
+	[STATUSBAR, Rect(46, 17 - 1032, 87):0/ffffffff/1.0/0.1, 0.0/0.0/0.0, LIGHT/fffafafa, LIGHT/fffafafa]
+	[BODY_TOP, Rect(77, 503 - 1001, 703):0/ffebebeb/2.7134166/0.51147133, 23.414633/0.45555556/0.3529412]
+	[BODY_MID, Rect(77, 1061 - 1001, 1100):0/ffececec/2.508452/0.47944564, 22.5/0.48979592/0.38431373]
+	[BODY_BOTTOM, Rect(77, 1463 - 1001, 1967):0/ffe9e9e9/2.559279/0.48738733, 21.818182/0.36065573/0.23921569]
+	[NAVIBAR, Rect(77, 2252 - 1001, 2429):0/ffe4e4e4/2.0004/0.4000625, 20.0/0.27272728/0.043137256]
+	[BACKGROUND, Rect(0, 0 - 1078, 2519):0/ffe8e8e8/2.5616574/0.48775893, 21.818182/0.39285713/0.21960784]
+    mDlsSemColors=null
+    mSmartCropOriginalRect=null, mSmartCropRect=null
+    mWallpaperHistory=
+	history - [time]::[callingPkg]::[type]::[contents]
+	16 Jun 2025 11:03:08::android::default
+	9 Aug 2025 03:01:03::com.samsung.android.app.dressroom::video::com.samsung.android.wallpaper.res
+	9 Aug 2025 03:01:22::com.samsung.android.app.dressroom::video::com.samsung.android.wallpaper.res
+	9 Aug 2025 16:17:31::com.samsung.android.app.dressroom::video::com.samsung.android.wallpaper.res
+	9 Aug 2025 16:20:01::com.samsung.android.app.dressroom::video::com.samsung.android.wallpaper.res
+	11 Aug 2025 01:38:11::com.android.systemui::video
+	11 Aug 2025 01:50:18::com.samsung.android.app.dressroom::video::twolions.v24vid.wallpapervideo
+	2 Sept 2025 01:17:05::com.samsung.android.app.dressroom::video::twolions.v24vid.wallpapervideo
+	2 Sept 2025 01:17:48::com.samsung.android.app.dressroom::video::twolions.v24vid.wallpapervideo
+	2 Sept 2025 01:18:08::com.samsung.android.app.dressroom::video::twolions.v24vid.wallpapervideo
+	2 Sept 2025 16:00:04::com.samsung.android.app.dressroom::video::twolions.v24vid.wallpapervideo
+    mLastClearCallstackWithNullPackage=null
+
+[AssetFileManager]
+
+[Tml]
+0 17 0 1080 2520
+0  6 0 1968 2184
+0  6 1 2184 1968
+0 18 0 548 1278
+0 18 1 1278 548
+0 18 3 1278 548
+0  9 0 1920 1080
+0 10 0 1920 1080
+zBM0bdVbU_TvG9r_MJ_V85n@ZNQ^thjn7[K|@P9S|QawW1tr`PnI_zKtT9KH|cyuGep_g4u\43P}fDtSFN|>VYsDjG=|:`^;=es{ls<z23YgX3f=f;R>IV58oA4kYTiTwwEl1ryE7N7\BSxl\Q;Xus<;GpIL;LVv7SoisSD`7m@q0yj4vkhr~M8XKVniK?
+zBMNeuI3kx4B[7B~_L65CWkSxzlAJ7K1jHoJCVzYxWyACNVWqY2RH`kN{\Xv}0JTFujEU45e;gAZGisEqqZpmeX`7aLpED{30Jyzz:X\JAwWM;>u]7{AS0;93q|@^rYL0?3;AuXxd8whNW15X^r?zYl4_z1=4=Lzm_=hU_:IH`eaHV9|Hx[Wb1S0V~{@V`
+zBV]{^VnSyNzM;z<QTmjbKSGz6Pv7A8H~KX?ka^1Z1{LG~SN6_Ot[@5g~=LwMkl_b7fjxa9\nnXRma[^2]0Avs8h[=_oebzLJ5w22\^Q=uc>ts;|j2YBAu:gti93Phn:~vTUVf76<FQ=el8UlgA_D_sHaiWgOgK^tBgD7BM|rt:P6xb;Zh24SW{6a8Q:aw
+ivvHvL1aa}3?HrN9b}bQ?xG^>{<Yujdq0|yt~n07arLx8]@MqK<`0qdBg_Xv}H\vJZJ^O}0fIzG\BgsbSLN[JuLKlJVnRtUXYt81G1WnVANE@}1L9LDwwu]vsIHV5Qd_`\QD1vnQ}p7n~AON{MdPcn?2Eqci2i:_0d@R=dnXJbJQN<EIu}c19YbrwjS>w]
+SdhSZyJfHfl1v4;8U>tt>4DfxREUX@a?n[BI1BnciZEpBDpi8[UOitA0VJRqzPHA>UXh}EztB}?qC:{rc5YOTt>^vW6olmTFv~p1G1WvjTY4a}]{g3h{4_lTsE35rTfQV2Kb9?3]D7<}c3mME=G\IS]zle?XKX6Z9\0:m\Jjo^CwBa{<IG?lQOzExc^rxa
+P4HT7|;W|zqZUBQ5[ZAFd<L<[ucCVWoGla~W5i`Q8Y0QaR6@t5XRZQ\rZFv{]Np^u`?70@i68qMqV_QL2XGh_ajsQ1Rlz6\]3y:d58qngq`S7U_Q9l}WPNOG26Iu0_Jl@G\mN1[jyyE~oy]{ZEd9BEQSWNRC>Cx9GK}wyK;BNt:P6vF^SOR[5cmD1sta1v
+8XypD1VTc60WGwkdRZm3>msXyV7Unc>hvHo76W3|x]jYyYp~?3yQ:q;RkZphEHFIOi0hc?{_iQm[S^<EzVG{:a^Rvxi1ng<\TYlC]\zbyHKklCVhRd8E]HBxTwbEqKf=]ZL`dVyJaKo@N}@7\3St_b^QOkS<Q<f8HmeNQmdv[hs=RGqa]yMKPLf5d<vGdO
+8XypD1VTc60WGwkdRZm3>msXyV7Unc>hvHo76W3|x]jYyYp~?3yQ:q;RkZphEHFIOi0hc?{_iQm[S^<EzVG{:a^Rvxi1ng<\TYlC]\zbyHKklCVhRd8E]HBxTwbEqKf=]ZL`dVyJaKo@N}@7\3St_b^QOkS<Q<fGO>YPL>Q6FZd|\IMBC]7qr30<Qo6IQS
+
+[Event history]
+    [05-05 01:42:24.951] doPackagesChangedLocked : removeCallbacks
+    [05-04 15:59:43.408] doPackagesChangedLocked : removeCallbacks
+    [05-04 06:01:24.272] switchUser, change -10000 to 0
+    [05-04 06:01:24.039] put, userId:0, mode:8, data:WallpaperData@37d9767, id: 18, which: 10, file mod: 0, no connection, type = -1, userId = 0, uri= null, allowBackup= false, wallpaperComponent = ComponentInfo{com.android.systemui/com.android.systemui.wallpapers.ImageWallpaper}, nextWallpaperComponent = null, hash:58562407
+    [05-04 06:01:24.038] put, userId:0, mode:8, data:WallpaperData@26eef26, id: 6, which: 11, file mod: 0, no connection, type = 0, userId = 0, uri= null, allowBackup= false, wallpaperComponent = ComponentInfo{com.android.systemui/com.android.systemui.wallpapers.ImageWallpaper}, nextWallpaperComponent = null, hash:40824614
+    [05-04 06:01:24.036] put, userId:0, mode:16, data:WallpaperData@30cf4d, id: 22, which: 18, file mod: null, no connection, type = 8, userId = 0, uri= null, allowBackup= true, wallpaperComponent = ComponentInfo{com.android.systemui/com.android.systemui.wallpapers.ImageWallpaper}, nextWallpaperComponent = null, hash:3198797
+    [05-04 06:01:24.036] put, userId:0, mode:16, data:WallpaperData@2aa1ee4, id: 4, which: 17, file mod: 0, no connection, type = 0, userId = 0, uri= android.resource://com.samsung.android.wallpaper.res/drawable/sub_wallpaper_004.png, allowBackup= false, wallpaperComponent = ComponentInfo{com.android.systemui/com.android.systemui.wallpapers.ImageWallpaper}, nextWallpaperComponent = null, hash:44703460
+    [05-04 06:01:24.030] put, userId:0, mode:4, data:WallpaperData@7ac5b33, id: 17, which: 6, file mod: null, no connection, type = 8, userId = 0, uri= null, allowBackup= true, wallpaperComponent = ComponentInfo{com.android.systemui/com.android.systemui.wallpapers.ImageWallpaper}, nextWallpaperComponent = null, hash:128736051
+    [05-04 06:01:24.030] put, userId:0, mode:4, data:WallpaperData@d0a72a2, id: 2, which: 5, file mod: 0, no connection, type = 7, userId = 0, uri= null, allowBackup= false, wallpaperComponent = ComponentInfo{com.samsung.android.wallpaper.live/com.samsung.android.wallpaper.live.fold.FoldInteractive}, nextWallpaperComponent = null, hash:218788514
+    [05-04 06:01:22.097] WallpaperService startup
+[End of event history]
+[State log]
