@@ -49,8 +49,7 @@
             android:name=".SolarSystemHomeWallpaperService"
             android:exported="true"
             android:label="@string/wallpaper_label_home"
-            android:permission="android.permission.BIND_WALLPAPER"
-            android:process=":wallpaper">
+            android:permission="android.permission.BIND_WALLPAPER">
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
             </intent-filter>
@@ -65,8 +64,7 @@
             android:name=".SolarSystemLockWallpaperService"
             android:exported="true"
             android:label="@string/wallpaper_label_lock"
-            android:permission="android.permission.BIND_WALLPAPER"
-            android:process=":wallpaper">
+            android:permission="android.permission.BIND_WALLPAPER">
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
             </intent-filter>
