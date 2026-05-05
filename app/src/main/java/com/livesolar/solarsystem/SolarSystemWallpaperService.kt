@@ -84,11 +84,19 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
             if (widthPx <= 0 || heightPx <= 0 || rendering) return
             rendering = true
             val params = currentParams()
-            lastParams = params
             WebViewBitmapRenderer.render(applicationContext, widthPx, heightPx, params) { bm ->
                 rendering = false
                 if (bm != null) {
                     lastBitmap = bm
+                    // Only mark these params 'last seen' once we successfully
+                    // produced a bitmap. If we set lastParams pre-render and
+                    // the render returns null (e.g. createVirtualDisplay
+                    // exhausted), the next onVisibilityChanged would compute
+                    // currentParams() == lastParams and skip the retry — the
+                    // wallpaper would be permanently stuck on the previous
+                    // bitmap. Setting after success ensures stale renders
+                    // get retried on the next visibility cycle.
+                    lastParams = params
                     paintToSurface(bm)
                 }
             }
