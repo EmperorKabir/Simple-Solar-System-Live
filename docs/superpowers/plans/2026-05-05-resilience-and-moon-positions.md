@@ -213,7 +213,43 @@ For every moon, fill a table row:
 
 - [ ] **Step 3.7: STOP-CHECKPOINT — present inventory.md to user. Await GO before Task 4.**
 
-### Task 4: Cross-reference Stellarium screenshots vs app screenshots
+### Task 4 (REVISED — math-based, no LLM heuristics)
+
+**Critical correction:** the user's app screenshots are timestamped 19:22–19:26 UTC (UTC+01:00 local) while their Stellarium screenshots are 21:33–21:36 UTC. **~2 hour gap.** Moons move significantly in 2 hours — Phobos ~94°, Deimos ~24°, Io ~17°. Pixel-comparison between the two sets is invalid without controlling for time evolution.
+
+**Authoritative tools (no LLM math):**
+- **JPL Horizons API** (`https://ssd.jpl.nasa.gov/api/horizons.api`) — ground-truth RA/Dec for any solar system body at any UTC. Body codes: Phobos=401, Deimos=402, Io=501, Europa=502, Ganymede=503, Callisto=504, Miranda=705, Ariel=701, Umbriel=702, Titania=703, Oberon=704, Triton=801, Charon=901, etc.
+- **context7 MCP** — verify Horizons API request format, ephemeris frame conventions
+- **Node.js** — run the app's actual JS evaluators (`moonPositions.js`) in isolation to capture computed positions
+- **swiss-ephemeris MCP** — independent cross-check for Earth's Moon
+
+**Methodology:**
+1. Pin a single UTC instant from one of the user's Stellarium screenshots (most precise readable timestamp).
+2. For each moon visible in that Stellarium screenshot:
+   - Query JPL Horizons for astrometric RA/Dec @ that UTC. **GROUND TRUTH.**
+   - Run the app's JS evaluator at the same UTC (Node + import moonPositions.js + planet VSOP for the host).
+   - Convert the app's ecliptic-J2000 vector to RA/Dec via standard rotation (Meeus 21.3, no LLM-derived constants — use the published obliquity ε at J2000 = 23.43928°).
+3. Compute the **angular delta** in arc-minutes between (Horizons RA/Dec) and (app RA/Dec). This is the "raw" pre-resolver delta.
+4. Compute `resolveMoonOverlap(appPos, …)` post-resolver delta separately. Document its magnitude per moon.
+5. Repeat for every Stellarium-visible moon. Record everything in `02-numerical-deltas.md`.
+
+**Output:** a per-moon table with these columns:
+- Moon name
+- UTC instant
+- Horizons RA/Dec (HMS / DMS)
+- App raw evaluator output (RA/Dec)
+- Raw angular delta (arc-min) — **reveals true ephemeris correctness**
+- Resolver shift magnitude (degrees)
+- App final position after resolver (RA/Dec)
+- Final delta (arc-min) — **what the user actually sees**
+
+A moon with raw delta < 1 arc-min but resolver shift of several degrees: bug is in resolver, not in ephemeris.
+A moon with raw delta > 1 degree: bug is in the ephemeris evaluator (frame, epoch, elements, etc.).
+A moon with both small: not a bug, just user's viewpoint mismatch.
+
+**No code changes in this task.** Output is documentation only.
+
+
 
 - **Files:**
   - Create: `docs/diag/2026-05-05-moon-investigation/02-screenshot-deltas.md`
