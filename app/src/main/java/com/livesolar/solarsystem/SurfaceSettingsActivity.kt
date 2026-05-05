@@ -97,6 +97,13 @@ abstract class SurfaceSettingsActivity : Activity() {
             text = "Hide Pluto"
             isChecked = settings.hidePluto
             setOnCheckedChangeListener { _, isChecked -> settings.hidePluto = isChecked }
+            setPadding(0, pad / 2, 0, pad / 2)
+        }
+
+        val moonLabelsSwitch = Switch(this).apply {
+            text = "Show moon labels (not recommended)"
+            isChecked = settings.moonLabelsEnabled
+            setOnCheckedChangeListener { _, isChecked -> settings.moonLabelsEnabled = isChecked }
             setPadding(0, pad / 2, 0, pad)
         }
 
@@ -120,6 +127,7 @@ abstract class SurfaceSettingsActivity : Activity() {
             addView(tiltSpinner)
             addView(labelsSwitch)
             addView(plutoSwitch)
+            addView(moonLabelsSwitch)
             addView(saveBtn)
         }
         setContentView(root)

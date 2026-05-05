@@ -405,6 +405,21 @@
             pointer-events: none;
         }
         .wp-preview-loading.hidden { opacity: 0; }
+
+        /* Side-by-side wallpaper sections in landscape / wide layouts.
+           Falls back to vertical stacking in folded / portrait < 700 px. */
+        @media (min-width: 700px) {
+            #wallpaper-modal-card {
+                max-width: min(900px, calc(100vw - 48px));
+            }
+            .wp-section {
+                display: inline-block;
+                vertical-align: top;
+                width: calc(50% - 8px);
+                box-sizing: border-box;
+            }
+            .wp-section + .wp-section { margin-left: 12px; }
+        }
         #wallpaper-modal-close {
             display: block; margin: 4px 0 0 auto;
             padding: 6px 16px;
@@ -671,6 +686,10 @@
                     <label>Hide Pluto</label>
                     <button type="button" class="wp-toggle off" data-prop="hidePluto">Off</button>
                 </div>
+                <div class="wp-row">
+                    <label>Show moon labels (not recommended)</label>
+                    <button type="button" class="wp-toggle off" data-prop="moonLabels">Off</button>
+                </div>
             </div>
             <div class="wp-section" data-target="lock">
                 <h4>Lock screen</h4>
@@ -715,6 +734,10 @@
                 <div class="wp-row">
                     <label>Hide Pluto</label>
                     <button type="button" class="wp-toggle off" data-prop="hidePluto">Off</button>
+                </div>
+                <div class="wp-row">
+                    <label>Show moon labels (not recommended)</label>
+                    <button type="button" class="wp-toggle off" data-prop="moonLabels">Off</button>
                 </div>
             </div>
             <button id="wallpaper-modal-close" type="button">Close</button>
@@ -838,6 +861,12 @@
         // which mutates this same variable. Declaration is hoisted here so
         // it is available before the planet construction loop.
         let plutoEnabled = (_surfaceParams.get('pluto') !== 'off');
+        // Moon-labels flag: opt-in for surface mode (default OFF since moons
+        // are sub-pixel at widget/wallpaper framing and labels clutter the
+        // composition). Main app default ON to keep historical behaviour.
+        const MOON_LABELS_ENABLED = (SURFACE === 'main')
+            ? true
+            : (_surfaceParams.get('moonLabels') === 'on');
 
         // F1: texture downscale factor for surface (widget/wallpaper) modes.
         // Source planet textures (up to 8192x4096 RGBA = 128 MB GPU mem each)
@@ -1937,6 +1966,12 @@
                     pTog.textContent = hide ? 'On' : 'Off';
                     pTog.classList.toggle('off', !hide);
                 }
+                const mlTog = section.querySelector('.wp-toggle[data-prop="moonLabels"]');
+                if (mlTog) {
+                    const on = !!parsed[target].moonLabels;
+                    mlTog.textContent = on ? 'On' : 'Off';
+                    mlTog.classList.toggle('off', !on);
+                }
             }
         }
         function _wpReadSection(section) {
@@ -1944,17 +1979,19 @@
             const tSel = section.querySelector('.wp-select[data-prop="tilt"]');
             const tog  = section.querySelector('.wp-toggle[data-prop="labels"]');
             const pTog = section.querySelector('.wp-toggle[data-prop="hidePluto"]');
+            const mlTog = section.querySelector('.wp-toggle[data-prop="moonLabels"]');
             return {
-                offsetY:   parseFloat(oSel.value),
-                tilt:      parseFloat(tSel ? tSel.value : '0'),
-                labels:    !tog.classList.contains('off'),
-                hidePluto: pTog ? !pTog.classList.contains('off') : false
+                offsetY:    parseFloat(oSel.value),
+                tilt:       parseFloat(tSel ? tSel.value : '0'),
+                labels:     !tog.classList.contains('off'),
+                hidePluto:  pTog ? !pTog.classList.contains('off') : false,
+                moonLabels: mlTog ? !mlTog.classList.contains('off') : false
             };
         }
         function _wpSave(target, section) {
             if (!wallpaperBridgeAvailable) return;
             const v = _wpReadSection(section);
-            window.WallpaperPicker.saveSettings(target, v.offsetY, v.tilt, v.labels, v.hidePluto);
+            window.WallpaperPicker.saveSettings(target, v.offsetY, v.tilt, v.labels, v.hidePluto, v.moonLabels);
             _wpUpdatePreview(target, section);
         }
         // Live in-modal preview. Loads index.html in an iframe with the
@@ -1962,27 +1999,39 @@
         // will look like before tapping 'Set as wallpaper'. Each iframe is
         // its own WebView context, so F1 texture downscale (TEX_DOWNSCALE=4
         // for surface mode) keeps GPU memory bounded.
+        //
+        // Debounced: rapid toggle/select changes (each fires _wpSave which
+        // calls this function) coalesce into a single iframe reload after
+        // 600 ms of quiet — prevents the WebView from thrashing on repeated
+        // src changes which otherwise freeze the parent app while textures
+        // re-decode in the iframe context.
+        const _previewDebounce = new Map();
         function _wpUpdatePreview(target, section) {
-            const frame = section.querySelector('.wp-preview-frame');
             const loading = section.querySelector('.wp-preview-loading');
-            if (!frame) return;
+            // Show loading overlay immediately so the user gets feedback
+            // even though the actual iframe.src change is debounced.
             if (loading) loading.classList.remove('hidden');
-            const v = _wpReadSection(section);
-            const params = new URLSearchParams({
-                surface: 'wallpaper',
-                offsetY: String(v.offsetY),
-                tilt:    String(v.tilt),
-                labels:  v.labels ? 'on' : 'off',
-                pluto:   v.hidePluto ? 'off' : 'on'
-            });
-            // Only hide the loading overlay AFTER the iframe's window has
-            // dispatched 'load' (full document + initial render attempted).
-            const onLoad = () => {
-                if (loading) loading.classList.add('hidden');
-                frame.removeEventListener('load', onLoad);
-            };
-            frame.addEventListener('load', onLoad);
-            frame.src = './index.html?' + params.toString();
+            if (_previewDebounce.has(target)) clearTimeout(_previewDebounce.get(target));
+            _previewDebounce.set(target, setTimeout(() => {
+                _previewDebounce.delete(target);
+                const frame = section.querySelector('.wp-preview-frame');
+                if (!frame) return;
+                const v = _wpReadSection(section);
+                const params = new URLSearchParams({
+                    surface:    'wallpaper',
+                    offsetY:    String(v.offsetY),
+                    tilt:       String(v.tilt),
+                    labels:     v.labels ? 'on' : 'off',
+                    pluto:      v.hidePluto ? 'off' : 'on',
+                    moonLabels: v.moonLabels ? 'on' : 'off'
+                });
+                const onLoad = () => {
+                    if (loading) loading.classList.add('hidden');
+                    frame.removeEventListener('load', onLoad);
+                };
+                frame.addEventListener('load', onLoad);
+                frame.src = './index.html?' + params.toString();
+            }, 600));
         }
         wallpaperIcon.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -2015,6 +2064,12 @@
                 plutoTog.textContent = isOff ? 'Off' : 'On';
                 _wpSave(target, section);
             });
+            const moonLabelsTog = section.querySelector('.wp-toggle[data-prop="moonLabels"]');
+            if (moonLabelsTog) moonLabelsTog.addEventListener('click', () => {
+                const isOff = moonLabelsTog.classList.toggle('off');
+                moonLabelsTog.textContent = isOff ? 'Off' : 'On';
+                _wpSave(target, section);
+            });
             section.querySelector('.wp-apply').addEventListener('click', () => {
                 _wpSave(target, section);
                 if (wallpaperBridgeAvailable) {
@@ -2022,6 +2077,23 @@
                 }
             });
         });
+
+        // Apply moon-label visibility per setting. CSS2DRenderer (per its
+        // implementation at line 124-125) only checks `object.visible` on the
+        // label itself, so we walk each moon mesh's children to find the
+        // CSS2DObject and hide it. Done in a separate pass (not via traverse
+        // on the body mesh) because we want to preserve the moon body's
+        // visibility while only hiding its label.
+        if (!MOON_LABELS_ENABLED) {
+            for (const mc of activeMoons) {
+                if (!mc.mesh) continue;
+                for (const child of mc.mesh.children) {
+                    if (child.isCSS2DObject || (child.element && child.element.classList && child.element.classList.contains('planet-label'))) {
+                        child.visible = false;
+                    }
+                }
+            }
+        }
 
         // Pluto visibility helper. Why traverse() instead of single `.visible`
         // assignment: CSS2DRenderer only checks `object.visible` directly on
@@ -2675,18 +2747,25 @@
                         // labels' on-screen rects overlap, hide the one belonging to
                         // the smaller-rendered body.
                         const PLANET_LABELS = new Set(['Sun','Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto']);
+                        const MOON_NAMES = new Set(activeMoons.map(mc => mc.config && mc.config.name).filter(Boolean));
                         const all = document.querySelectorAll('.planet-label');
                         const cand = [];
                         const fovRad = camera.fov * Math.PI / 180.0;
                         const _wp = new THREE.Vector3();
                         for (const lbl of all) {
                             const name = lbl.dataset.bodyName || (lbl.textContent || '').trim();
-                            if (!PLANET_LABELS.has(name)) continue;
+                            const isPlanet = PLANET_LABELS.has(name);
+                            const isMoon = MOON_LABELS_ENABLED && MOON_NAMES.has(name);
+                            if (!isPlanet && !isMoon) continue;
                             const r = lbl.getBoundingClientRect();
                             if (r.width <= 0 || r.height <= 0) continue;
                             let bodyMesh = null, bodyRadius = 0;
                             if (name === 'Sun') { bodyMesh = sun; bodyRadius = sunVisualRadius; }
                             else if (planets[name]) { bodyMesh = planets[name]; bodyRadius = planetsData[name].size; }
+                            else if (isMoon) {
+                                const mc = activeMoons.find(m => m.config && m.config.name === name);
+                                if (mc) { bodyMesh = mc.mesh; bodyRadius = mc.config.size || 0.1; }
+                            }
                             if (!bodyMesh) continue;
                             bodyMesh.getWorldPosition(_wp);
                             const dist = camera.position.distanceTo(_wp);

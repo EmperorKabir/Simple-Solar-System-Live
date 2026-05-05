@@ -111,17 +111,19 @@ class MainActivity : Activity() {
                     .put("offsetY", home.offsetY)
                     .put("tilt", home.tilt)
                     .put("labels", home.labelsEnabled)
-                    .put("hidePluto", home.hidePluto))
+                    .put("hidePluto", home.hidePluto)
+                    .put("moonLabels", home.moonLabelsEnabled))
                 .put("lock", JSONObject()
                     .put("offsetY", lock.offsetY)
                     .put("tilt", lock.tilt)
                     .put("labels", lock.labelsEnabled)
-                    .put("hidePluto", lock.hidePluto))
+                    .put("hidePluto", lock.hidePluto)
+                    .put("moonLabels", lock.moonLabelsEnabled))
                 .toString()
         }
 
         @JavascriptInterface
-        fun saveSettings(target: String, offsetY: Float, tilt: Float, labels: Boolean, hidePluto: Boolean) {
+        fun saveSettings(target: String, offsetY: Float, tilt: Float, labels: Boolean, hidePluto: Boolean, moonLabels: Boolean) {
             val (ns, def) = when (target) {
                 "home" -> SurfaceSettings.HOME_WALLPAPER_NAMESPACE to SurfaceSettings.DEFAULT_HOME_OFFSET_Y
                 "lock" -> SurfaceSettings.LOCK_WALLPAPER_NAMESPACE to SurfaceSettings.DEFAULT_LOCK_OFFSET_Y
@@ -132,6 +134,7 @@ class MainActivity : Activity() {
                 this.tilt = tilt
                 this.labelsEnabled = labels
                 this.hidePluto = hidePluto
+                this.moonLabelsEnabled = moonLabels
             }
         }
 
