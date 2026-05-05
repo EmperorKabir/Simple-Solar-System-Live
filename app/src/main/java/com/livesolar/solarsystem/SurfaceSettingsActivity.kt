@@ -63,7 +63,7 @@ abstract class SurfaceSettingsActivity : Activity() {
         }
 
         val tiltLabel = TextView(this).apply {
-            text = "Camera tilt (0% = top-down, 70% = nearly side-on):"
+            text = "Camera tilt (0% = top-down, 100% = side-on):"
             setPadding(0, pad, 0, pad / 4)
         }
         val tiltSpinner = Spinner(this).apply {
@@ -90,7 +90,14 @@ abstract class SurfaceSettingsActivity : Activity() {
             text = "Show body labels"
             isChecked = settings.labelsEnabled
             setOnCheckedChangeListener { _, isChecked -> settings.labelsEnabled = isChecked }
-            setPadding(0, pad, 0, pad)
+            setPadding(0, pad, 0, pad / 2)
+        }
+
+        val plutoSwitch = Switch(this).apply {
+            text = "Hide Pluto"
+            isChecked = settings.hidePluto
+            setOnCheckedChangeListener { _, isChecked -> settings.hidePluto = isChecked }
+            setPadding(0, pad / 2, 0, pad)
         }
 
         val saveBtn = Button(this).apply {
@@ -112,6 +119,7 @@ abstract class SurfaceSettingsActivity : Activity() {
             addView(tiltLabel)
             addView(tiltSpinner)
             addView(labelsSwitch)
+            addView(plutoSwitch)
             addView(saveBtn)
         }
         setContentView(root)

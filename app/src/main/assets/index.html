@@ -636,6 +636,10 @@
                     <label>Show planet labels</label>
                     <button type="button" class="wp-toggle" data-prop="labels">On</button>
                 </div>
+                <div class="wp-row">
+                    <label>Hide Pluto</label>
+                    <button type="button" class="wp-toggle off" data-prop="hidePluto">Off</button>
+                </div>
                 <button type="button" class="wp-apply" data-action="apply">Set as home wallpaper</button>
             </div>
             <div class="wp-section" data-target="lock">
@@ -672,6 +676,10 @@
                 <div class="wp-row">
                     <label>Show planet labels</label>
                     <button type="button" class="wp-toggle" data-prop="labels">On</button>
+                </div>
+                <div class="wp-row">
+                    <label>Hide Pluto</label>
+                    <button type="button" class="wp-toggle off" data-prop="hidePluto">Off</button>
                 </div>
                 <button type="button" class="wp-apply" data-action="apply">Set as lock wallpaper</button>
             </div>
@@ -791,6 +799,12 @@
             const v = parseFloat(_surfaceParams.get('offsetY') || '0');
             return Number.isFinite(v) ? Math.min(0.7, Math.max(0, v)) : 0;
         })();
+        // Hide-Pluto flag: derived from URL param in surface mode, defaults
+        // to true (Pluto visible). Main app keeps the existing toggle button
+        // which mutates this same variable. Declaration is hoisted here so
+        // it is available before the planet construction loop.
+        let plutoEnabled = (_surfaceParams.get('pluto') !== 'off');
+
         // F1: texture downscale factor for surface (widget/wallpaper) modes.
         // Source planet textures (up to 8192x4096 RGBA = 128 MB GPU mem each)
         // overflow the chromium WebView tile-memory budget and OOM-kill the
@@ -1883,22 +1897,30 @@
                     tog.textContent = on ? 'On' : 'Off';
                     tog.classList.toggle('off', !on);
                 }
+                const pTog = section.querySelector('.wp-toggle[data-prop="hidePluto"]');
+                if (pTog) {
+                    const hide = !!parsed[target].hidePluto;
+                    pTog.textContent = hide ? 'On' : 'Off';
+                    pTog.classList.toggle('off', !hide);
+                }
             }
         }
         function _wpReadSection(section) {
             const oSel = section.querySelector('.wp-select[data-prop="offsetY"]');
             const tSel = section.querySelector('.wp-select[data-prop="tilt"]');
             const tog  = section.querySelector('.wp-toggle[data-prop="labels"]');
+            const pTog = section.querySelector('.wp-toggle[data-prop="hidePluto"]');
             return {
-                offsetY: parseFloat(oSel.value),
-                tilt:    parseFloat(tSel ? tSel.value : '0'),
-                labels:  !tog.classList.contains('off')
+                offsetY:   parseFloat(oSel.value),
+                tilt:      parseFloat(tSel ? tSel.value : '0'),
+                labels:    !tog.classList.contains('off'),
+                hidePluto: pTog ? !pTog.classList.contains('off') : false
             };
         }
         function _wpSave(target, section) {
             if (!wallpaperBridgeAvailable) return;
             const v = _wpReadSection(section);
-            window.WallpaperPicker.saveSettings(target, v.offsetY, v.tilt, v.labels);
+            window.WallpaperPicker.saveSettings(target, v.offsetY, v.tilt, v.labels, v.hidePluto);
         }
         wallpaperIcon.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1920,6 +1942,12 @@
                 toggle.textContent = isOff ? 'Off' : 'On';
                 _wpSave(target, section);
             });
+            const plutoTog = section.querySelector('.wp-toggle[data-prop="hidePluto"]');
+            if (plutoTog) plutoTog.addEventListener('click', () => {
+                const isOff = plutoTog.classList.toggle('off');
+                plutoTog.textContent = isOff ? 'Off' : 'On';
+                _wpSave(target, section);
+            });
             section.querySelector('.wp-apply').addEventListener('click', () => {
                 _wpSave(target, section);
                 if (wallpaperBridgeAvailable) {
@@ -1928,8 +1956,17 @@
             });
         });
 
-        let plutoEnabled = true;
+        // Apply initial Pluto visibility (URL-param-derived in surface mode;
+        // always true in main app since the toggle button defaults visible).
+        if (!plutoEnabled) {
+            if (planets['Pluto']) planets['Pluto'].visible = false;
+            if (ringLines['Pluto']) ringLines['Pluto'].visible = false;
+            for (const mc of activeMoons) {
+                if (mc.config && mc.config.host === "Pluto") mc.mesh.visible = false;
+            }
+        }
         const plutoToggle = document.getElementById('pluto-toggle');
+        if (plutoToggle) plutoToggle.innerText = plutoEnabled ? "Hide Pluto" : "Show Pluto";
         plutoToggle.addEventListener('click', () => {
             const wasAtResetView = (typeof isAtResetView === 'function') && isAtResetView();
             plutoEnabled = !plutoEnabled;
