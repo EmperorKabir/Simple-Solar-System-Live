@@ -12,3 +12,4 @@ local.properties
 .claude/settings.local.json
 tools/astronomia_src/
 tools/astronomia-*.tgz
+tools/python-env/
