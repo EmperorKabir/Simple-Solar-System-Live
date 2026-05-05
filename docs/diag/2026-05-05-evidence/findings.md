@@ -303,3 +303,41 @@ Three layered defences (apply in priority order; (a) is mandatory, (b) + (c) opt
 - Loading-screen lag (~few seconds) on lock is expected Android behaviour, not our bug
 - Ring invisibility consistent across widget/home/lock — single root cause (commit 2af317e gate), single fix (Phase 2)
 - No new bugs introduced by F1+F4 at any wallpaper surface
+
+---
+
+## P0-G — Tilt matrix (user-applied; current state captured)
+
+### Evidence captured
+- `tilt-current-state.png` (232 KB) — home wallpaper at last applied tilt
+- SharedPreferences confirmed via run-as
+
+### SharedPreferences readout
+- `slss.wallpaper_home.xml`: offsetY=0.0, labels=true, **tilt=0.7**
+- `slss.wallpaper_lock.xml`: offsetY=0.3, labels=false, **tilt=0.7**
+- Both at the current TILT_OPTIONS cap (0.7 = 70%)
+
+### User observation
+- "it's hard to see the tilt without the orbital rings"
+- Confirmed by code analysis: planets lie within ~7° of the ecliptic; only the orbital rings (or Pluto's 17°-inclined orbit) make tilt visible
+- Therefore: **tilt verification requires rings** — Phase 2 (rings) must precede final visual tilt verification
+
+### Moons visibility — answered from code (no PNG inspection needed)
+- Moons ARE constructed in surface mode (loop at index.html:1573 — no `SURFACE === 'main'` gate)
+- They use 16-segment spheres (vs 32 in main app) but get full textures and scene attachment
+- **However:** at solar-system framing (Pluto at edge ~90 scene units; camera ~100 units away), Earth's Moon is ~0.001 scene units → projects to ~0.01 px on a 1080-px-wide render
+- Moons are **physically sub-pixel at widget/wallpaper scale** — they render but are below visual resolution
+- This is also true at typical main-app zoom; you only see moons when zoomed in close
+- NOT a bug; geometric necessity
+
+### Stale pref files noted (Phase 6 cleanup candidate)
+- `shared_prefs/` contains: slss.widget_47, _48, _49, _50, _51, _52 — six widget pref files
+- Current dumpsys shows only widget id=38 active (and id=40 is ChatGPT, not ours)
+- Stale prefs from previously-removed widgets accumulate over time
+- Cleanup: hook `onDeleted(int[])` in `SolarSystemAppWidgetProvider` to delete prefs when a widget is removed
+- Defer to Phase 6 — low-priority hygiene
+
+### Implication for plan ordering
+- Phase 1 (tilt math 0..1.0) can proceed mathematically; URL-param test sufficient for code-level verification
+- Final visual tilt verification waits for Phase 2 (rings restored) so the user can actually SEE the tilt against the orbital ellipses
+- No plan change needed; just sequence final visual checks together at end of Phase 2
