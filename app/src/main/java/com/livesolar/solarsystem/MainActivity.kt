@@ -17,6 +17,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.webkit.WebViewAssetLoader
@@ -153,6 +154,10 @@ class MainActivity : Activity() {
             // onVisibilityChanged and re-renders on next visibility cycle.
             // Returns true → JS dismisses our modal without launching system UI.
             if (isAlreadyBound(target, targetComponent)) {
+                val msg = if (target == "home") "Home screen changed" else "Lock screen changed"
+                activity.runOnUiThread {
+                    Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                }
                 return true
             }
             val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
@@ -183,25 +188,35 @@ class MainActivity : Activity() {
         }
 
         // Detect whether our service is the currently active live wallpaper
-        // for the given target surface. Home is always queryable via the
-        // no-arg WallpaperManager.getWallpaperInfo() API. Lock requires
-        // WallpaperManager.getWallpaperInfo(int) which is API 34+; on older
-        // devices we fall back to a SharedPreferences flag set by markBound.
+        // for the given target surface.
+        //
+        // Direct query: home uses WallpaperManager.getWallpaperInfo() (API 14+);
+        // lock requires WallpaperManager.getWallpaperInfo(int) which is only
+        // reliably available on API 34+ via reflection.
+        //
+        // SharedPreferences fallback: every successful direct query updates
+        // the cache so subsequent calls can fall back to it when Samsung's
+        // One UI returns null from the direct API (observed on Z Fold 6).
+        // Plus markBound writes to the cache after every applyWallpaper
+        // intent, so users who reach the system preview at least once can
+        // skip it on subsequent taps even if direct query is unreliable.
         private fun isAlreadyBound(target: String, expected: ComponentName): Boolean {
             val wm = WallpaperManager.getInstance(activity)
-            if (target == "home") {
-                return wm.wallpaperInfo?.component == expected
-            }
-            // target == "lock"
-            if (Build.VERSION.SDK_INT >= 34) {
-                try {
+            val direct: ComponentName? = when {
+                target == "home" -> wm.wallpaperInfo?.component
+                Build.VERSION.SDK_INT >= 34 -> try {
                     val method = WallpaperManager::class.java.getMethod("getWallpaperInfo", Int::class.javaPrimitiveType)
-                    val info = method.invoke(wm, /* FLAG_LOCK */ 2) as? WallpaperInfo
-                    return info?.component == expected
-                } catch (_: Throwable) {}
+                    (method.invoke(wm, /* FLAG_LOCK */ 2) as? WallpaperInfo)?.component
+                } catch (_: Throwable) { null }
+                else -> null
             }
-            return activity.getSharedPreferences("slss.bind_state", Context.MODE_PRIVATE)
-                .getBoolean("bound_$target", false)
+            val prefs = activity.getSharedPreferences("slss.bind_state", Context.MODE_PRIVATE)
+            if (direct != null) {
+                val bound = (direct == expected)
+                prefs.edit().putBoolean("bound_$target", bound).apply()
+                return bound
+            }
+            return prefs.getBoolean("bound_$target", false)
         }
 
         private fun markBound(target: String) {
