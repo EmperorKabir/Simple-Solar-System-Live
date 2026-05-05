@@ -189,18 +189,23 @@ class MainActivity : Activity() {
 
         // Detect whether our service is the currently active live wallpaper.
         //
-        // Strategy: direct query is ADDITIVE (positive proof only). If
-        // WallpaperManager.getWallpaperInfo()?.component matches our service
-        // we're definitely bound and we cache it. Otherwise we fall back to
-        // the SharedPreferences cache populated by markBound after every
-        // successful applyWallpaper intent.
+        // Direct WallpaperManager.getWallpaperInfo() is AUTHORITATIVE when
+        // it returns non-null. Confirmed via dumpsys evidence on the
+        // SM-F966B that Samsung One UI does correctly return the bound
+        // service from the no-arg API. Earlier worry that 'Samsung lies'
+        // was a misdiagnosis — the actual case was our service getting
+        // silently REPLACED by Samsung's FoldInteractive default after
+        // the crash loop, and our cache (set eagerly by markBound) was
+        // pointing at a non-existent binding.
         //
-        // Why we don't use a negative direct result to invalidate the cache:
-        // Samsung One UI on the Z Fold 6 returns the SystemUI ImageWallpaper
-        // wrapper from getWallpaperInfo() even when our service is the actual
-        // active wallpaper (verified via dumpsys mLastWallpaper.mInfo.
-        // component). Trusting the direct call's negative result would lock
-        // the user back into Samsung's system preview on every Set tap.
+        // Behaviour:
+        //   direct == expected   → bound; cache=true; return true
+        //   direct == something else → NOT bound; cache=false; return false
+        //                              (so the user sees the system preview
+        //                               on next Set tap and can re-bind)
+        //   direct == null        → API didn't answer (rare, e.g. lock on
+        //                              pre-API-34 devices); fall back to
+        //                              cache as a best-effort signal
         private fun isAlreadyBound(target: String, expected: ComponentName): Boolean {
             val wm = WallpaperManager.getInstance(activity)
             val direct: ComponentName? = when {
@@ -212,9 +217,10 @@ class MainActivity : Activity() {
                 else -> null
             }
             val prefs = activity.getSharedPreferences("slss.bind_state", Context.MODE_PRIVATE)
-            if (direct == expected) {
-                prefs.edit().putBoolean("bound_$target", true).apply()
-                return true
+            if (direct != null) {
+                val bound = (direct == expected)
+                prefs.edit().putBoolean("bound_$target", bound).apply()
+                return bound
             }
             return prefs.getBoolean("bound_$target", false)
         }
