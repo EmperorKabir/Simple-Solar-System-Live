@@ -69,23 +69,73 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
             applicationContext.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
         }
         private val foldRefreshDebounceMs = 500L
+        // Per-display size cache. onDisplayChanged fires for ANY display
+        // property change — brightness, refresh rate, doze, even active
+        // wake state — most of which are NOT folds and shouldn't trigger
+        // a re-render. Filtering to actual size deltas cuts out the noisy
+        // events that otherwise create a feedback loop where each render
+        // toggles screen state and re-fires the listener.
+        private val displaySizes = HashMap<Int, android.graphics.Point>()
         private val foldRefreshRunnable = Runnable {
-            // Trigger widget refresh through the existing scheduleWidget
-            // path — uses enqueueUniqueWork(REPLACE) so concurrent
-            // enqueues for the same widget collapse cleanly.
             val mgr = AppWidgetManager.getInstance(applicationContext)
             val provider = ComponentName(applicationContext, SolarSystemAppWidgetProvider::class.java)
             for (id in mgr.getAppWidgetIds(provider)) {
                 SolarSystemAppWidgetProvider.scheduleWidget(applicationContext, id, runImmediately = true)
             }
-            // Also re-render this wallpaper engine itself so the active
-            // surface picks up the new dimensions on the new display.
-            renderAndPaint()
+            // No engine re-render here: onSurfaceChanged fires anyway when
+            // the surface dimensions actually change after a fold; calling
+            // renderAndPaint from this runnable risked piling on a second
+            // WebView render concurrent with the surface-changed one and
+            // contributed to the 'main app flickers white/black' feedback
+            // loop the user observed.
+        }
+        // Our own virtual displays are named "SolarRenderer-<nanoTime>" by
+        // WebViewBitmapRenderer.render. They get added/removed every render
+        // cycle. If the listener reacts to those events it forms a feedback
+        // loop: render -> VD added -> fold-refresh trigger -> renderAndPaint
+        // -> render -> VD added -> ... ad infinitum, observed as 'main app
+        // flickers white/black, stuck on loading screen' on the user's
+        // device. Track which display IDs are ours so we can ignore them.
+        private val ourVirtualIds = HashSet<Int>()
+        private fun isOurVirtual(displayId: Int): Boolean {
+            if (ourVirtualIds.contains(displayId)) return true
+            val d = try { displayManager.getDisplay(displayId) } catch (_: Throwable) { null }
+                ?: return false
+            if (d.name?.startsWith("SolarRenderer-") == true) {
+                ourVirtualIds.add(displayId)
+                return true
+            }
+            return false
         }
         private val displayListener = object : DisplayManager.DisplayListener {
-            override fun onDisplayAdded(displayId: Int) = scheduleFoldRefresh()
-            override fun onDisplayRemoved(displayId: Int) = scheduleFoldRefresh()
-            override fun onDisplayChanged(displayId: Int) = scheduleFoldRefresh()
+            override fun onDisplayAdded(displayId: Int) {
+                if (isOurVirtual(displayId)) return
+                cacheDisplaySize(displayId)
+                scheduleFoldRefresh()
+            }
+            override fun onDisplayRemoved(displayId: Int) {
+                if (ourVirtualIds.remove(displayId)) return
+                displaySizes.remove(displayId)
+                scheduleFoldRefresh()
+            }
+            override fun onDisplayChanged(displayId: Int) {
+                if (isOurVirtual(displayId)) return
+                if (cacheDisplaySize(displayId)) scheduleFoldRefresh()
+            }
+        }
+        // Returns true if the display's real size changed since the last
+        // observation (i.e. a true fold/unfold dimension event), false if
+        // unchanged or unreadable. Updates the cache as a side effect.
+        private fun cacheDisplaySize(displayId: Int): Boolean {
+            val d = try { displayManager.getDisplay(displayId) } catch (_: Throwable) { null }
+                ?: return false
+            val newSize = android.graphics.Point().also {
+                @Suppress("DEPRECATION")
+                d.getRealSize(it)
+            }
+            val prev = displaySizes[displayId]
+            displaySizes[displayId] = newSize
+            return prev == null || prev != newSize
         }
         private fun scheduleFoldRefresh() {
             handler.removeCallbacks(foldRefreshRunnable)
