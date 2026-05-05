@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
@@ -47,8 +48,15 @@ class SolarSystemAppWidgetProvider : AppWidgetProvider() {
                 periodic
             )
             if (runImmediately) {
+                // Mark the one-shot widget refresh as expedited so it bypasses
+                // Samsung Freecess / Doze when the app is in the background
+                // (e.g. just after a fold/unfold or settings change). Falls
+                // back to a non-expedited request if the system's expedited
+                // quota is exhausted, so we never lose the refresh entirely.
                 val once = OneTimeWorkRequestBuilder<SolarSystemWidgetWorker>()
-                    .setInputData(data).build()
+                    .setInputData(data)
+                    .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                    .build()
                 WorkManager.getInstance(context).enqueue(once)
             }
         }
