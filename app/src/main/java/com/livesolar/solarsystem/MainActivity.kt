@@ -2,10 +2,13 @@ package com.livesolar.solarsystem
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.WallpaperInfo
 import android.app.WallpaperManager
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowInsets
@@ -111,19 +114,17 @@ class MainActivity : Activity() {
                     .put("offsetY", home.offsetY)
                     .put("tilt", home.tilt)
                     .put("labels", home.labelsEnabled)
-                    .put("hidePluto", home.hidePluto)
-                    .put("moonLabels", home.moonLabelsEnabled))
+                    .put("hidePluto", home.hidePluto))
                 .put("lock", JSONObject()
                     .put("offsetY", lock.offsetY)
                     .put("tilt", lock.tilt)
                     .put("labels", lock.labelsEnabled)
-                    .put("hidePluto", lock.hidePluto)
-                    .put("moonLabels", lock.moonLabelsEnabled))
+                    .put("hidePluto", lock.hidePluto))
                 .toString()
         }
 
         @JavascriptInterface
-        fun saveSettings(target: String, offsetY: Float, tilt: Float, labels: Boolean, hidePluto: Boolean, moonLabels: Boolean) {
+        fun saveSettings(target: String, offsetY: Float, tilt: Float, labels: Boolean, hidePluto: Boolean) {
             val (ns, def) = when (target) {
                 "home" -> SurfaceSettings.HOME_WALLPAPER_NAMESPACE to SurfaceSettings.DEFAULT_HOME_OFFSET_Y
                 "lock" -> SurfaceSettings.LOCK_WALLPAPER_NAMESPACE to SurfaceSettings.DEFAULT_LOCK_OFFSET_Y
@@ -134,32 +135,78 @@ class MainActivity : Activity() {
                 this.tilt = tilt
                 this.labelsEnabled = labels
                 this.hidePluto = hidePluto
-                this.moonLabelsEnabled = moonLabels
             }
         }
 
         @JavascriptInterface
-        fun applyWallpaper(target: String) {
+        fun applyWallpaper(target: String): Boolean {
             val cls = when (target) {
                 "home" -> SolarSystemHomeWallpaperService::class.java
                 "lock" -> SolarSystemLockWallpaperService::class.java
-                else -> return
+                else -> return false
+            }
+            val targetComponent = ComponentName(activity, cls)
+            // If our service is already the active wallpaper for this surface,
+            // skip Samsung's system preview entirely. Settings have already
+            // been persisted by saveSettings; the wallpaper service polls
+            // SharedPreferences via currentParams() vs lastParams in
+            // onVisibilityChanged and re-renders on next visibility cycle.
+            // Returns true → JS dismisses our modal without launching system UI.
+            if (isAlreadyBound(target, targetComponent)) {
+                return true
             }
             val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
                 putExtra(
                     WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
-                    ComponentName(activity, cls)
+                    targetComponent
                 )
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             activity.runOnUiThread {
-                try { activity.startActivity(intent) } catch (_: Throwable) {
+                try {
+                    activity.startActivity(intent)
+                    // Optimistically mark as bound for the pre-API-34 fallback
+                    // path. If the user cancels the system preview, the worst
+                    // outcome is we skip the preview next time (still works
+                    // because the wallpaper isn't ours and the apply intent
+                    // re-fires on next 'Set'). API 34+ uses real WallpaperInfo
+                    // so this flag is just a fallback.
+                    markBound(target)
+                } catch (_: Throwable) {
                     try { activity.startActivity(
                         Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER)
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     ) } catch (_: Throwable) {}
                 }
             }
+            return false
+        }
+
+        // Detect whether our service is the currently active live wallpaper
+        // for the given target surface. Home is always queryable via the
+        // no-arg WallpaperManager.getWallpaperInfo() API. Lock requires
+        // WallpaperManager.getWallpaperInfo(int) which is API 34+; on older
+        // devices we fall back to a SharedPreferences flag set by markBound.
+        private fun isAlreadyBound(target: String, expected: ComponentName): Boolean {
+            val wm = WallpaperManager.getInstance(activity)
+            if (target == "home") {
+                return wm.wallpaperInfo?.component == expected
+            }
+            // target == "lock"
+            if (Build.VERSION.SDK_INT >= 34) {
+                try {
+                    val method = WallpaperManager::class.java.getMethod("getWallpaperInfo", Int::class.javaPrimitiveType)
+                    val info = method.invoke(wm, /* FLAG_LOCK */ 2) as? WallpaperInfo
+                    return info?.component == expected
+                } catch (_: Throwable) {}
+            }
+            return activity.getSharedPreferences("slss.bind_state", Context.MODE_PRIVATE)
+                .getBoolean("bound_$target", false)
+        }
+
+        private fun markBound(target: String) {
+            activity.getSharedPreferences("slss.bind_state", Context.MODE_PRIVATE)
+                .edit().putBoolean("bound_$target", true).apply()
         }
     }
 

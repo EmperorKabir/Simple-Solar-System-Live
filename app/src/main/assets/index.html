@@ -686,10 +686,6 @@
                     <label>Hide Pluto</label>
                     <button type="button" class="wp-toggle off" data-prop="hidePluto">Off</button>
                 </div>
-                <div class="wp-row">
-                    <label>Show moon labels (not recommended)</label>
-                    <button type="button" class="wp-toggle off" data-prop="moonLabels">Off</button>
-                </div>
             </div>
             <div class="wp-section" data-target="lock">
                 <h4>Lock screen</h4>
@@ -734,10 +730,6 @@
                 <div class="wp-row">
                     <label>Hide Pluto</label>
                     <button type="button" class="wp-toggle off" data-prop="hidePluto">Off</button>
-                </div>
-                <div class="wp-row">
-                    <label>Show moon labels (not recommended)</label>
-                    <button type="button" class="wp-toggle off" data-prop="moonLabels">Off</button>
                 </div>
             </div>
             <button id="wallpaper-modal-close" type="button">Close</button>
@@ -861,12 +853,13 @@
         // which mutates this same variable. Declaration is hoisted here so
         // it is available before the planet construction loop.
         let plutoEnabled = (_surfaceParams.get('pluto') !== 'off');
-        // Moon-labels flag: opt-in for surface mode (default OFF since moons
-        // are sub-pixel at widget/wallpaper framing and labels clutter the
-        // composition). Main app default ON to keep historical behaviour.
-        const MOON_LABELS_ENABLED = (SURFACE === 'main')
-            ? true
-            : (_surfaceParams.get('moonLabels') === 'on');
+        // Moon construction is GATED OFF for surface mode (widget/wallpaper).
+        // Moons are sub-pixel at typical framing (~0.01 px wide for Earth's
+        // Moon at solar-system scale) so they contribute zero visual signal
+        // while consuming ~50 MB of GPU memory and ~23K vertices. Skipping
+        // the construction loop entirely is the cheapest fix and removes
+        // the need for the previously-shipped moon-label toggle.
+        const MOONS_ENABLED = (SURFACE === 'main');
 
         // F1: texture downscale factor for surface (widget/wallpaper) modes.
         // Source planet textures (up to 8192x4096 RGBA = 128 MB GPU mem each)
@@ -1650,13 +1643,16 @@
         }
 
         // ============================================================
-        // 10. Moon Construction
+        // 10. Moon Construction (skipped entirely in surface mode)
         // ============================================================
         const activeMoons = [];
+        // Surface mode: skip the entire moon-construction block. activeMoons
+        // remains an empty array so any code that iterates it (Pluto-system
+        // visibility, _capture label collection, etc.) is a no-op.
         // Earth's Moon needs special scene-level handling (ecliptic orbit)
         let earthMoonMesh = null;
 
-        for (const mc of moonSystemConfig) {
+        for (const mc of moonSystemConfig) { if (!MOONS_ENABLED) break;
             const mGeom = mc.irregular ? createIrregularGeometry(mc.size) : new THREE.SphereGeometry(mc.size, _moonSeg, _moonSeg);
             
             // Use correct texture — Proteus has no texture file, use grey material
@@ -1966,12 +1962,6 @@
                     pTog.textContent = hide ? 'On' : 'Off';
                     pTog.classList.toggle('off', !hide);
                 }
-                const mlTog = section.querySelector('.wp-toggle[data-prop="moonLabels"]');
-                if (mlTog) {
-                    const on = !!parsed[target].moonLabels;
-                    mlTog.textContent = on ? 'On' : 'Off';
-                    mlTog.classList.toggle('off', !on);
-                }
             }
         }
         function _wpReadSection(section) {
@@ -1979,19 +1969,17 @@
             const tSel = section.querySelector('.wp-select[data-prop="tilt"]');
             const tog  = section.querySelector('.wp-toggle[data-prop="labels"]');
             const pTog = section.querySelector('.wp-toggle[data-prop="hidePluto"]');
-            const mlTog = section.querySelector('.wp-toggle[data-prop="moonLabels"]');
             return {
-                offsetY:    parseFloat(oSel.value),
-                tilt:       parseFloat(tSel ? tSel.value : '0'),
-                labels:     !tog.classList.contains('off'),
-                hidePluto:  pTog ? !pTog.classList.contains('off') : false,
-                moonLabels: mlTog ? !mlTog.classList.contains('off') : false
+                offsetY:   parseFloat(oSel.value),
+                tilt:      parseFloat(tSel ? tSel.value : '0'),
+                labels:    !tog.classList.contains('off'),
+                hidePluto: pTog ? !pTog.classList.contains('off') : false
             };
         }
         function _wpSave(target, section) {
             if (!wallpaperBridgeAvailable) return;
             const v = _wpReadSection(section);
-            window.WallpaperPicker.saveSettings(target, v.offsetY, v.tilt, v.labels, v.hidePluto, v.moonLabels);
+            window.WallpaperPicker.saveSettings(target, v.offsetY, v.tilt, v.labels, v.hidePluto);
             _wpUpdatePreview(target, section);
         }
         // Live in-modal preview. Loads index.html in an iframe with the
@@ -2018,12 +2006,11 @@
                 if (!frame) return;
                 const v = _wpReadSection(section);
                 const params = new URLSearchParams({
-                    surface:    'wallpaper',
-                    offsetY:    String(v.offsetY),
-                    tilt:       String(v.tilt),
-                    labels:     v.labels ? 'on' : 'off',
-                    pluto:      v.hidePluto ? 'off' : 'on',
-                    moonLabels: v.moonLabels ? 'on' : 'off'
+                    surface: 'wallpaper',
+                    offsetY: String(v.offsetY),
+                    tilt:    String(v.tilt),
+                    labels:  v.labels ? 'on' : 'off',
+                    pluto:   v.hidePluto ? 'off' : 'on'
                 });
                 const onLoad = () => {
                     if (loading) loading.classList.add('hidden');
@@ -2043,9 +2030,31 @@
                 _wpUpdatePreview(section.dataset.target, section);
             });
         });
-        wallpaperClose.addEventListener('click', () => wallpaperModal.classList.remove('visible'));
+        // Free preview iframe WebView memory when the modal is dismissed.
+        // Each iframe owns a chromium tile cache; leaving them loaded keeps
+        // ~20-40 MB of GPU memory pinned even when the user has closed the
+        // picker, contributing to OOM kills on subsequent open/close cycles.
+        // Setting src='about:blank' tears down the iframe's renderer
+        // process (or at minimum drops its tile cache), reclaimable on next
+        // _wpUpdatePreview when the modal reopens.
+        function _wpDismissModal() {
+            wallpaperModal.classList.remove('visible');
+            wallpaperModal.querySelectorAll('.wp-preview-frame').forEach((frame) => {
+                try { frame.src = 'about:blank'; } catch (_) {}
+            });
+            wallpaperModal.querySelectorAll('.wp-preview-loading').forEach((el) => {
+                el.classList.remove('hidden');
+            });
+            // Cancel any pending debounced reload so it doesn't fire after
+            // we've cleared the iframes.
+            if (typeof _previewDebounce !== 'undefined') {
+                _previewDebounce.forEach((id) => clearTimeout(id));
+                _previewDebounce.clear();
+            }
+        }
+        wallpaperClose.addEventListener('click', _wpDismissModal);
         wallpaperModal.addEventListener('click', (e) => {
-            if (e.target === wallpaperModal) wallpaperModal.classList.remove('visible');
+            if (e.target === wallpaperModal) _wpDismissModal();
         });
         wallpaperModal.querySelectorAll('.wp-section').forEach((section) => {
             const target = section.dataset.target;
@@ -2064,36 +2073,21 @@
                 plutoTog.textContent = isOff ? 'Off' : 'On';
                 _wpSave(target, section);
             });
-            const moonLabelsTog = section.querySelector('.wp-toggle[data-prop="moonLabels"]');
-            if (moonLabelsTog) moonLabelsTog.addEventListener('click', () => {
-                const isOff = moonLabelsTog.classList.toggle('off');
-                moonLabelsTog.textContent = isOff ? 'Off' : 'On';
-                _wpSave(target, section);
-            });
             section.querySelector('.wp-apply').addEventListener('click', () => {
                 _wpSave(target, section);
                 if (wallpaperBridgeAvailable) {
-                    window.WallpaperPicker.applyWallpaper(target);
+                    // Bridge returns true when our service is already the
+                    // active wallpaper — settings persist via _wpSave above
+                    // and the service's onVisibilityChanged polling picks
+                    // them up. We dismiss the modal directly, skipping
+                    // Samsung's system preview screen.
+                    const alreadyBound = window.WallpaperPicker.applyWallpaper(target);
+                    if (alreadyBound) {
+                        _wpDismissModal();
+                    }
                 }
             });
         });
-
-        // Apply moon-label visibility per setting. CSS2DRenderer (per its
-        // implementation at line 124-125) only checks `object.visible` on the
-        // label itself, so we walk each moon mesh's children to find the
-        // CSS2DObject and hide it. Done in a separate pass (not via traverse
-        // on the body mesh) because we want to preserve the moon body's
-        // visibility while only hiding its label.
-        if (!MOON_LABELS_ENABLED) {
-            for (const mc of activeMoons) {
-                if (!mc.mesh) continue;
-                for (const child of mc.mesh.children) {
-                    if (child.isCSS2DObject || (child.element && child.element.classList && child.element.classList.contains('planet-label'))) {
-                        child.visible = false;
-                    }
-                }
-            }
-        }
 
         // Pluto visibility helper. Why traverse() instead of single `.visible`
         // assignment: CSS2DRenderer only checks `object.visible` directly on
@@ -2747,25 +2741,18 @@
                         // labels' on-screen rects overlap, hide the one belonging to
                         // the smaller-rendered body.
                         const PLANET_LABELS = new Set(['Sun','Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto']);
-                        const MOON_NAMES = new Set(activeMoons.map(mc => mc.config && mc.config.name).filter(Boolean));
                         const all = document.querySelectorAll('.planet-label');
                         const cand = [];
                         const fovRad = camera.fov * Math.PI / 180.0;
                         const _wp = new THREE.Vector3();
                         for (const lbl of all) {
                             const name = lbl.dataset.bodyName || (lbl.textContent || '').trim();
-                            const isPlanet = PLANET_LABELS.has(name);
-                            const isMoon = MOON_LABELS_ENABLED && MOON_NAMES.has(name);
-                            if (!isPlanet && !isMoon) continue;
+                            if (!PLANET_LABELS.has(name)) continue;
                             const r = lbl.getBoundingClientRect();
                             if (r.width <= 0 || r.height <= 0) continue;
                             let bodyMesh = null, bodyRadius = 0;
                             if (name === 'Sun') { bodyMesh = sun; bodyRadius = sunVisualRadius; }
                             else if (planets[name]) { bodyMesh = planets[name]; bodyRadius = planetsData[name].size; }
-                            else if (isMoon) {
-                                const mc = activeMoons.find(m => m.config && m.config.name === name);
-                                if (mc) { bodyMesh = mc.mesh; bodyRadius = mc.config.size || 0.1; }
-                            }
                             if (!bodyMesh) continue;
                             bodyMesh.getWorldPosition(_wp);
                             const dist = camera.position.distanceTo(_wp);
