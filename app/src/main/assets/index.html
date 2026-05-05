@@ -1420,8 +1420,8 @@
                 ringPoints.push(getOrbitPositionFast(data, (i / 360) * (data.period * 365.25), true).clone());
             }
             const ringMat = (SURFACE === 'main')
-                ? new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 })
-                : new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45, linewidth: 2 });
+                ? new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18 })
+                : new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.27, linewidth: 2 });
             const ring = new THREE.LineLoop(
                 new THREE.BufferGeometry().setFromPoints(ringPoints),
                 ringMat
