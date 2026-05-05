@@ -1956,31 +1956,38 @@
             });
         });
 
-        // Apply initial Pluto visibility (URL-param-derived in surface mode;
-        // always true in main app since the toggle button defaults visible).
-        if (!plutoEnabled) {
-            if (planets['Pluto']) planets['Pluto'].visible = false;
-            if (ringLines['Pluto']) ringLines['Pluto'].visible = false;
+        // Pluto visibility helper. Why traverse() instead of single `.visible`
+        // assignment: CSS2DRenderer only checks `object.visible` directly on
+        // the label object, NOT the parent chain. Setting planets["Pluto"]
+        // .visible = false hides the WebGL meshes but the CSS2DObject labels
+        // (children of body meshes) keep rendering as DOM elements. Traversing
+        // and setting visible=false on every descendant covers both.
+        function setPlutoVisibility(visible) {
+            if (planets["Pluto"]) planets["Pluto"].traverse((obj) => { obj.visible = visible; });
+            if (ringLines["Pluto"]) ringLines["Pluto"].visible = visible;
             for (const mc of activeMoons) {
-                if (mc.config && mc.config.host === "Pluto") mc.mesh.visible = false;
+                if (mc.config && mc.config.host === "Pluto" && mc.mesh) {
+                    mc.mesh.traverse((obj) => { obj.visible = visible; });
+                }
             }
         }
+        // Apply initial Pluto visibility (URL-param-derived in surface mode;
+        // always true in main app since the toggle button defaults visible).
+        setPlutoVisibility(plutoEnabled);
         const plutoToggle = document.getElementById('pluto-toggle');
-        if (plutoToggle) plutoToggle.innerText = plutoEnabled ? "Hide Pluto" : "Show Pluto";
-        plutoToggle.addEventListener('click', () => {
-            const wasAtResetView = (typeof isAtResetView === 'function') && isAtResetView();
-            plutoEnabled = !plutoEnabled;
-            if(planets["Pluto"]) planets["Pluto"].visible = plutoEnabled;
-            if(ringLines["Pluto"]) ringLines["Pluto"].visible = plutoEnabled;
-            for (const mc of activeMoons) {
-                if (mc.config.host === "Pluto") mc.mesh.visible = plutoEnabled;
-            }
+        if (plutoToggle) {
             plutoToggle.innerText = plutoEnabled ? "Hide Pluto" : "Show Pluto";
-            // If the camera was sitting at the reset-view framing, re-fit so
-            // the visible-system fills the screen at the new size. Any other
-            // pan / zoom / selected-body state is left untouched.
-            if (wasAtResetView) calcResetView();
-        });
+            plutoToggle.addEventListener('click', () => {
+                const wasAtResetView = (typeof isAtResetView === 'function') && isAtResetView();
+                plutoEnabled = !plutoEnabled;
+                setPlutoVisibility(plutoEnabled);
+                plutoToggle.innerText = plutoEnabled ? "Hide Pluto" : "Show Pluto";
+                // If the camera was sitting at the reset-view framing, re-fit so
+                // the visible-system fills the screen at the new size. Any other
+                // pan / zoom / selected-body state is left untouched.
+                if (wasAtResetView) calcResetView();
+            });
+        }
 
         let viewMode = "GALAXY"; 
         let targetPlanet = sun;
