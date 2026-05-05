@@ -1,0 +1,120 @@
+﻿05-05 14:41:01.691  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0004, index=0, type=systemGestures, source=DISPLAY, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=0}, mMinimalInsetsSizeInDisplayCutoutSafe=Insets{left=0, top=0, right=0, bottom=0}}
+05-05 14:41:01.691  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0024, index=1, type=systemGestures, source=DISPLAY, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=0}, mMinimalInsetsSizeInDisplayCutoutSafe=Insets{left=0, top=0, right=0, bottom=0}}
+05-05 14:41:01.691  2376  7761 I WindowManager:       frameRateBoostOnTouch=true
+05-05 14:41:01.691  2376  7761 I WindowManager:       dvrrWindowFrameRateHint=true naviIconColor=0} naviIconColor=0}
+05-05 14:41:01.734  2376  7761 I WindowManager: Relayout Window{dcc8a54 u0 com.livesolar.solarsystem.SolarSystemLockWallpaperService}: viewVisibility=0 req=-1x-1 ty=2013 d0
+05-05 14:41:01.735  2376  7761 I WindowManager: Relayout hash=dcc8a54, pid=25708, syncId=-1: mAttrs={(0,0)(fillxfill) gr=TOP START CENTER layoutInDisplayCutoutMode=always ty=WALLPAPER fmt=RGBX_8888 wanim=0x1030328
+05-05 14:41:01.735  2376  7761 I WindowManager:   fl=10318
+05-05 14:41:01.735  2376  7761 I WindowManager:   pfl=4
+05-05 14:41:01.735  2376  7761 I WindowManager:   bhv=1
+05-05 14:41:01.735  2376  7761 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:41:01.735  2376  7761 I WindowManager:   dvrrWindowFrameRateHint=true naviIconColor=0}
+05-05 14:41:01.742  2376  5595 I WindowManager: Relayout Window{a31e443 u0 NotificationShade}: viewVisibility=0 req=2184x1968 ty=2040 d0
+05-05 14:41:01.742  2376  5595 I WindowManager: Relayout hash=a31e443, pid=0, syncId=-1: mAttrs={(0,0)(fillxfill) gr=TOP CENTER_VERTICAL sim={adjust=pan} layoutInDisplayCutoutMode=always ty=NOTIFICATION_SHADE fmt=TRANSLUCENT
+05-05 14:41:01.742  2376  5595 I WindowManager:   fl=81160040
+05-05 14:41:01.742  2376  5595 I WindowManager:   pfl=10000200
+05-05 14:41:01.742  2376  5595 I WindowManager:   bhv=2
+05-05 14:41:01.742  2376  5595 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:41:01.742  2376  5595 I WindowManager:   dvrrWindowFrameRateHint=true naviIconColor=0
+05-05 14:41:01.742  2376  5595 I WindowManager:   sfl=40000}
+05-05 14:41:01.791  2376  7761 I WindowManager: Relayout Window{bc1e92e u0 NavigationBar0}: viewVisibility=0 req=1080x75 ty=2019 d0
+05-05 14:41:01.792  2376  7761 I WindowManager: Relayout hash=bc1e92e, pid=4534, syncId=-1: mAttrs={(0,0)(fillx93) gr=BOTTOM CENTER_VERTICAL sim={adjust=pan} layoutInDisplayCutoutMode=always ty=NAVIGATION_BAR fmt=TRANSLUCENT
+05-05 14:41:01.792  2376  7761 I WindowManager:   fl=20040028
+05-05 14:41:01.792  2376  7761 I WindowManager:   pfl=31001000
+05-05 14:41:01.792  2376  7761 I WindowManager:   bhv=1
+05-05 14:41:01.792  2376  7761 I WindowManager:   providedInsets:
+05-05 14:41:01.792  2376  7761 I WindowManager:     InsetsFrameProvider: {id=#8f4c0001, index=0, type=navigationBars, source=FRAME, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=93}, insetsSizeOverrides=[TypedInsetsSize: {windowType=INPUT_METHOD, insetsSize=null}]}
+05-05 14:41:01.792  2376  7761 I WindowManager:     InsetsFrameProvider: {id=#8f4c0006, index=0, type=tappableElement, source=FRAME, flags=[]}
+05-05 14:41:01.792  2376  7761 I WindowManager:     InsetsFrameProvider: {id=#8f4c0005, index=0, type=mandatorySystemGestures, source=FRAME, flags=[]}
+05-05 14:41:01.792  2376  7761 I WindowManager:     InsetsFrameProvider: {id=#8f4c0004, index=0, type=systemGestures, source=DISPLAY, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=0}, mMinimalInsetsSizeInDisplayCutoutSafe=Insets{left=0, top=0, right=0, bottom=0}}
+05-05 14:41:01.792  2376  7761 I WindowManager:     InsetsFrameProvider: {id=#8f4c0024, index=1, type=systemGestures, source=DISPLAY, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=0}, mMinimalInsetsSizeInDisplayCutoutSafe=Insets{left=0, top=0, right=0, bottom=0}}
+05-05 14:41:01.792  2376  7761 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:41:01.792  2376  7761 I WindowManager:   dvrrWindowFrameRateHint=true
+05-05 14:41:01.792  2376  7761 I WindowManager:   paramsForRotation:
+05-05 14:41:01.792  2376  7761 I WindowManager:     ROTATION_0={(0,0)(fillx93) gr=BOTTOM CENTER_VERTICAL layoutInDisplayCutoutMode=always ty=NAVIGATION_BAR fmt=TRANSLUCENT
+05-05 14:41:01.792  2376  7761 I WindowManager:       fl=20040028
+05-05 14:41:01.792  2376  7761 I WindowManager:       pfl=31001000
+05-05 14:41:01.792  2376  7761 I WindowManager:       bhv=1
+05-05 14:41:01.792  2376  7761 I WindowManager:       providedInsets:
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0001, index=0, type=navigationBars, source=FRAME, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=93}, insetsSizeOverrides=[TypedInsetsSize: {windowType=INPUT_METHOD, insetsSize=null}]}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0006, index=0, type=tappableElement, source=FRAME, flags=[]}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0005, index=0, type=mandatorySystemGestures, source=FRAME, flags=[]}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0004, index=0, type=systemGestures, source=DISPLAY, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=0}, mMinimalInsetsSizeInDisplayCutoutSafe=Insets{left=0, top=0, right=0, bottom=0}}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0024, index=1, type=systemGestures, source=DISPLAY, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=0}, mMinimalInsetsSizeInDisplayCutoutSafe=Insets{left=0, top=0, right=0, bottom=0}}
+05-05 14:41:01.792  2376  7761 I WindowManager:       frameRateBoostOnTouch=true
+05-05 14:41:01.792  2376  7761 I WindowManager:       dvrrWindowFrameRateHint=true naviIconColor=0}
+05-05 14:41:01.792  2376  7761 I WindowManager:     ROTATION_90={(0,0)(fillx93) gr=BOTTOM CENTER_VERTICAL layoutInDisplayCutoutMode=always ty=NAVIGATION_BAR fmt=TRANSLUCENT
+05-05 14:41:01.792  2376  7761 I WindowManager:       fl=20040028
+05-05 14:41:01.792  2376  7761 I WindowManager:       pfl=31001000
+05-05 14:41:01.792  2376  7761 I WindowManager:       bhv=1
+05-05 14:41:01.792  2376  7761 I WindowManager:       providedInsets:
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0001, index=0, type=navigationBars, source=FRAME, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=93}, insetsSizeOverrides=[TypedInsetsSize: {windowType=INPUT_METHOD, insetsSize=null}]}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0006, index=0, type=tappableElement, source=FRAME, flags=[]}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0005, index=0, type=mandatorySystemGestures, source=FRAME, flags=[]}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0004, index=0, type=systemGestures, source=DISPLAY, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=0}, mMinimalInsetsSizeInDisplayCutoutSafe=Insets{left=0, top=0, right=0, bottom=0}}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0024, index=1, type=systemGestures, source=DISPLAY, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=0}, mMinimalInsetsSizeInDisplayCutoutSafe=Insets{left=0, top=0, right=0, bottom=0}}
+05-05 14:41:01.792  2376  7761 I WindowManager:       frameRateBoostOnTouch=true
+05-05 14:41:01.792  2376  7761 I WindowManager:       dvrrWindowFrameRateHint=true naviIconColor=0}
+05-05 14:41:01.792  2376  7761 I WindowManager:     ROTATION_180={(0,0)(fillx93) gr=BOTTOM CENTER_VERTICAL layoutInDisplayCutoutMode=always ty=NAVIGATION_BAR fmt=TRANSLUCENT
+05-05 14:41:01.792  2376  7761 I WindowManager:       fl=20040028
+05-05 14:41:01.792  2376  7761 I WindowManager:       pfl=31001000
+05-05 14:41:01.792  2376  7761 I WindowManager:       bhv=1
+05-05 14:41:01.792  2376  7761 I WindowManager:       providedInsets:
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0001, index=0, type=navigationBars, source=FRAME, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=93}, insetsSizeOverrides=[TypedInsetsSize: {windowType=INPUT_METHOD, insetsSize=null}]}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0006, index=0, type=tappableElement, source=FRAME, flags=[]}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0005, index=0, type=mandatorySystemGestures, source=FRAME, flags=[]}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0004, index=0, type=systemGestures, source=DISPLAY, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=0}, mMinimalInsetsSizeInDisplayCutoutSafe=Insets{left=0, top=0, right=0, bottom=0}}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0024, index=1, type=systemGestures, source=DISPLAY, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=0}, mMinimalInsetsSizeInDisplayCutoutSafe=Insets{left=0, top=0, right=0, bottom=0}}
+05-05 14:41:01.792  2376  7761 I WindowManager:       frameRateBoostOnTouch=true
+05-05 14:41:01.792  2376  7761 I WindowManager:       dvrrWindowFrameRateHint=true naviIconColor=0}
+05-05 14:41:01.792  2376  7761 I WindowManager:     ROTATION_270={(0,0)(fillx93) gr=BOTTOM CENTER_VERTICAL layoutInDisplayCutoutMode=always ty=NAVIGATION_BAR fmt=TRANSLUCENT
+05-05 14:41:01.792  2376  7761 I WindowManager:       fl=20040028
+05-05 14:41:01.792  2376  7761 I WindowManager:       pfl=31001000
+05-05 14:41:01.792  2376  7761 I WindowManager:       bhv=1
+05-05 14:41:01.792  2376  7761 I WindowManager:       providedInsets:
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0001, index=0, type=navigationBars, source=FRAME, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=93}, insetsSizeOverrides=[TypedInsetsSize: {windowType=INPUT_METHOD, insetsSize=null}]}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0006, index=0, type=tappableElement, source=FRAME, flags=[]}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0005, index=0, type=mandatorySystemGestures, source=FRAME, flags=[]}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0004, index=0, type=systemGestures, source=DISPLAY, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=0}, mMinimalInsetsSizeInDisplayCutoutSafe=Insets{left=0, top=0, right=0, bottom=0}}
+05-05 14:41:01.792  2376  7761 I WindowManager:         InsetsFrameProvider: {id=#8f4c0024, index=1, type=systemGestures, source=DISPLAY, flags=[], insetsSize=Insets{left=0, top=0, right=0, bottom=0}, mMinimalInsetsSizeInDisplayCutoutSafe=Insets{left=0, top=0, right=0, bottom=0}}
+05-05 14:41:01.792  2376  7761 I WindowManager:       frameRateBoostOnTouch=true
+05-05 14:41:01.792  2376  7761 I WindowManager:       dvrrWindowFrameRateHint=true naviIconColor=0} naviIconColor=0}
+05-05 14:41:01.811  2376  7761 I WindowManager: Relayout Window{ab1992d u0 Bouncer}: viewVisibility=4 req=2184x0 ty=2009 d0
+05-05 14:41:01.812  2376  7761 I WindowManager: Relayout hash=ab1992d, pid=4534, syncId=-1: mAttrs={(0,0)(fillx0) gr=TOP CENTER_VERTICAL sim={adjust=resize} layoutInDisplayCutoutMode=shortEdges ty=KEYGUARD_DIALOG fmt=TRANSLUCENT if=INPUT_FEATURE_DISABLE_USER_ACTIVITY userActivityTimeout=10000
+05-05 14:41:01.812  2376  7761 I WindowManager:   fl=85000548
+05-05 14:41:01.812  2376  7761 I WindowManager:   pfl=10000000
+05-05 14:41:01.812  2376  7761 I WindowManager:   vsysui=500
+05-05 14:41:01.812  2376  7761 I WindowManager:   bhv=2
+05-05 14:41:01.812  2376  7761 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:41:01.812  2376  7761 I WindowManager:   dvrrWindowFrameRateHint=true
+05-05 14:41:01.812  2376  7761 I WindowManager:  dimAmount=0.0 screenDimDuration=0 naviIconColor=0
+05-05 14:41:01.812  2376  7761 I WindowManager:   sfl=40000}
+05-05 14:41:01.820  2376  7672 I WindowManager: Relayout Window{a31e443 u0 NotificationShade}: viewVisibility=0 req=2184x1968 ty=2040 d0
+05-05 14:41:01.820  2376  7672 I WindowManager: Cancelling animation restarting=true, leash=Surface(name=Surface(name=6e251b4 TaskbarWindow)/@0x9a26803 - animation-leash of insets_animation)/@0xc4d7830
+05-05 14:41:01.820  2376  7672 I WindowManager: Reparenting to original parent: Surface(name=WindowToken{7bde152 type=2024 android.os.BinderProxy@48ff513})/@0xb296380, destroy=false, surface=Surface(name=6e251b4 TaskbarWindow)/@0x9a26803
+05-05 14:41:01.820  2376  7672 I WindowManager: Reparenting to leash, surface=Surface(name=6e251b4 TaskbarWindow)/@0x9a26803, leashParent=Surface(name=WindowToken{7bde152 type=2024 android.os.BinderProxy@48ff513})/@0xb296380
+05-05 14:41:01.821  2376  7672 I WindowManager: Cancelling animation restarting=true, leash=Surface(name=Surface(name=af39384 StatusBar)/@0x7310f85 - animation-leash of insets_animation)/@0xc184beb
+05-05 14:41:01.821  2376  7672 I WindowManager: Reparenting to original parent: Surface(name=WindowToken{95f0597 type=2000 android.os.BinderProxy@bb23931})/@0x87c51da, destroy=false, surface=Surface(name=af39384 StatusBar)/@0x7310f85
+05-05 14:41:01.821  2376  7672 I WindowManager: Reparenting to leash, surface=Surface(name=af39384 StatusBar)/@0x7310f85, leashParent=Surface(name=WindowToken{95f0597 type=2000 android.os.BinderProxy@bb23931})/@0x87c51da
+05-05 14:41:01.821  2376  7672 I WindowManager: Cancelling animation restarting=true, leash=Surface(name=Surface(name=bc1e92e NavigationBar0)/@0x80acce8 - animation-leash of insets_animation)/@0x83497e1
+05-05 14:41:01.821  2376  7672 I WindowManager: Reparenting to original parent: Surface(name=WindowToken{743dfa9 type=2019 android.os.BinderProxy@cd6a0e2})/@0xa781f01, destroy=false, surface=Surface(name=bc1e92e NavigationBar0)/@0x80acce8
+05-05 14:41:01.821  2376  7672 I WindowManager: Reparenting to leash, surface=Surface(name=bc1e92e NavigationBar0)/@0x80acce8, leashParent=Surface(name=WindowToken{743dfa9 type=2019 android.os.BinderProxy@cd6a0e2})/@0xa781f01
+05-05 14:41:01.822  2376  7672 I WindowManager: Relayout hash=a31e443, pid=0, syncId=-1: mAttrs={(0,0)(fillxfill) gr=TOP CENTER_VERTICAL sim={adjust=pan} layoutInDisplayCutoutMode=always ty=NOTIFICATION_SHADE fmt=TRANSLUCENT
+05-05 14:41:01.822  2376  7672 I WindowManager:   fl=81140048
+05-05 14:41:01.822  2376  7672 I WindowManager:   pfl=10000200
+05-05 14:41:01.822  2376  7672 I WindowManager:   bhv=2
+05-05 14:41:01.822  2376  7672 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:41:01.822  2376  7672 I WindowManager:   dvrrWindowFrameRateHint=true naviIconColor=0
+05-05 14:41:01.822  2376  7672 I WindowManager:   sfl=40000}
+05-05 14:41:01.835  2376  5595 I WindowManager: Reparenting to leash, surface=Surface(name=b279680 SnapshotStartingWindow for taskId=365)/@0x1ed3d, leashParent=Surface(name=ActivityRecord{129083266 u0 com.livesolar.solarsystem/.MainActivity t365})/@0xa932aaa
+05-05 14:41:01.851  2376  5595 I WindowManager: Relayout Window{a31e443 u0 NotificationShade}: viewVisibility=4 req=2184x1968 ty=2040 d0
+05-05 14:41:01.855  2376  5595 E WindowManager: win=Window{a31e443 u0 NotificationShade} destroySurfaces: appStopped=true cleanupOnResume=false win.mWindowRemovalAllowed=false win.mRemoveOnExit=false win.mViewVisibility=4 caller=com.android.server.wm.WindowManagerService.tryStartExitingAnimation:134 com.android.server.wm.WindowManagerService.relayoutWindow:1213 com.android.server.wm.Session.relayout:27 android.view.IWindowSession$Stub.onTransact:829 com.android.server.wm.Session.onTransact:1 android.os.Binder.execTransactInternal:1462 android.os.Binder.execTransact:1401 
+05-05 14:41:01.856  2376  5595 I WindowManager: Relayout hash=a31e443, pid=4534, syncId=-1: mAttrs={(0,0)(fillxfill) gr=TOP CENTER_VERTICAL sim={adjust=pan} layoutInDisplayCutoutMode=always ty=NOTIFICATION_SHADE fmt=TRANSLUCENT
+05-05 14:41:01.856  2376  5595 I WindowManager:   fl=81040048
+05-05 14:41:01.856  2376  5595 I WindowManager:   pfl=11000200
+05-05 14:41:01.856  2376  5595 I WindowManager:   bhv=2
+05-05 14:41:01.856  2376  5595 I WindowManager:   frameRateBoostOnTouch=true
+05-05 14:41:01.856  2376  5595 I WindowManager:   dvrrWindowFrameRateHint=true naviIconColor=0
+05-05 14:41:01.856  2376  5595 I WindowManager:   sfl=40000}
+05-05 14:41:01.918  2376  2897 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{129083266 u0 com.livesolar.solarsystem/.MainActivity t365})/@0xa932aaa, destroy=true, surface=Surface(name=b279680 SnapshotStartingWindow for taskId=365)/@0x1ed3d
+05-05 14:41:01.918  2376  2897 E WindowManager: win=Window{b279680 u0 SnapshotStartingWindow for taskId=365 EXITING} destroySurfaces: appStopped=false cleanupOnResume=false win.mWindowRemovalAllowed=true win.mRemoveOnExit=true win.mViewVisibility=0 caller=com.android.server.wm.WindowState.onExitAnimationDone:224 com.android.server.wm.WindowState.onAnimationFinished:161 com.android.server.wm.WindowContainer$$ExternalSyntheticLambda8.onAnimationFinished:3 com.android.server.wm.SurfaceAnimator$$ExternalSyntheticLambda0.onAnimationFinished:69 com.android.server.wm.LocalAnimationAdapter$$ExternalSyntheticLambda0.run:10 android.os.Handler.handleCallback:995 android.os.Handler.dispatchMessage:103 

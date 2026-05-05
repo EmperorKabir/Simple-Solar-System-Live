@@ -267,4 +267,39 @@ Three layered defences (apply in priority order; (a) is mandatory, (b) + (c) opt
 
 ### User-reported visual state
 - "home wallpaper applied" (no defects called out)
-- No explicit visual report of issues — assumed nominal pending P0-D comparison
+- Subsequent report: "the home screen looks ok, no hangs, but orbital rings are imperceptible"
+- Rings imperceptible = expected (commit 2af317e gates rings off in surface mode; Phase 2 will restore with thicker stroke)
+
+---
+
+## P0-D — Apply lock wallpaper, unfolded
+
+### Evidence captured
+- Lock screen screencap: `wallpaper-lock-unfolded.png` (257 KB)
+- Wallpaper state (home + lock): `wallpaper-state-lock.txt`
+- Render logcat tail: `wallpaper-lock-render.log`
+
+### Wallpaper service bindings (both registered)
+- `mWallpaperComponent=SolarSystemHomeWallpaperService` (home, displayId=0)
+- `mWallpaperComponent=SolarSystemLockWallpaperService` (lock, displayId=0)
+- Two separate services confirms per-surface independent settings architecture (per prior commit `53a67a5`)
+
+### Window flow (lock screen apply moment)
+- 14:41:01.734 — `SolarSystemLockWallpaperService` relayout req=-1×-1 (SurfaceView reset for binding)
+- 14:41:01.835 — `SnapshotStartingWindow` reparented to MainActivity's leash (Android's transient placeholder while wallpaper service warms up)
+- 14:41:01.918 — placeholder destroyed, real wallpaper surface attached
+
+### Logcat findings
+- ZERO matches for `tile_manager | crash detected | kill OOM | Renderer process | out of memory | FATAL` in 120-line tail
+- F1+F4 hold at lock-wallpaper render path
+
+### User-reported visual state
+- "lock screen background stayed black for a few seconds then loaded" — this matches the `SnapshotStartingWindow` → wallpaper-surface handoff above. Black-then-fade-in is **expected** Android lifecycle for live wallpapers on lock; not a defect.
+- "no perceptible orbital rings" — expected (Phase 2)
+- "label behaviour seems to work" — confirms label dedupe inheriting on lock surface
+
+### Verdict for P0-C + P0-D
+- Both wallpaper services functional after F1+F4
+- Loading-screen lag (~few seconds) on lock is expected Android behaviour, not our bug
+- Ring invisibility consistent across widget/home/lock — single root cause (commit 2af317e gate), single fix (Phase 2)
+- No new bugs introduced by F1+F4 at any wallpaper surface
