@@ -132,3 +132,49 @@ User decision: implement F1 + F4 first, then restart Phase 0 from beginning so a
 - **Crash gone. Crash kill gone. App survives.** Primary objective of F1+F4 achieved.
 - Functional: yes (user reports faster render, labels visible).
 - Optimal: no — warnings still fire. Defer tightening to Phase 6 once full Phase 0 evidence is in.
+
+---
+
+## P0-B — Widget folded — STALE BITMAP / FREECESS FREEZE
+
+### Evidence captured
+- Cover display screencap (HWC display 3, port=148): `widget-postfix-folded-display3.png` (1.25 MB)
+- Inner display screencap (HWC display 0, port=147): `widget-postfix-folded-display0.png` (22 KB — display likely off)
+- Display IDs: `display-ids-folded.txt`
+- AppWidget state on fold: `appwidget-state-folded.txt`
+- Recent logcat: `widget-folded-recent.log`
+
+### Display state after fold
+- `wm size: 1080×2520`, `wm density: 311 (override)` — cover display active
+- HWC display 0 (port=147) = inner display (now off/sleeping → screencap nearly empty)
+- HWC display 3 (port=148) = cover display (active, 1.25 MB screencap content)
+- `screencap` without `-d` defaults to "first display found" — could grab either; explicit `-d <id>` required for foldable diagnostics
+
+### AppWidget state findings
+- Widget id=38 (Simple Solar System) reported on cover launcher: `MaxWidth=696 dp, MaxHeight=1180 dp` at density 1.94 = **~1351 × 2289 px target**
+- Widget id=40 is a ChatGPT widget, not ours; ignore
+- Inner-display widget (the 4×4 from P0-A) was 340×553 dp = **~660 × 1075 px target**
+- **2× larger linear dimension = 4× area difference** between inner-folded widget cells
+
+### Root cause of "squished view"
+- User reports cover widget looks squished/stretched
+- Logcat 800-line tail contains EXACTLY ONE `livesolar.solarsystem` reference:
+  ```
+  05-05 03:05:37.716  2376  5434 D FreecessHandler: freeze com.livesolar.solarsystem(10567) result : 10
+  ```
+- **Samsung's Freecess CPU governor froze the app process** when it went background (fold = inner-display sleep → app process to background → Samsung freezes)
+- WorkManager job for widget refresh did NOT fire after the fold — no `[Worker] startWork` or render logs anywhere in the buffer for this period
+- The bitmap currently displayed is **the OLD inner-display 4×4 render** (660×1075 px) being upscaled by Samsung One UI launcher to fit the cover home cell (~1350×2289 px)
+- 2× linear upscale of a small bitmap into a larger cell = visibly stretched/blurry = user's "squished" perception
+
+### Mechanisms to dig into in Phase 6
+- **Freecess on background** is Samsung-specific. Standard mitigation: ensure widget worker is registered as a `Foreground service` or use `OneTimeWorkRequest` with `setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)` to bypass freeze.
+- **Options change broadcast on display swap** — when user folds, Android does NOT always rebroadcast `ACTION_APPWIDGET_OPTIONS_CHANGED` for an already-bound widget. The cover-display launcher may treat the widget as "already sized" and skip the resize event. If we want re-render on fold, we need to either listen for `Configuration.ORIENTATION_*` changes globally or hook `Display` events.
+
+### NOT yet a regression of F1/F4
+- F1+F4 were per-WebView fixes. They cannot help if the WORKER never fires.
+- The squish is a stale-bitmap symptom from before F1+F4 was even installed (the cached bitmap pre-dates the install).
+
+### Action options for user
+- A. Force a fresh render now: long-press the cover widget → "Edit" → save → triggers options-changed → worker should fire (post-fix). Re-capture.
+- B. Skip widget folded re-render testing for now; proceed to P0-C/D (wallpapers folded+unfolded). Revisit widget folded after Phase 2 (rings) so we can verify rings appear at both display sizes in one pass.
