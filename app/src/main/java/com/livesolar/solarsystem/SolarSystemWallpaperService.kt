@@ -147,6 +147,20 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
             if (ownsFoldRefresh()) {
                 try { displayManager.registerDisplayListener(displayListener, handler) } catch (_: Throwable) {}
             }
+            // Disk-cache recovery: load the previous render's bitmap so the
+            // very first paintToSurface after a process restart (e.g. user
+            // force-stopped the app from Settings, system OOM-killed the
+            // :wallpaper process, etc.) can show the prior wallpaper within
+            // ~50 ms instead of leaving the surface black until the async
+            // WebView render finishes ~4-8 s later. The fresh render still
+            // happens via onSurfaceChanged → renderAndPaint, just behind the
+            // already-painted cached bitmap.
+            try {
+                val cacheFile = java.io.File(applicationContext.filesDir, "wallpaper_${namespace()}.webp")
+                if (cacheFile.exists()) {
+                    lastBitmap = android.graphics.BitmapFactory.decodeFile(cacheFile.absolutePath)
+                }
+            } catch (_: Throwable) { /* best-effort; cache miss falls back to default */ }
         }
 
         override fun onSurfaceChanged(holder: SurfaceHolder?, format: Int, w: Int, h: Int) {
@@ -210,7 +224,25 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                     // get retried on the next visibility cycle.
                     lastParams = params
                     paintToSurface(bm)
+                    cacheBitmapToDisk(bm)
                 }
+            }
+        }
+
+        // Persist the most recent successful render to filesDir so the next
+        // process start (after force-stop / OOM kill / reboot) can show it
+        // immediately on Engine.onCreate. WebP at quality 80 keeps the file
+        // ~150-300 KB on a typical inner-display render. Fire-and-forget on
+        // the engine's main handler — no caller blocks on this.
+        private fun cacheBitmapToDisk(bm: Bitmap) {
+            handler.post {
+                try {
+                    val cacheFile = java.io.File(applicationContext.filesDir, "wallpaper_${namespace()}.webp")
+                    cacheFile.outputStream().use { os ->
+                        @Suppress("DEPRECATION")
+                        bm.compress(Bitmap.CompressFormat.WEBP, 80, os)
+                    }
+                } catch (_: Throwable) { /* best-effort; cache miss is acceptable */ }
             }
         }
 
