@@ -902,14 +902,21 @@
             if (!IS_PREVIEW) return;
             if (CAMERA_OFFSET_Y <= 0) return;
             const offsetPx = window.innerHeight * CAMERA_OFFSET_Y;
-            // Use the SAME mechanism (transform: translateY) on both the
-            // WebGL canvas and the CSS2DRenderer container so they shift in
-            // visual lockstep. setSize on either renderer doesn't disturb
-            // transform; in contrast, style.top on the labelRenderer turned
-            // out not to track the WebGL canvas reliably (observed: scene
-            // pushed down, labels left at top).
-            renderer.domElement.style.transform = `translateY(${offsetPx}px)`;
-            labelRenderer.domElement.style.transform = `translateY(${offsetPx}px)`;
+            // Force BOTH renderers into the same absolute-positioning coord
+            // frame anchored to body's top-left. The WebGL canvas defaults to
+            // `position: static` (inline-block in document flow) so any
+            // preceding body content (HUD divs, modals, hidden picker
+            // elements) pushes the canvas down before any transform fires —
+            // resulting in scene+labels landing at different vertical
+            // positions even though both got the same translateY. Pinning
+            // both with position:absolute,top:offsetPx,left:0 puts them in
+            // an identical coordinate frame so they always align visually.
+            renderer.domElement.style.position = 'absolute';
+            renderer.domElement.style.top = offsetPx + 'px';
+            renderer.domElement.style.left = '0';
+            renderer.domElement.style.transform = '';
+            labelRenderer.domElement.style.top = offsetPx + 'px';
+            labelRenderer.domElement.style.transform = '';
         }
         _applySurfaceOffset();
 
