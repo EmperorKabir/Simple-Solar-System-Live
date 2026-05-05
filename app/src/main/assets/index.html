@@ -405,6 +405,17 @@
             pointer-events: none;
         }
         .wp-preview-loading.hidden { opacity: 0; }
+        .wp-first-bind {
+            display: none;
+            font-size: 11px; line-height: 1.45;
+            color: rgba(255,255,255,0.62);
+            background: rgba(160, 110, 220, 0.10);
+            border: 1px solid rgba(160, 110, 220, 0.28);
+            border-radius: 6px;
+            padding: 6px 9px;
+            margin: 0 0 8px;
+        }
+        .wp-section.unbound .wp-first-bind { display: block; }
 
         /* Side-by-side wallpaper sections in landscape / wide layouts.
            Falls back to vertical stacking in folded / portrait < 700 px. */
@@ -644,6 +655,7 @@
             <div id="wallpaper-modal-heading">Set as wallpaper</div>
             <div class="wp-section" data-target="home">
                 <h4>Home screen</h4>
+                <div class="wp-first-bind">First-time setup goes through Android's confirmation screen. After that, future changes apply instantly with no preview interruption.</div>
                 <button type="button" class="wp-apply" data-action="apply">Set as home wallpaper</button>
                 <div class="wp-preview">
                     <iframe class="wp-preview-frame" sandbox="allow-scripts allow-same-origin" title="Home wallpaper preview"></iframe>
@@ -689,6 +701,7 @@
             </div>
             <div class="wp-section" data-target="lock">
                 <h4>Lock screen</h4>
+                <div class="wp-first-bind">First-time setup goes through Android's confirmation screen. After that, future changes apply instantly with no preview interruption.</div>
                 <button type="button" class="wp-apply" data-action="apply">Set as lock wallpaper</button>
                 <div class="wp-preview">
                     <iframe class="wp-preview-frame" sandbox="allow-scripts allow-same-origin" title="Lock wallpaper preview"></iframe>
@@ -877,7 +890,10 @@
         const _preserveBuf = (SURFACE !== 'main');
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance", preserveDrawingBuffer: _preserveBuf });
         renderer.setSize(window.innerWidth, _renderHeight());
-        renderer.setPixelRatio(window.devicePixelRatio);
+        // Cap DPR at 2 on mobile per three.js mobile guidance: most Android
+        // displays are 2.75–3.5 DPR; capping at 2 cuts pixel work ~50% with
+        // no perceptible quality loss at viewing distance.
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         document.body.appendChild(renderer.domElement);
         
@@ -1452,6 +1468,17 @@
             }));
         }
         Promise.all(texLoadPromises).then(() => {
+            // Pre-compile shaders BEFORE first user-visible render so the
+            // first frame doesn't stutter on shader-program compile (which
+            // can take 100-300 ms for a scene with 30+ MeshStandardMaterials
+            // on a midrange Android GPU). renderer.compile traverses the
+            // scene, requests every material's program, and warms the
+            // pipeline. Followed by one explicit render call so any
+            // remaining first-draw cost is paid before the loader fades.
+            try {
+                renderer.compile(scene, camera);
+                renderer.render(scene, camera);
+            } catch (_) { /* defensive: never block loader on a compile glitch */ }
             // Reveal scene + labels + HUD; loader overlay fades via CSS.
             document.body.dataset.ready = "true";
             const loader = document.getElementById('app-loader');
@@ -1984,6 +2011,11 @@
                     pTog.textContent = hide ? 'On' : 'Off';
                     pTog.classList.toggle('off', !hide);
                 }
+                // Show first-time-bind explainer iff our service isn't the
+                // currently active wallpaper for this surface — tapping Set
+                // will go through Android's confirmation screen this round.
+                // After bind it auto-hides on next picker open.
+                section.classList.toggle('unbound', parsed[target].bound !== true);
             }
         }
         function _wpReadSection(section) {

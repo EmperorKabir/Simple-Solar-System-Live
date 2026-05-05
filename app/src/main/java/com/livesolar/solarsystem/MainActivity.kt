@@ -110,17 +110,27 @@ class MainActivity : Activity() {
                 activity, SurfaceSettings.LOCK_WALLPAPER_NAMESPACE,
                 SurfaceSettings.DEFAULT_LOCK_OFFSET_Y
             )
+            val homeBound = isAlreadyBound(
+                "home",
+                ComponentName(activity, SolarSystemHomeWallpaperService::class.java)
+            )
+            val lockBound = isAlreadyBound(
+                "lock",
+                ComponentName(activity, SolarSystemLockWallpaperService::class.java)
+            )
             return JSONObject()
                 .put("home", JSONObject()
                     .put("offsetY", home.offsetY)
                     .put("tilt", home.tilt)
                     .put("labels", home.labelsEnabled)
-                    .put("hidePluto", home.hidePluto))
+                    .put("hidePluto", home.hidePluto)
+                    .put("bound", homeBound))
                 .put("lock", JSONObject()
                     .put("offsetY", lock.offsetY)
                     .put("tilt", lock.tilt)
                     .put("labels", lock.labelsEnabled)
-                    .put("hidePluto", lock.hidePluto))
+                    .put("hidePluto", lock.hidePluto)
+                    .put("bound", lockBound))
                 .toString()
         }
 
