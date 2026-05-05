@@ -1,0 +1,15 @@
+# Precession rates from JPL Horizons APX (24-month linear fit)
+# 25 samples, JD 2460803.5 .. 2461523.5
+# Slopes from least-squares fit through unwrapped Ω(t), ω(t).
+
+moon       	epoch_OM   	epoch_W    	OM_DOT_2yr     	W_DOT_2yr      	note
+Phobos     	80.5044	213.2600	      0.001653	      0.429205	n=25
+Deimos     	81.3256	41.3715	      0.001286	      0.007014	n=25
+Miranda    	163.2805	59.1015	     -0.000903	      0.055322	n=25
+Ariel      	167.6652	260.7979	      0.000005	      0.032266	n=25
+Umbriel    	167.7247	69.5177	      0.000004	      0.009934	n=25
+Titania    	167.6429	281.1580	      0.000005	      0.019538	n=25
+Oberon     	167.7091	177.8617	     -0.000005	     -0.025587	n=25
+Triton     	222.7443	304.0825	      0.000721	      1.242308	n=25
+Proteus    	48.7170	1.9497	      0.000045	      0.070196	n=25
+Charon     	227.3930	172.5957	      0.000000	      0.000048	n=25

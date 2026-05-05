@@ -59,7 +59,11 @@ const _uranusVSOP  = new Planet(vsop87Buranus);
  * @param {Planet} hostVSOP — astronomia Planet instance for the host
  * @returns {number} τ in days
  */
-function lightTimeDays(jde, hostVSOP) {
+export { _marsVSOP, _jupiterVSOP, _saturnVSOP, _uranusVSOP };
+export function lightTimeDays(jde, hostVSOP) {
+    return _lightTimeDays(jde, hostVSOP);
+}
+function _lightTimeDays(jde, hostVSOP) {
     const e = _earthVSOP.position2000(jde);
     const h = hostVSOP.position2000(jde);
     const ex = e.range * Math.cos(e.lat) * Math.cos(e.lon);

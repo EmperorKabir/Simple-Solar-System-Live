@@ -6,8 +6,11 @@
 // IMPORTANT: ecliptic-J2000 frame — caller attaches to un-tilted planet pivot.
 // N is mean motion in deg/day (×86400 from Horizons deg/sec).
 
-// OM_DOT, W_DOT secular precession rates (deg/day) numerically differenced
-// from JPL Horizons APX. Source: tools/fetch-precession-rates.mjs.
+// OM_DOT, W_DOT secular precession rates (deg/day) — linear least-squares
+// fit through 25 monthly samples of JPL Horizons APX OSCULATING ELEMENTS
+// spanning JD 2460803.5..2461523.5 (T-12mo..T+12mo around epoch). Source:
+//   tools/fetch-precession-rates-2yr.mjs
+//   docs/diag/2026-05-05-moon-investigation/22-precession-rates-2yr.txt
 export const triton = {
     name: "Triton",
     epochJD: 2461163.5,
@@ -18,8 +21,8 @@ export const triton = {
     W:  304.0825276822618,
     MA: 19.04339905264130,
     N:  61.25487104098993,
-    OM_DOT: 0.000711,
-    W_DOT:  0.951187
+    OM_DOT: 0.000721,
+    W_DOT:  1.242308
 };
 
 export const proteus = {
@@ -32,8 +35,8 @@ export const proteus = {
     W:  1.949681092698172,
     MA: 332.3491065694876,
     N:  320.6580063587919,
-    OM_DOT: 0.000025,
-    W_DOT:  -0.271914
+    OM_DOT: 0.000045,
+    W_DOT:  0.070196
 };
 
 export default { triton, proteus };

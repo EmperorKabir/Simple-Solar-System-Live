@@ -9,10 +9,13 @@
 //
 // N is mean motion in deg/day (converted from Horizons deg/sec by ×86400).
 
-// OM_DOT, W_DOT secular precession rates (deg/day) numerically differenced
-// from JPL Horizons APX OSCULATING ELEMENTS at JD 2461163.5 vs 2461193.5
-// (30-day baseline). Source: tools/fetch-precession-rates.mjs run output
-// at docs/diag/2026-05-05-moon-investigation/21-precession-rates.txt.
+// OM_DOT, W_DOT secular precession rates (deg/day) — linear least-squares
+// fit through 25 monthly samples of JPL Horizons APX OSCULATING ELEMENTS
+// spanning JD 2460803.5..2461523.5 (T-12mo..T+12mo around epoch). The
+// long baseline averages out monthly libration (which dominated the
+// earlier 30-day differencing approach). Source:
+//   tools/fetch-precession-rates-2yr.mjs
+//   docs/diag/2026-05-05-moon-investigation/22-precession-rates-2yr.txt
 export const phobos = {
     name: "Phobos",
     epochJD: 2461163.5,
@@ -23,8 +26,8 @@ export const phobos = {
     W:  213.2600226478119,
     MA: 157.3773285122747,
     N:  1128.111738894016,
-    OM_DOT: 0.005387,
-    W_DOT:  0.421443
+    OM_DOT: 0.001653,
+    W_DOT:  0.429205
 };
 
 export const deimos = {
@@ -37,8 +40,8 @@ export const deimos = {
     W:  41.37149794352102,
     MA: 167.4777341880778,
     N:  285.1238812062207,
-    OM_DOT: 0.000479,
-    W_DOT:  0.183838
+    OM_DOT: 0.001286,
+    W_DOT:  0.007014
 };
 
 export default { phobos, deimos };

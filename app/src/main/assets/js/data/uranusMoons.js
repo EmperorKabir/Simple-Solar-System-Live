@@ -11,9 +11,12 @@
 // IMPORTANT: ecliptic-J2000 frame — caller attaches to un-tilted planet pivot.
 // N is mean motion in deg/day (×86400 from Horizons deg/sec).
 
-// OM_DOT, W_DOT secular precession rates (deg/day) numerically differenced
-// from JPL Horizons APX OSCULATING ELEMENTS at JD 2461163.5 vs 2461193.5
-// (30-day baseline). Source: tools/fetch-precession-rates.mjs.
+// OM_DOT, W_DOT secular precession rates (deg/day) — linear least-squares
+// fit through 25 monthly samples of JPL Horizons APX OSCULATING ELEMENTS
+// spanning JD 2460803.5..2461523.5 (T-12mo..T+12mo around epoch). The
+// long baseline averages out monthly libration. Source:
+//   tools/fetch-precession-rates-2yr.mjs
+//   docs/diag/2026-05-05-moon-investigation/22-precession-rates-2yr.txt
 export const miranda = {
     name: "Miranda",
     epochJD: 2461163.5,
@@ -24,8 +27,8 @@ export const miranda = {
     W:  59.10146622591670,
     MA: 205.8387488086251,
     N:  254.6943243447271,
-    OM_DOT: -0.000827,
-    W_DOT:  -0.330436
+    OM_DOT: -0.000903,
+    W_DOT:  0.055322
 };
 
 export const ariel = {
@@ -39,7 +42,7 @@ export const ariel = {
     MA: 41.96926855004741,
     N:  142.8161527602701,
     OM_DOT: 0.000005,
-    W_DOT:  -1.008708
+    W_DOT:  0.032266
 };
 
 export const umbriel = {
@@ -52,8 +55,8 @@ export const umbriel = {
     W:  69.51767860812087,
     MA: 164.9298842430356,
     N:  86.84814831584738,
-    OM_DOT: 0.000003,
-    W_DOT:  -0.238749
+    OM_DOT: 0.000004,
+    W_DOT:  0.009934
 };
 
 export const titania = {
@@ -66,8 +69,8 @@ export const titania = {
     W:  281.1580482320147,
     MA: 293.9071757910803,
     N:  41.34054443521452,
-    OM_DOT: 0.000006,
-    W_DOT:  -0.556127
+    OM_DOT: 0.000005,
+    W_DOT:  0.019538
 };
 
 export const oberon = {
@@ -80,8 +83,8 @@ export const oberon = {
     W:  177.8617275524585,
     MA: 323.3754741281617,
     N:  26.73091383398796,
-    OM_DOT: -0.000006,
-    W_DOT:  -0.647681
+    OM_DOT: -0.000005,
+    W_DOT:  -0.025587
 };
 
 export default { miranda, ariel, umbriel, titania, oberon };
