@@ -902,8 +902,14 @@
             if (!IS_PREVIEW) return;
             if (CAMERA_OFFSET_Y <= 0) return;
             const offsetPx = window.innerHeight * CAMERA_OFFSET_Y;
+            // Use the SAME mechanism (transform: translateY) on both the
+            // WebGL canvas and the CSS2DRenderer container so they shift in
+            // visual lockstep. setSize on either renderer doesn't disturb
+            // transform; in contrast, style.top on the labelRenderer turned
+            // out not to track the WebGL canvas reliably (observed: scene
+            // pushed down, labels left at top).
             renderer.domElement.style.transform = `translateY(${offsetPx}px)`;
-            labelRenderer.domElement.style.top = offsetPx + 'px';
+            labelRenderer.domElement.style.transform = `translateY(${offsetPx}px)`;
         }
         _applySurfaceOffset();
 
@@ -2020,7 +2026,11 @@
                     tilt:    String(v.tilt),
                     labels:  v.labels ? 'on' : 'off',
                     pluto:   v.hidePluto ? 'off' : 'on',
-                    preview: 'on'
+                    preview: 'on',
+                    // Cache-bust so WebView always serves the freshest index.html
+                    // when settings change; otherwise the iframe can re-use a
+                    // stale cached document and our changes never appear.
+                    _t: String(Date.now())
                 });
                 const onLoad = () => {
                     if (loading) loading.classList.add('hidden');
@@ -2659,6 +2669,67 @@
             }
             
             labelRenderer.render(scene, camera);
+
+            // Surface-mode aggressive dedupe for the LIVE preview iframe.
+            // The bitmap-render path runs its own dedupe inside _capture; the
+            // animate loop's main-mode dedupe (next block) is the gentle
+            // pairwise rule unsuited to widget framing. Here we apply the
+            // strict 'one largest per cluster' rule and toggle .label-overlapped
+            // on every animate tick (cheap: ≤10 candidate labels) so the
+            // user sees the same dedupe as the actual wallpaper bitmap.
+            if (SURFACE !== 'main' && IS_PREVIEW) {
+                const _PREVIEW_PLANETS = ['Sun','Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto'];
+                const _previewCand = [];
+                const _previewFovRad = camera.fov * Math.PI / 180.0;
+                const _previewWp = new THREE.Vector3();
+                for (let i = 0; i < labelsList.length; i++) {
+                    const lblDiv = labelsList[i];
+                    if (!lblDiv) continue;
+                    const name = lblDiv.dataset.bodyName || (lblDiv.textContent || '').trim();
+                    if (!_PREVIEW_PLANETS.includes(name)) continue;
+                    const r = lblDiv.getBoundingClientRect();
+                    if (r.width <= 0 || r.height <= 0) continue;
+                    let bodyMesh = null, bodyRadius = 0;
+                    if (name === 'Sun') { bodyMesh = sun; bodyRadius = sunVisualRadius; }
+                    else if (planets[name]) { bodyMesh = planets[name]; bodyRadius = planetsData[name].size; }
+                    if (!bodyMesh) continue;
+                    bodyMesh.getWorldPosition(_previewWp);
+                    const dist = camera.position.distanceTo(_previewWp);
+                    const rPx = bodyRadius * (window.innerHeight * 0.5) / Math.tan(_previewFovRad * 0.5) / Math.max(dist, 1e-6);
+                    _previewCand.push({ id: name, rect: { x: r.x, y: r.y, w: r.width, h: r.height }, renderedRadius: rPx, element: lblDiv });
+                }
+                const _previewHidden = (() => {
+                    const n = _previewCand.length;
+                    const adj = Array.from({length:n}, () => []);
+                    for (let i=0; i<n; i++) for (let j=i+1; j<n; j++) {
+                        const a = _previewCand[i].rect, b = _previewCand[j].rect;
+                        if (!(a.x+a.w<b.x || b.x+b.w<a.x || a.y+a.h<b.y || b.y+b.h<a.y)) {
+                            adj[i].push(j); adj[j].push(i);
+                        }
+                    }
+                    const seen = new Array(n).fill(false);
+                    const hidden = new Set();
+                    for (let i=0; i<n; i++) {
+                        if (seen[i]) continue;
+                        const comp = [];
+                        const stack = [i]; seen[i] = true;
+                        while (stack.length) {
+                            const k = stack.pop(); comp.push(k);
+                            for (const m of adj[k]) if (!seen[m]) { seen[m] = true; stack.push(m); }
+                        }
+                        if (comp.length < 2) continue;
+                        let maxR = -Infinity, maxIdx = -1;
+                        for (const k of comp) {
+                            if (_previewCand[k].renderedRadius > maxR) { maxR = _previewCand[k].renderedRadius; maxIdx = k; }
+                        }
+                        for (const k of comp) if (k !== maxIdx) hidden.add(_previewCand[k].id);
+                    }
+                    return hidden;
+                })();
+                for (const c of _previewCand) {
+                    c.element.classList.toggle('label-overlapped', _previewHidden.has(c.id));
+                }
+            }
 
             // Label-overlap fade (every 6 frames ≈ 10 Hz). Stacks orthogonally
             // with .hidden-label so the zoom/occlusion logic above still wins.
