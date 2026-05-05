@@ -178,3 +178,62 @@ User decision: implement F1 + F4 first, then restart Phase 0 from beginning so a
 ### Action options for user
 - A. Force a fresh render now: long-press the cover widget → "Edit" → save → triggers options-changed → worker should fire (post-fix). Re-capture.
 - B. Skip widget folded re-render testing for now; proceed to P0-C/D (wallpapers folded+unfolded). Revisit widget folded after Phase 2 (rings) so we can verify rings appear at both display sizes in one pass.
+
+---
+
+## P0-B-FORCED — Cover widget after manual Edit + save
+
+### Evidence captured
+- Cover display screencap post-refresh: `widget-postfix-folded-refreshed.png` (1.2 MB)
+- Logcat tail post-refresh: `widget-folded-refreshed.log`
+- AppWidget options post-refresh: `appwidget-state-folded-refreshed.txt`
+
+### User-reported visual state
+- "cover widget refreshed. that seemed to work" — fresh render at cover dimensions succeeded
+
+### Logcat findings POST-REFRESH
+- Grep for `tile_manager|crash|kill OOM|Renderer process|out of memory` over the 60-line tail captured immediately after refresh: **ZERO MATCHES**
+- F1+F4 held up at 1351×2289 px target render (largest in the app — ~2.1× more pixels than inner-display 4×4 widget)
+
+### AppWidget state confirmed
+- id=38: `appWidgetMaxWidth=696 dp, appWidgetMaxHeight=1180 dp, semDisplayDensity=1.94375` → 1351×2289 px target
+- Worker correctly read these dimensions and produced a fresh bitmap in cover format
+
+### Why user must currently force-refresh manually
+- Samsung's `FreecessHandler` froze the app process when foldback put it in background
+- `ACTION_APPWIDGET_OPTIONS_CHANGED` broadcast was either never sent (launcher kept old size) or was received but blocked from processing while frozen
+- Standard `WorkManager.enqueue` work is subject to Doze + Freecess + battery optimisation throttling
+- Tapping "Edit" forces the launcher to re-issue the options-changed broadcast WITH the app un-frozen (foreground transition during edit dialog)
+
+### Phase 6 fix design — auto-refresh on display swap
+
+Three layered defences (apply in priority order; (a) is mandatory, (b) + (c) optional):
+
+- **(a) Make widget WorkRequest expedited**
+  - `OneTimeWorkRequestBuilder<SolarSystemWidgetWorker>().setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)`
+  - Expedited work bypasses Doze and Samsung Freecess for ~10 s
+  - Fired from `SolarSystemAppWidgetProvider.onAppWidgetOptionsChanged`
+  - Cost: minimal; one-line API change in the provider's WorkRequest construction
+  - Risk: low; falls back to normal work if quota exhausted (the OutOfQuotaPolicy fallback)
+
+- **(b) Manifest BroadcastReceiver for `Intent.ACTION_CONFIGURATION_CHANGED`**
+  - Receives system broadcasts when display/orientation/density changes
+  - On receipt, enumerate all widget IDs via `AppWidgetManager.getAppWidgetIds(...)` and enqueue an expedited `WidgetWorker` per ID
+  - Cost: ~30 lines new receiver class + manifest entry
+  - Risk: ACTION_CONFIGURATION_CHANGED not always delivered to background apps on Android 13+; combine with (a) and (c) for reliability
+
+- **(c) `DisplayManager.DisplayListener` from the always-alive wallpaper service**
+  - The user's home and lock wallpaper services are alive whenever wallpaper is visible
+  - Register a `DisplayListener` from those services; on `onDisplayChanged(displayId)`, enqueue expedited widget refresh
+  - Cost: ~15 lines per service
+  - Risk: only effective if user has the wallpaper applied; orthogonal so doesn't conflict with (a)+(b)
+
+### Recommendation
+- Implement (a) first as a one-line manifest+code fix; capture evidence on next fold
+- If still flaky, add (b)
+- (c) only if (a)+(b) prove insufficient
+
+### Verdict for P0-B
+- F1+F4 confirmed effective at 1351×2289 px (worst-case render in the app)
+- Stale-bitmap-on-fold is a separate concern from the OOM
+- Auto-refresh-on-fold is a Phase 6 deliverable; design above
