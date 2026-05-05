@@ -889,6 +889,23 @@
         labelRenderer.domElement.style.zIndex = '5';
         document.body.appendChild(labelRenderer.domElement);
 
+        // Surface-mode camera-offset positioning. The actual wallpaper
+        // bitmap render is composited in Kotlin, which lays the WebGL
+        // scene + labels into the BOTTOM (1 - offsetY) of the bitmap.
+        // For the in-app live preview iframe (which loads index.html
+        // directly), we replicate that visually by translating both the
+        // WebGL canvas and the label container down by offsetY * height.
+        // Without this, the preview iframe shows scene+labels at top with
+        // empty space at the bottom — the opposite of what the user sees
+        // in the actual wallpaper.
+        function _applySurfaceOffset() {
+            if (CAMERA_OFFSET_Y <= 0) return;
+            const offsetPx = window.innerHeight * CAMERA_OFFSET_Y;
+            renderer.domElement.style.transform = `translateY(${offsetPx}px)`;
+            labelRenderer.domElement.style.top = offsetPx + 'px';
+        }
+        _applySurfaceOffset();
+
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = false;
         controls.maxDistance = 750.0;
@@ -2692,6 +2709,7 @@
             camera.updateProjectionMatrix();
             renderer.setSize(w, h);
             labelRenderer.setSize(w, h);
+            _applySurfaceOffset();
         });
 
         animate();
@@ -2755,9 +2773,46 @@
                                 xOut: r.left, yOut: r.top
                             });
                         }
-                        const hidden = computeHiddenByOverlap(cand);
+                        // Aggressive dedupe for surface mode: in each cluster
+                        // of overlapping labels, keep ONLY the body with the
+                        // largest on-screen rendered radius and hide every
+                        // other. The shared LabelOverlap.computeHiddenByOverlap
+                        // implements the main app's gentler "hide only the
+                        // smallest" rule, which at the widget's fixed top-down
+                        // framing leaves Sun + Mercury + Venus + Earth + Mars
+                        // all visible because each pair only loses its smallest
+                        // — net result: 4 of 5 labels still overlapping. Crisp
+                        // readability matters more here than completeness.
+                        const _aggHidden = (() => {
+                            const n = cand.length;
+                            const adj = Array.from({length:n}, () => []);
+                            for (let i=0; i<n; i++) for (let j=i+1; j<n; j++) {
+                                const a = cand[i].rect, b = cand[j].rect;
+                                if (!(a.x+a.w<b.x || b.x+b.w<a.x || a.y+a.h<b.y || b.y+b.h<a.y)) {
+                                    adj[i].push(j); adj[j].push(i);
+                                }
+                            }
+                            const seen = new Array(n).fill(false);
+                            const hidden = new Set();
+                            for (let i=0; i<n; i++) {
+                                if (seen[i]) continue;
+                                const comp = [];
+                                const stack = [i]; seen[i] = true;
+                                while (stack.length) {
+                                    const k = stack.pop(); comp.push(k);
+                                    for (const m of adj[k]) if (!seen[m]) { seen[m] = true; stack.push(m); }
+                                }
+                                if (comp.length < 2) continue;
+                                let maxR = -Infinity, maxIdx = -1;
+                                for (const k of comp) {
+                                    if (cand[k].renderedRadius > maxR) { maxR = cand[k].renderedRadius; maxIdx = k; }
+                                }
+                                for (const k of comp) if (k !== maxIdx) hidden.add(cand[k].id);
+                            }
+                            return hidden;
+                        })();
                         for (const c of cand) {
-                            if (hidden.has(c.id)) continue;
+                            if (_aggHidden.has(c.id)) continue;
                             labels.push({ text: c.id, x: c.xOut, y: c.yOut });
                         }
                     }
