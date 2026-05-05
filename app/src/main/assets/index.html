@@ -1409,22 +1409,25 @@
         let earthGroupPivot = null;
 
         for (const [name, data] of Object.entries(planetsData)) {
-            // Orbit rings: skipped in surface mode (1620 line verts of pure
-            // overhead at widget framing where the ring is invisible anyway).
-            if (SURFACE === 'main') {
-                const ringPoints = [];
-                for(let i = 0; i <= 360; i+=2) {
-                    ringPoints.push(getOrbitPositionFast(data, (i / 360) * (data.period * 365.25), true).clone());
-                }
-                const ring = new THREE.LineLoop(
-                    new THREE.BufferGeometry().setFromPoints(ringPoints),
-                    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 })
-                );
-                scene.add(ring);
-                ringLines[name] = ring;
-            } else {
-                ringLines[name] = null;
+            // Orbit rings: built unconditionally. Main app uses subtle 0.15
+            // opacity; surfaces (widget/wallpaper) use higher 0.45 opacity +
+            // requested linewidth=2 so the ring remains visible at small
+            // render sizes where it is the primary visual cue for tilt.
+            // (LineBasicMaterial.linewidth honoured ≤2 on most WebGL impls;
+            // if device shows hairlines we'll escalate to Line2 in Phase 6.)
+            const ringPoints = [];
+            for(let i = 0; i <= 360; i+=2) {
+                ringPoints.push(getOrbitPositionFast(data, (i / 360) * (data.period * 365.25), true).clone());
             }
+            const ringMat = (SURFACE === 'main')
+                ? new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 })
+                : new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45, linewidth: 2 });
+            const ring = new THREE.LineLoop(
+                new THREE.BufferGeometry().setFromPoints(ringPoints),
+                ringMat
+            );
+            scene.add(ring);
+            ringLines[name] = ring;
 
             // Planet material
             const matParams = { map: tex[name], roughness: 1.0, metalness: 0.0 };
