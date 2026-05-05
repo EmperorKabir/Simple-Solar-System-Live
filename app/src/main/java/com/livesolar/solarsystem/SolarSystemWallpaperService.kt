@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
 import android.service.wallpaper.WallpaperService
-import android.util.Log
 import android.view.SurfaceHolder
 
 /**
@@ -45,14 +44,12 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         override fun onSurfaceChanged(holder: SurfaceHolder?, format: Int, w: Int, h: Int) {
             super.onSurfaceChanged(holder, format, w, h)
             widthPx = w; heightPx = h
-            Log.i("SolarRenderer", "SLSS_DIAG Wallpaper onSurfaceChanged ${w}x${h} ns=${namespace()}")
             renderAndPaint()
         }
 
         override fun onVisibilityChanged(v: Boolean) {
             super.onVisibilityChanged(v)
             visible = v
-            Log.i("SolarRenderer", "SLSS_DIAG Wallpaper visible=$v ns=${namespace()}")
             if (v) {
                 // If user changed offset/labels while the wallpaper was hidden,
                 // re-render rather than re-painting the stale cached bitmap.
@@ -88,7 +85,6 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
             rendering = true
             val params = currentParams()
             lastParams = params
-            Log.i("SolarRenderer", "SLSS_DIAG Wallpaper renderAndPaint ${widthPx}x${heightPx} params=$params")
             WebViewBitmapRenderer.render(applicationContext, widthPx, heightPx, params) { bm ->
                 rendering = false
                 if (bm != null) {
