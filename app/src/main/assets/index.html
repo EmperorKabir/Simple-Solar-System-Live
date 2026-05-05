@@ -370,15 +370,41 @@
         }
         .wp-toggle.off { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.55); }
         .wp-apply {
-            display: block; width: 100%; margin-top: 8px;
-            padding: 8px 14px;
+            display: inline-block; margin: 0 0 10px;
+            padding: 6px 14px;
             background: rgba(160, 110, 220, 0.22);
             border: 1px solid rgba(160, 110, 220, 0.55);
             color: #e6d5fb; border-radius: 5px;
-            font-size: 13px; font-weight: 600;
+            font-size: 12px; font-weight: 600;
             cursor: pointer; -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none; user-select: none;
         }
         .wp-apply:active { background: rgba(160, 110, 220, 0.36); }
+        .wp-preview {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 9 / 16;
+            max-height: 38vh;
+            background: #000;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .wp-preview-frame {
+            width: 100%; height: 100%;
+            border: 0; display: block;
+            background: #000;
+        }
+        .wp-preview-loading {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: #000; color: rgba(255,255,255,0.55);
+            font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            transition: opacity 0.25s ease;
+            pointer-events: none;
+        }
+        .wp-preview-loading.hidden { opacity: 0; }
         #wallpaper-modal-close {
             display: block; margin: 4px 0 0 auto;
             padding: 6px 16px;
@@ -603,6 +629,11 @@
             <div id="wallpaper-modal-heading">Set as wallpaper</div>
             <div class="wp-section" data-target="home">
                 <h4>Home screen</h4>
+                <button type="button" class="wp-apply" data-action="apply">Set as home wallpaper</button>
+                <div class="wp-preview">
+                    <iframe class="wp-preview-frame" sandbox="allow-scripts allow-same-origin" title="Home wallpaper preview"></iframe>
+                    <div class="wp-preview-loading">Loading preview…</div>
+                </div>
                 <div class="wp-row">
                     <label>Vertical offset (empty space at top)</label>
                     <select class="wp-select" data-prop="offsetY">
@@ -640,10 +671,14 @@
                     <label>Hide Pluto</label>
                     <button type="button" class="wp-toggle off" data-prop="hidePluto">Off</button>
                 </div>
-                <button type="button" class="wp-apply" data-action="apply">Set as home wallpaper</button>
             </div>
             <div class="wp-section" data-target="lock">
                 <h4>Lock screen</h4>
+                <button type="button" class="wp-apply" data-action="apply">Set as lock wallpaper</button>
+                <div class="wp-preview">
+                    <iframe class="wp-preview-frame" sandbox="allow-scripts allow-same-origin" title="Lock wallpaper preview"></iframe>
+                    <div class="wp-preview-loading">Loading preview…</div>
+                </div>
                 <div class="wp-row">
                     <label>Vertical offset (empty space at top)</label>
                     <select class="wp-select" data-prop="offsetY">
@@ -681,7 +716,6 @@
                     <label>Hide Pluto</label>
                     <button type="button" class="wp-toggle off" data-prop="hidePluto">Off</button>
                 </div>
-                <button type="button" class="wp-apply" data-action="apply">Set as lock wallpaper</button>
             </div>
             <button id="wallpaper-modal-close" type="button">Close</button>
         </div>
@@ -1921,11 +1955,44 @@
             if (!wallpaperBridgeAvailable) return;
             const v = _wpReadSection(section);
             window.WallpaperPicker.saveSettings(target, v.offsetY, v.tilt, v.labels, v.hidePluto);
+            _wpUpdatePreview(target, section);
+        }
+        // Live in-modal preview. Loads index.html in an iframe with the
+        // section's current settings so the user sees what their wallpaper
+        // will look like before tapping 'Set as wallpaper'. Each iframe is
+        // its own WebView context, so F1 texture downscale (TEX_DOWNSCALE=4
+        // for surface mode) keeps GPU memory bounded.
+        function _wpUpdatePreview(target, section) {
+            const frame = section.querySelector('.wp-preview-frame');
+            const loading = section.querySelector('.wp-preview-loading');
+            if (!frame) return;
+            if (loading) loading.classList.remove('hidden');
+            const v = _wpReadSection(section);
+            const params = new URLSearchParams({
+                surface: 'wallpaper',
+                offsetY: String(v.offsetY),
+                tilt:    String(v.tilt),
+                labels:  v.labels ? 'on' : 'off',
+                pluto:   v.hidePluto ? 'off' : 'on'
+            });
+            // Only hide the loading overlay AFTER the iframe's window has
+            // dispatched 'load' (full document + initial render attempted).
+            const onLoad = () => {
+                if (loading) loading.classList.add('hidden');
+                frame.removeEventListener('load', onLoad);
+            };
+            frame.addEventListener('load', onLoad);
+            frame.src = './index.html?' + params.toString();
         }
         wallpaperIcon.addEventListener('click', (e) => {
             e.stopPropagation();
             _wpRefreshUi();
             wallpaperModal.classList.add('visible');
+            // Trigger initial preview render for both sections after the UI
+            // has been refreshed from saved settings.
+            wallpaperModal.querySelectorAll('.wp-section').forEach((section) => {
+                _wpUpdatePreview(section.dataset.target, section);
+            });
         });
         wallpaperClose.addEventListener('click', () => wallpaperModal.classList.remove('visible'));
         wallpaperModal.addEventListener('click', (e) => {
