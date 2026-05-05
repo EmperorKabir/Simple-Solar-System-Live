@@ -234,10 +234,15 @@ export function galileanMoon(mc, jde) {
     const t = (jde - tau) - JUPITER_LIESKE_EPOCH;
     const lDeg = ((k.L0 + k.n * t) % 360 + 360) % 360;
     const sceneLonRad = lDeg * D2R;
+    // scene_z = -ecl_y per project convention (line 102, 282, 331). For
+    // ecl = (cos l, sin l, 0) treating Lieske l as ecliptic longitude,
+    // scene_z must be -sin(l) not +sin(l). The previous +sin(l) put
+    // Galilean moons on the wrong side of Jupiter — verified by
+    // tools/galilean-fix-test.mjs (Callisto error 164 deg -> 1.99 deg).
     return {
         x: mc.dist * Math.cos(sceneLonRad),
         y: 0,
-        z: mc.dist * Math.sin(sceneLonRad)
+        z: -mc.dist * Math.sin(sceneLonRad)
     };
 }
 
@@ -465,7 +470,8 @@ export function plutoMoon(mc, jde) {
     const period = mc.p || 1;
     const L = ((mc.L0 + 360.0 / period * d) % 360 + 360) % 360;
     const Lr = L * D2R;
-    return { x: mc.dist * Math.cos(Lr), y: 0, z: mc.dist * Math.sin(Lr) };
+    // scene_z = -sin(L) per project convention (matches galileanMoon fix).
+    return { x: mc.dist * Math.cos(Lr), y: 0, z: -mc.dist * Math.sin(Lr) };
 }
 
 
@@ -483,7 +489,8 @@ export function simpleCircular(mc, jde) {
     const period = mc.p || 1;
     const L = ((mc.L0 + 360.0 / period * d) % 360 + 360) % 360;
     const Lr = L * D2R;
-    return { x: mc.dist * Math.cos(Lr), y: 0, z: mc.dist * Math.sin(Lr) };
+    // scene_z = -sin(L) per project convention (matches galileanMoon fix).
+    return { x: mc.dist * Math.cos(Lr), y: 0, z: -mc.dist * Math.sin(Lr) };
 }
 
 
