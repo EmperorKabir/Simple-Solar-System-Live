@@ -187,19 +187,20 @@ class MainActivity : Activity() {
             return false
         }
 
-        // Detect whether our service is the currently active live wallpaper
-        // for the given target surface.
+        // Detect whether our service is the currently active live wallpaper.
         //
-        // Direct query: home uses WallpaperManager.getWallpaperInfo() (API 14+);
-        // lock requires WallpaperManager.getWallpaperInfo(int) which is only
-        // reliably available on API 34+ via reflection.
+        // Strategy: direct query is ADDITIVE (positive proof only). If
+        // WallpaperManager.getWallpaperInfo()?.component matches our service
+        // we're definitely bound and we cache it. Otherwise we fall back to
+        // the SharedPreferences cache populated by markBound after every
+        // successful applyWallpaper intent.
         //
-        // SharedPreferences fallback: every successful direct query updates
-        // the cache so subsequent calls can fall back to it when Samsung's
-        // One UI returns null from the direct API (observed on Z Fold 6).
-        // Plus markBound writes to the cache after every applyWallpaper
-        // intent, so users who reach the system preview at least once can
-        // skip it on subsequent taps even if direct query is unreliable.
+        // Why we don't use a negative direct result to invalidate the cache:
+        // Samsung One UI on the Z Fold 6 returns the SystemUI ImageWallpaper
+        // wrapper from getWallpaperInfo() even when our service is the actual
+        // active wallpaper (verified via dumpsys mLastWallpaper.mInfo.
+        // component). Trusting the direct call's negative result would lock
+        // the user back into Samsung's system preview on every Set tap.
         private fun isAlreadyBound(target: String, expected: ComponentName): Boolean {
             val wm = WallpaperManager.getInstance(activity)
             val direct: ComponentName? = when {
@@ -211,10 +212,9 @@ class MainActivity : Activity() {
                 else -> null
             }
             val prefs = activity.getSharedPreferences("slss.bind_state", Context.MODE_PRIVATE)
-            if (direct != null) {
-                val bound = (direct == expected)
-                prefs.edit().putBoolean("bound_$target", bound).apply()
-                return bound
+            if (direct == expected) {
+                prefs.edit().putBoolean("bound_$target", true).apply()
+                return true
             }
             return prefs.getBoolean("bound_$target", false)
         }
