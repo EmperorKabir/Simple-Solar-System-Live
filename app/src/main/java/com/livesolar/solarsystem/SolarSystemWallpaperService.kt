@@ -1,12 +1,8 @@
 package com.livesolar.solarsystem
 
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.Looper
 import android.service.wallpaper.WallpaperService
@@ -45,29 +41,6 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
             }
         }
 
-        // Listen for display add/remove/change events (fold ↔ unfold on the
-        // Z Fold, dock connect/disconnect, external display attach, etc.).
-        // When a display change happens we enqueue a refresh for every
-        // active widget so the cover/inner-display launchers stop showing
-        // stale bitmaps. The wallpaper service itself is always alive while
-        // a wallpaper is applied, so this listener gives reliable fold
-        // detection without spinning up a foreground service of our own.
-        private val displayManager by lazy {
-            applicationContext.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-        }
-        private val displayListener = object : DisplayManager.DisplayListener {
-            override fun onDisplayAdded(displayId: Int) = triggerWidgetRefresh()
-            override fun onDisplayRemoved(displayId: Int) = triggerWidgetRefresh()
-            override fun onDisplayChanged(displayId: Int) = triggerWidgetRefresh()
-        }
-
-        override fun onCreate(surfaceHolder: SurfaceHolder?) {
-            super.onCreate(surfaceHolder)
-            try {
-                displayManager.registerDisplayListener(displayListener, handler)
-            } catch (_: Throwable) { /* defensive: device may not support DisplayManager */ }
-        }
-
         override fun onSurfaceChanged(holder: SurfaceHolder?, format: Int, w: Int, h: Int) {
             super.onSurfaceChanged(holder, format, w, h)
             widthPx = w; heightPx = h
@@ -99,22 +72,9 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         }
 
         override fun onDestroy() {
-            try { displayManager.unregisterDisplayListener(displayListener) } catch (_: Throwable) {}
             handler.removeCallbacks(refreshRunnable)
             lastBitmap = null
             super.onDestroy()
-        }
-
-        // Enqueue an expedited widget render for every currently-bound widget.
-        // Works through SolarSystemAppWidgetProvider.scheduleWidget so it
-        // shares the setExpedited() path that bypasses Freecess/Doze.
-        private fun triggerWidgetRefresh() {
-            val mgr = AppWidgetManager.getInstance(applicationContext)
-            val provider = ComponentName(applicationContext, SolarSystemAppWidgetProvider::class.java)
-            val widgetIds = mgr.getAppWidgetIds(provider)
-            for (id in widgetIds) {
-                SolarSystemAppWidgetProvider.scheduleWidget(applicationContext, id, runImmediately = true)
-            }
         }
 
         private fun currentParams(): String =

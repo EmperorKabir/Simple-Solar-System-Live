@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Bundle
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.PeriodicWorkRequestBuilder
@@ -53,11 +54,22 @@ class SolarSystemAppWidgetProvider : AppWidgetProvider() {
                 // (e.g. just after a fold/unfold or settings change). Falls
                 // back to a non-expedited request if the system's expedited
                 // quota is exhausted, so we never lose the refresh entirely.
+                //
+                // enqueueUniqueWork(REPLACE) coalesces concurrent enqueues for
+                // the same widget — a flurry of rapid-fire refresh triggers
+                // (resize events, settings spam, etc.) collapses to a single
+                // pending render instead of spawning N concurrent
+                // VirtualDisplays, which OEM systems can refuse with a null
+                // return that previously NPEd the process.
                 val once = OneTimeWorkRequestBuilder<SolarSystemWidgetWorker>()
                     .setInputData(data)
                     .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                     .build()
-                WorkManager.getInstance(context).enqueue(once)
+                WorkManager.getInstance(context).enqueueUniqueWork(
+                    "widget-refresh-once-$appWidgetId",
+                    ExistingWorkPolicy.REPLACE,
+                    once
+                )
             }
         }
     }

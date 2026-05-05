@@ -61,16 +61,31 @@ object WebViewBitmapRenderer {
         val app = context.applicationContext
         val handler = Handler(Looper.getMainLooper())
         var done = false
+        val tStart = android.os.SystemClock.elapsedRealtime()
+        Log.i(TAG, "DIAG render start ${widthPx}x${heightPx} surface=${urlParams}")
 
         val imageReader = ImageReader.newInstance(widthPx, heightPx, PixelFormat.RGBA_8888, 2)
         val displayManager = app.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
         val density = app.resources.displayMetrics.densityDpi
-        val virtualDisplay: VirtualDisplay = displayManager.createVirtualDisplay(
+        // createVirtualDisplay returns null when the system is out of
+        // resources (concurrent VD count limit, surface flinger pressure,
+        // OEM throttling). The Kotlin signature here was non-null which
+        // crashed the app process on null with java.lang.NullPointerException
+        // and triggered an immediate crash loop because the failed widget
+        // worker re-fires WorkManager jobs on app restart. Treat as a
+        // recoverable failure — log + cleanup + return null bitmap so the
+        // launcher keeps the previous cached bitmap instead of force-closing.
+        val virtualDisplay: VirtualDisplay? = displayManager.createVirtualDisplay(
             "SolarRenderer-${System.nanoTime()}",
             widthPx, heightPx, density,
             imageReader.surface,
             DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY
         )
+        if (virtualDisplay == null) {
+            Log.w(TAG, "createVirtualDisplay returned null — system out of resources, skipping render")
+            try { imageReader.close() } catch (_: Throwable) {}
+            onResult(null); return
+        }
 
         val presentation = try {
             val p = Presentation(app, virtualDisplay.display)
@@ -96,6 +111,7 @@ object WebViewBitmapRenderer {
         val bridge = SnapshotBridge { json ->
             if (done) return@SnapshotBridge
             done = true
+            Log.i(TAG, "DIAG snapshot received t=${android.os.SystemClock.elapsedRealtime() - tStart}ms chars=${json.length}")
             handler.post {
                 var bm: Bitmap? = null
                 try {
@@ -104,6 +120,7 @@ object WebViewBitmapRenderer {
                     Log.w(TAG, "compose failed", t)
                 } finally {
                     cleanup()
+                    Log.i(TAG, "DIAG bitmap done t=${android.os.SystemClock.elapsedRealtime() - tStart}ms")
                     onResult(bm)
                 }
             }
