@@ -785,6 +785,15 @@
             const v = parseFloat(_surfaceParams.get('offsetY') || '0');
             return Number.isFinite(v) ? Math.min(0.7, Math.max(0, v)) : 0;
         })();
+        // F1: texture downscale factor for surface (widget/wallpaper) modes.
+        // Source planet textures (up to 8192x4096 RGBA = 128 MB GPU mem each)
+        // overflow the chromium WebView tile-memory budget and OOM-kill the
+        // renderer process when used in widgets/live wallpapers. Downscaling
+        // by 4x (16x memory reduction) at upload time keeps total texture
+        // memory under ~50 MB in surface mode while leaving the main app at
+        // full source resolution. Visual quality at widget render sizes
+        // (~660 px wide) is indistinguishable from full-res.
+        const TEX_DOWNSCALE = (SURFACE === 'main') ? 1 : 4;
         const CAMERA_TILT = (() => {
             const v = parseFloat(_surfaceParams.get('tilt') || '0');
             return Number.isFinite(v) ? Math.min(0.7, Math.max(0, v)) : 0;
@@ -1315,7 +1324,26 @@
             texLoadPromises.push(new Promise((resolve) => {
                 tex[k] = tLoad.load(
                     urls[k],
-                    () => resolve(),                  // onLoad
+                    (loaded) => {
+                        // F1 downscale: in surface mode shrink the decoded
+                        // image before GPU upload to stay within chromium's
+                        // tile-memory budget. Main app keeps full resolution.
+                        if (TEX_DOWNSCALE > 1 && loaded.image && loaded.image.width > 0) {
+                            try {
+                                const w = Math.max(1, Math.floor(loaded.image.width  / TEX_DOWNSCALE));
+                                const h = Math.max(1, Math.floor(loaded.image.height / TEX_DOWNSCALE));
+                                const cv = (typeof OffscreenCanvas !== 'undefined')
+                                    ? new OffscreenCanvas(w, h)
+                                    : Object.assign(document.createElement('canvas'), { width: w, height: h });
+                                cv.getContext('2d').drawImage(loaded.image, 0, 0, w, h);
+                                loaded.image = cv;
+                                loaded.needsUpdate = true;
+                            } catch (e) {
+                                console.warn('F1 downscale failed for', urls[k], e);
+                            }
+                        }
+                        resolve();
+                    },
                     undefined,                        // onProgress (unused)
                     () => resolve()                   // onError → still resolve so one bad texture can't freeze the loader
                 );

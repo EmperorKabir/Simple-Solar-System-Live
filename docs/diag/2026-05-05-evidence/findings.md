@@ -58,5 +58,34 @@
 - **F4 — Force WebView large-heap** — declare `android:largeHeap="true"` on the application (one-line manifest change). Mitigation, not a fix; doesn't touch chromium tile budget.
 
 ### Open questions for user
-- Approve any of F1–F4 as the Phase 6 strategy, or different approach?
-- Does the user permit app/JS-side texture handling changes (F1, F2, F3)? They said no to file-level downscaling, but in-app runtime downscaling is different.
+- ~~Approve any of F1–F4 as the Phase 6 strategy~~ — **F1 + F4 approved 2026-05-05; F3 deferred.**
+- ~~Does the user permit app/JS-side texture handling changes~~ — **Confirmed: app/JS-side allowed; texture *files* still untouched.**
+
+---
+
+## P0-PRELUDE — F1 + F4 OOM mitigation (applied before re-running Phase 0)
+
+User decision: implement F1 + F4 first, then restart Phase 0 from beginning so all subsequent evidence is captured against an OOM-safe build.
+
+### F4 — Manifest largeHeap
+- File: `app/src/main/AndroidManifest.xml` line 11
+- Change: added `android:largeHeap="true"` on the `<application>` tag
+- Effect: requests larger Android Java/Kotlin heap; does not affect chromium tile pool but mitigates non-chromium bitmap pressure
+
+### F1 — Runtime texture downscale in surface mode
+- File: `app/src/main/assets/index.html`
+- Lines: ~796 (TEX_DOWNSCALE constant), ~1331 (downscale branch in loader callback)
+- Logic: `TEX_DOWNSCALE = (SURFACE === 'main') ? 1 : 4`
+  - Main app: full resolution preserved (no behavioural change)
+  - Widget/wallpaper: each texture downscaled 4× per axis = 16× memory reduction before GPU upload
+- Implementation: in the `tLoad.load` onLoad callback, replace `loaded.image` with an OffscreenCanvas-rendered smaller copy (fallback to regular canvas if OffscreenCanvas unavailable), then `loaded.needsUpdate = true` to trigger re-upload
+- Estimated memory after: ~10 MB total textures in surface mode (was ~700+ MB)
+- Build status: APK built 02:57:22, installed via `adb install -r` → "Success"
+
+### Re-test plan (begin Phase 0 from start)
+- P0-A widget unfolded — expect NO chromium tile-mem warnings, NO renderer kill
+- P0-B widget folded — same
+- P0-C/D wallpapers — same
+- P0-E perf log — expect cold-start render time ≤ 4 s (vs prior ~10 s)
+- P0-F white-bg repro — expect symptom GONE (renderer no longer dies → no white fallback)
+- P0-G tilt matrix — capture screencaps as before

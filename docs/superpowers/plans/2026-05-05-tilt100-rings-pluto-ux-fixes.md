@@ -45,6 +45,17 @@
 
 ---
 
+## Phase 0-PRELUDE — F1 + F4 OOM mitigation (COMPLETED 2026-05-05)
+
+> Phase 0.A discovered chromium WebView OOM-kill caused by oversized planet textures (5 textures @ 8192×4096 RGBA = 640 MB). User approved F1 + F4 to be applied BEFORE Phase 0 evidence gathering, so Phase 0 captures evidence against an OOM-safe build.
+
+- [x] F4 — `android:largeHeap="true"` on `<application>` in `AndroidManifest.xml`
+- [x] F1 — `TEX_DOWNSCALE = SURFACE === 'main' ? 1 : 4` + OffscreenCanvas downscale in texture loader callback
+- [x] Build + install: APK 02:57:22 → adb install Success
+- [x] Commit + push (see commit log)
+
+---
+
 ## Phase 0 — Device evidence baseline (NO production code)
 
 > **Goal:** capture ground truth for every reported symptom. Output: `docs/diag/2026-05-05-evidence/` with logs + PNGs + a findings markdown. After this phase, plan tasks 1–9 may be re-ordered or dropped if evidence contradicts assumptions.
