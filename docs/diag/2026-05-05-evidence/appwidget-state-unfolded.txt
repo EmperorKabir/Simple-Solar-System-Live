@@ -1,0 +1,92 @@
+﻿
+>   [329] provider ProviderId{user:0, app:10567, cmp:ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}
+      min=(71681x71681)   minResize=(46081x46081) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0b0029 
+initialKeyguardLayout=#0   zombie=false
+      masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+   
+  Widgets:
+    [0] id=40
+      host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+      provider=ProviderId{user:0, app:10383, cmp:ComponentInfo{com.openai.chatgpt/com.openai.feature.widget.WidgetReceiver}}
+      host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@ddd249e
+>     provider=ProviderId{user:0, app:10567, cmp:ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}
+      host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@ddd249e
+      views=android.widget.RemoteViews@296716
+      options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=0.71428573, appWidgetMaxHeight=553, semAppWidgetRowSpan=4, appWidgetCategory=1, 
+semAppWidgetColumnSpan=4, hsMode=OneUI, appWidgetMaxWidth=340, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=553, semWidgetSize=8, 
+semDisplayDensity=1.94375, semWidgetStyle=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=340, semHostType=1, 
+hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[340.0643x553.0546]}]
+   
+  Hosts:
+    [0] hostId=HostId{user:0, app:10153, hostId:1024, pkg:com.sec.android.app.launcher}
+      callbacks=null
+      widgets.size=3 zombie=false
+>   [05-05 01:48:51.445] getInstalledProvidersForProfiles 10567 com.livesolar.solarsystem t:0 r:0
+    [05-05 01:49:34.425] getInstalledProvidersForProfiles 10153 com.sec.android.app.launcher t:0 r:0
+    [05-05 01:49:34.430] getInstalledProvidersForProfiles 10153 null t:0 r:0
+    [05-05 01:49:34.510] getInstalledProvidersForProfiles 10153 null t:11 r:0
+    [05-05 01:49:34.925] getInstalledProvidersForProfiles 10153 com.sec.android.app.launcher t:0 r:0
+    [05-05 01:49:35.336] getInstalledProvidersForProfiles 10428 com.fitbit.FitbitMobile t:0 r:0
+    [05-05 01:49:35.986] getInstalledProvidersForProfiles 10133 com.samsung.android.smartsuggestions t:0 r:0
+    [05-05 01:49:36.571] getInstalledProvidersForProfiles 10396 com.whatsapp t:0 r:0
+    [05-05 01:49:36.643] getInstalledProvidersForProfiles 10492 jp.co.johospace.jorte t:0 r:0
+>   [05-05 01:50:56.019] getInstalledProvidersForProfiles 10567 com.livesolar.solarsystem t:0 r:0
+    [05-05 01:51:28.940] getInstalledProvidersForProfiles 10428 com.fitbit.FitbitMobile t:1 r:0
+    [05-05 01:51:30.544] getInstalledProvidersForProfiles 10425 com.surfshark.vpnclient.android t:1 r:0
+    [05-05 01:51:30.586] getInstalledProvidersForProfiles 10415 com.bose.bosemusic t:0 r:0
+    [05-05 01:51:40.501] getInstalledProvidersForProfiles 10122 com.samsung.android.app.contacts t:0 r:0
+    [05-05 01:51:40.626] getInstalledProvidersForProfiles 10124 com.samsung.android.dialer t:1 r:0
+    [05-05 01:51:40.811] getInstalledProvidersForProfiles 10133 com.samsung.android.smartsuggestions t:0 r:0
+    [05-05 01:52:55.123] getInstalledProvidersForProfiles 10428 com.fitbit.FitbitMobile t:1 r:0
+    [05-05 01:52:55.500] getInstalledProvidersForProfiles 10415 com.bose.bosemusic t:0 r:0
+>   [05-05 02:03:46.557] getInstalledProvidersForProfiles 10567 com.livesolar.solarsystem t:0 r:0
+    [05-05 02:07:57.946] getInstalledProvidersForProfiles 10349 com.alarmclock.xtreme.free t:0 r:0
+    [05-05 02:09:37.547] getInstalledProvidersForProfiles 10153 com.powermediaplayer t:1 r:0
+    [05-05 02:13:07.221] getInstalledProvidersForProfiles 10153 com.powermediaplayer t:0 r:0
+    [05-05 02:14:13.335] getInstalledProvidersForProfiles 10547 app.symfonik.music.player t:0 r:0
+    [05-05 02:14:15.604] getInstalledProvidersForProfiles 10512 app.revanced.android.youtube t:0 r:0
+    [05-05 02:14:16.003] getInstalledProvidersForProfiles 10302 com.google.android.youtube t:0 r:0
+    [05-05 02:19:44.605] getInstalledProvidersForProfiles 10287 com.android.chrome t:1 r:1
+    [05-05 02:28:36.785] getInstalledProvidersForProfiles 10282 com.google.android.googlequicksearchbox t:1 r:0
+>   [05-05 02:34:41.654] getInstalledProvidersForProfiles 10567 com.livesolar.solarsystem t:1 r:0
+    [05-05 02:34:43.758] getInstalledProvidersForProfiles 10302 com.google.android.youtube t:0 r:0
+    [05-05 02:35:59.679] getInstalledProvidersForProfiles 10492 jp.co.johospace.jorte t:0 r:0
+    [05-05 02:36:00.148] getInstalledProvidersForProfiles 10239 com.sec.android.daemonapp t:1 r:0
+    [05-05 02:36:00.201] getInstalledProvidersForProfiles 10239 com.sec.android.daemonapp t:1 r:0
+    [05-05 02:36:06.668] setTemplateWidgetPreview 10239 t:1
+    [05-05 02:36:06.770] getInstalledProvidersForProfiles 10153 null t:1 r:0
+    [05-05 02:36:06.784] getInstalledProvidersForProfiles 10153 null t:0 r:0
+    [05-05 02:36:07.096] setTemplateWidgetPreview 10239 t:0
+>   [05-05 02:46:59.397] getInstalledProvidersForProfiles 10567 com.livesolar.solarsystem t:0 r:0
+    [05-05 01:44:09.495] setTemplateWidgetPreview 10239 t:0
+    [05-05 01:45:23.936] getInstalledProvidersForProfiles 10492 jp.co.johospace.jorte t:0 r:0
+    [05-05 01:46:42.645] getInstalledProvidersForProfiles 10301 com.google.android.apps.maps t:0 r:0
+    [05-05 01:48:02.122] getInstalledProvidersForProfiles 10153 null t:1 r:0
+    [05-05 01:48:02.143] getInstalledProvidersForProfiles 10153 null t:1 r:0
+>   [05-05 01:48:09.690] getInstalledProvidersForProfiles 10567 com.livesolar.solarsystem t:0 r:0
+   
+  AppWidget alarm history:
+>   [05-04 22:38:02.730] cancel =Provider{ProviderId{user:0, app:10567, 
+cmp:ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}}
+>   [05-04 22:40:54.097] add =Provider{ProviderId{user:0, app:10567, 
+cmp:ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}}
+>   [05-05 01:36:46.218] cancel =Provider{ProviderId{user:0, app:10567, 
+cmp:ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}}
+>   [05-05 01:48:09.681] add =Provider{ProviderId{user:0, app:10567, 
+cmp:ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}}
+>   [05-05 02:46:48.105] cancel =Provider{ProviderId{user:0, app:10567, 
+cmp:ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}}
+>   [05-05 02:46:59.388] add =Provider{ProviderId{user:0, app:10567, 
+cmp:ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}}
+>   [05-04 22:37:16.504] add =Provider{ProviderId{user:0, app:10567, 
+cmp:ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}}
+   
+  AppWidget restore history:
+  
+  
+   
+  AppWidget last read provider info time:
+      startTime=74753704
+      endTime=74753704
+
+
