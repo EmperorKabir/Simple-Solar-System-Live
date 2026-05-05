@@ -889,16 +889,17 @@
         labelRenderer.domElement.style.zIndex = '5';
         document.body.appendChild(labelRenderer.domElement);
 
-        // Surface-mode camera-offset positioning. The actual wallpaper
-        // bitmap render is composited in Kotlin, which lays the WebGL
-        // scene + labels into the BOTTOM (1 - offsetY) of the bitmap.
-        // For the in-app live preview iframe (which loads index.html
-        // directly), we replicate that visually by translating both the
-        // WebGL canvas and the label container down by offsetY * height.
-        // Without this, the preview iframe shows scene+labels at top with
-        // empty space at the bottom — the opposite of what the user sees
-        // in the actual wallpaper.
+        // Surface-mode camera-offset positioning. ONLY applied when this
+        // page is loaded as a picker preview iframe (?preview=on). The
+        // actual wallpaper bitmap render path (no preview param) leaves
+        // the WebGL canvas + labels at top:0 because Kotlin's native
+        // compositor adds the offsetY band itself when laying the bitmap.
+        // Applying the CSS transform on the bitmap path would double-
+        // offset labels (Kotlin would see getBoundingClientRect returning
+        // y + offsetPx, then add offsetPx again).
+        const IS_PREVIEW = (_surfaceParams.get('preview') === 'on');
         function _applySurfaceOffset() {
+            if (!IS_PREVIEW) return;
             if (CAMERA_OFFSET_Y <= 0) return;
             const offsetPx = window.innerHeight * CAMERA_OFFSET_Y;
             renderer.domElement.style.transform = `translateY(${offsetPx}px)`;
@@ -2018,7 +2019,8 @@
                     offsetY: String(v.offsetY),
                     tilt:    String(v.tilt),
                     labels:  v.labels ? 'on' : 'off',
-                    pluto:   v.hidePluto ? 'off' : 'on'
+                    pluto:   v.hidePluto ? 'off' : 'on',
+                    preview: 'on'
                 });
                 const onLoad = () => {
                     if (loading) loading.classList.add('hidden');
