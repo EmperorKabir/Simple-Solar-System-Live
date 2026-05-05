@@ -89,3 +89,46 @@ User decision: implement F1 + F4 first, then restart Phase 0 from beginning so a
 - P0-E perf log — expect cold-start render time ≤ 4 s (vs prior ~10 s)
 - P0-F white-bg repro — expect symptom GONE (renderer no longer dies → no white fallback)
 - P0-G tilt matrix — capture screencaps as before
+
+---
+
+## P0-A POST-FIX — Widget unfolded with F1+F4 applied
+
+### Evidence captured
+- Screencap: `widget-postfix-unfolded.png` (2.7 MB, pulled 02:59:xx)
+- Logcat: `widget-render-unfolded-postfix.log` (4.8 MB)
+- Meminfo: `meminfo-postfix-unfolded.txt`
+
+### App process state — ALIVE (was dead pre-fix)
+- pid 26051 alive
+- Java Heap PSS: 16.5 MB (modest)
+- Native Heap PSS: 46.8 MB
+- **GL mtrack PSS: 1353 MB** (high — see "Open issue 1" below)
+- 7 WebViews currently allocated in this process
+
+### User-reported visual state
+- "much faster" — render time perceptibly fast (vs prior ~10 s)
+- "labels look ok" — text rendering fine
+- "orbital rings invisible" — EXPECTED (commit 2af317e gates rings off in surface mode; Phase 2 will restore)
+
+### Logcat findings
+- ✅ NO `Renderer process crash detected` lines after the fix install
+- ✅ NO `kill (OOM or update)` lines after the fix install
+- ⚠️ Tile-memory warnings STILL FIRE (4× at 02:59:33, 02:59:42, 02:59:45, 02:59:48):
+  ```
+  E chromium: [ERROR:cc/tiles/tile_manager.cc:1001] WARNING: tile memory limits exceeded, some content may not draw
+  ```
+- These are warnings, not fatal — content may render incomplete but renderer no longer dies.
+
+### Open issues post-fix
+1. **GL mtrack 1.35 GB across 7 WebViews** — main app keeps full-res textures (correct; main mode TEX_DOWNSCALE=1) but 7 WebViews alive simultaneously suggests a lifecycle leak. Candidates: home wallpaper service + lock wallpaper service + widget worker(s) + main activity each holding a WebView. Worth investigating in Phase 6 if perf evidence demands.
+2. **Tile-memory warnings still fire** — F1 reduces but does not eliminate. Causes (in priority of likelihood):
+   - (a) Multiple WebViews competing for the same chromium tile pool (issue 1).
+   - (b) Brief window between full-res HTTP fetch and OffscreenCanvas resize where chromium's image cache holds the full-size decoded image transiently.
+   - (c) F1 downscale factor of 4 is insufficient; 8 or 16 would silence warnings but reduce widget visual fidelity.
+3. **Rings invisible** — expected, addressed in Phase 2.
+
+### Verdict
+- **Crash gone. Crash kill gone. App survives.** Primary objective of F1+F4 achieved.
+- Functional: yes (user reports faster render, labels visible).
+- Optimal: no — warnings still fire. Defer tightening to Phase 6 once full Phase 0 evidence is in.
