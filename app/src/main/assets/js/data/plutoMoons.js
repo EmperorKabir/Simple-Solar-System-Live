@@ -9,16 +9,21 @@
 //
 // N is mean motion in deg/day (×86400 from Horizons deg/sec).
 
+// OM_DOT, W_DOT secular precession rates (deg/day) numerically differenced
+// from JPL Horizons APX. Source: tools/fetch-precession-rates.mjs. Charon
+// is tidally locked with Pluto so rates are essentially zero.
 export const charon = {
     name: "Charon",
     epochJD: 2461163.5,
     EC: 0.0001604746776573028,
     A:  19595.76434643345,
-    IN: 112.8877911728154,           // Pluto-Charon system tilted ~120° to ecliptic
+    IN: 112.8877911728154,
     OM: 227.3930395445249,
     W:  172.5956815300551,
     MA: 111.6556458484565,
-    N:  56.36253361417249
+    N:  56.36253361417249,
+    OM_DOT: 0.000000,
+    W_DOT:  -0.001671
 };
 
 export default { charon };

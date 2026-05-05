@@ -11,6 +11,9 @@
 // IMPORTANT: ecliptic-J2000 frame — caller attaches to un-tilted planet pivot.
 // N is mean motion in deg/day (×86400 from Horizons deg/sec).
 
+// OM_DOT, W_DOT secular precession rates (deg/day) numerically differenced
+// from JPL Horizons APX OSCULATING ELEMENTS at JD 2461163.5 vs 2461193.5
+// (30-day baseline). Source: tools/fetch-precession-rates.mjs.
 export const miranda = {
     name: "Miranda",
     epochJD: 2461163.5,
@@ -20,7 +23,9 @@ export const miranda = {
     OM: 163.2805357770969,
     W:  59.10146622591670,
     MA: 205.8387488086251,
-    N:  254.6943243447271
+    N:  254.6943243447271,
+    OM_DOT: -0.000827,
+    W_DOT:  -0.330436
 };
 
 export const ariel = {
@@ -32,7 +37,9 @@ export const ariel = {
     OM: 167.6652144293958,
     W:  260.7978979682528,
     MA: 41.96926855004741,
-    N:  142.8161527602701
+    N:  142.8161527602701,
+    OM_DOT: 0.000005,
+    W_DOT:  -1.008708
 };
 
 export const umbriel = {
@@ -44,7 +51,9 @@ export const umbriel = {
     OM: 167.7246897322290,
     W:  69.51767860812087,
     MA: 164.9298842430356,
-    N:  86.84814831584738
+    N:  86.84814831584738,
+    OM_DOT: 0.000003,
+    W_DOT:  -0.238749
 };
 
 export const titania = {
@@ -56,7 +65,9 @@ export const titania = {
     OM: 167.6428574212894,
     W:  281.1580482320147,
     MA: 293.9071757910803,
-    N:  41.34054443521452
+    N:  41.34054443521452,
+    OM_DOT: 0.000006,
+    W_DOT:  -0.556127
 };
 
 export const oberon = {
@@ -68,7 +79,9 @@ export const oberon = {
     OM: 167.7091244460571,
     W:  177.8617275524585,
     MA: 323.3754741281617,
-    N:  26.73091383398796
+    N:  26.73091383398796,
+    OM_DOT: -0.000006,
+    W_DOT:  -0.647681
 };
 
 export default { miranda, ariel, umbriel, titania, oberon };

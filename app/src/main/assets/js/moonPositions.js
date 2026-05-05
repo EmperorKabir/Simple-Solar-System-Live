@@ -142,9 +142,15 @@ function eclipticKeplerMoon(el, mc, jde, hostVSOP) {
     const xo = r * Math.cos(v);
     const yo = r * Math.sin(v);
 
-    // Apply ecliptic-J2000 orientation (Ω, ω, i).
-    const N   = el.OM * D2R;
-    const w   = el.W  * D2R;
+    // Apply ecliptic-J2000 orientation (Ω, ω, i) WITH secular precession
+    // rates Ω̇, ω̇ from JPL Horizons APX (data files now include OM_DOT
+    // and W_DOT in deg/day). For moons in low orbits around oblate planets
+    // (Phobos at Mars, Galilean tidally-locked nodes, Triton retrograde),
+    // these rates are non-trivial — Phobos ω̇ ≈ 0.42°/day means ω drifts
+    // 314° over 2 years if not modelled. Inclination i is treated as
+    // static (planetary obliquity changes negligible over years).
+    const N   = (el.OM + (el.OM_DOT || 0) * dt) * D2R;
+    const w   = (el.W  + (el.W_DOT  || 0) * dt) * D2R;
     const inc = el.IN * D2R;
     const cN = Math.cos(N), sN = Math.sin(N);
     const cw = Math.cos(w), sw = Math.sin(w);

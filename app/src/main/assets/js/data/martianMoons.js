@@ -9,16 +9,22 @@
 //
 // N is mean motion in deg/day (converted from Horizons deg/sec by ×86400).
 
+// OM_DOT, W_DOT secular precession rates (deg/day) numerically differenced
+// from JPL Horizons APX OSCULATING ELEMENTS at JD 2461163.5 vs 2461193.5
+// (30-day baseline). Source: tools/fetch-precession-rates.mjs run output
+// at docs/diag/2026-05-05-moon-investigation/21-precession-rates.txt.
 export const phobos = {
     name: "Phobos",
     epochJD: 2461163.5,
     EC: 0.01481846725526823,
-    A:  9377.779964923571,           // semi-major axis (km)
-    IN: 26.48223316520042,           // inclination to ecliptic-J2000 (deg)
-    OM: 80.50439440676719,           // longitude of ascending node (deg)
-    W:  213.2600226478119,           // argument of pericenter (deg)
-    MA: 157.3773285122747,           // mean anomaly at epoch (deg)
-    N:  1128.111738894016            // mean motion (deg/day)
+    A:  9377.779964923571,
+    IN: 26.48223316520042,
+    OM: 80.50439440676719,
+    W:  213.2600226478119,
+    MA: 157.3773285122747,
+    N:  1128.111738894016,
+    OM_DOT: 0.005387,
+    W_DOT:  0.421443
 };
 
 export const deimos = {
@@ -30,7 +36,9 @@ export const deimos = {
     OM: 81.32564459730487,
     W:  41.37149794352102,
     MA: 167.4777341880778,
-    N:  285.1238812062207
+    N:  285.1238812062207,
+    OM_DOT: 0.000479,
+    W_DOT:  0.183838
 };
 
 export default { phobos, deimos };
