@@ -2106,12 +2106,13 @@
                     // Bridge returns true when our service is already the
                     // active wallpaper — settings persist via _wpSave above
                     // and the service's onVisibilityChanged polling picks
-                    // them up. We dismiss the modal directly, skipping
-                    // Samsung's system preview screen.
-                    const alreadyBound = window.WallpaperPicker.applyWallpaper(target);
-                    if (alreadyBound) {
-                        _wpDismissModal();
-                    }
+                    // them up. The native side fires a Toast confirmation
+                    // ('Home screen changed' / 'Lock screen changed') in
+                    // both branches; we leave the modal open per user
+                    // preference so they can keep adjusting either surface
+                    // without having to reopen the picker. Dismissal is
+                    // explicit via the Close button or outside-click.
+                    window.WallpaperPicker.applyWallpaper(target);
                 }
             });
         });
