@@ -66,7 +66,16 @@
       "mcp__context7__resolve-library-id",
       "mcp__context7__query-docs"
     ],
-    "deny": [],
+    "deny": [
+      "Read(**/assets/textures/**)",
+      "Read(**/build/intermediates/assets/**)",
+      "Read(**/.gradle-local/**)",
+      "Read(**/.gradle/**)",
+      "Read(**/*.png)",
+      "Read(**/*.jpg)",
+      "Read(**/*.jpeg)",
+      "Read(**/*.webp)"
+    ],
     "defaultMode": "acceptEdits"
   }
 }
