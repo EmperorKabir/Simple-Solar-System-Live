@@ -232,6 +232,17 @@ class MainActivity : Activity() {
                 prefs.edit().putBoolean("bound_$target", bound).apply()
                 return bound
             }
+            // direct == null on the lock target means the lock surface has no
+            // live wallpaper bound (per AOSP: getWallpaperInfo(FLAG_LOCK) is
+            // null when the lock is a static image, follows home, or has
+            // never been set — the dominant case on Samsung One UI).
+            // The optimistic markBound("lock") cache was written when the
+            // preview INTENT launched, not when the user confirmed it, so it
+            // routinely lies after a force-stop / cold start. Mirror the home
+            // button's effective behaviour: if the system can't confirm our
+            // service is bound, force the preview rather than firing a fake
+            // 'Lock screen changed' toast.
+            if (target == "lock") return false
             return prefs.getBoolean("bound_$target", false)
         }
 
