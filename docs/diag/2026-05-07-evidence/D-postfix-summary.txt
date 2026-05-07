@@ -1,0 +1,23 @@
+D — post-fix verification (2026-05-07)
+======================================
+
+Build: app-diagnostic.apk (commit d8a9e05 — D fix applied)
+Device: Samsung Z Fold 6 (RFCY70BARDJ)
+Test sequence: launch app → user folded → user unfolded
+Logcat: docs/diag/2026-05-07-evidence/D-postfix-logcat.log (6.8 MB)
+
+Acceptance criteria:
+[x] PASS — Zero 'finishDrawing of relaunch' events (pre-fix: 4 events)
+[x] PASS — Zero new SurfaceFlinger surface creations for MainActivity
+           (pre-fix: 5 distinct surface IDs across 1 fold+unfold)
+[x] PASS — Same VRI hash @e1cfeea, same PID 15941 across all events
+[x] PASS — Frame transitions detected via handleResized + configChanged=true:
+           [2520,1080] → [1080,2520] → [1968,2184] → [2184,1968]
+           Same activity instance handled all four resizes via the manifest
+           configChanges + onConfigurationChanged path.
+
+Visual continuity: pending user confirmation.
+
+Verdict: D FIX VERIFIED. Activity preserved across fold/unfold; WebView state
+preserved. Camera position / time override / selected planet should all
+persist across folds (single MainActivity + WebView instance).
