@@ -2490,27 +2490,91 @@
         function calcResetView() {
             camera.fov = 45;
             camera.updateProjectionMatrix();
-            let maxDist = 0;
-            for(const [pName, pData] of Object.entries(planetsData)) {
-                if(pData.visualDist > maxDist && pName !== "Pluto") maxDist = pData.visualDist;
+
+            // Build the list of visible orbital ring sample points so we can
+            // compute a tight per-axis projected bounding box. Sampling 36
+            // points per ring captures inclination + node tilt accurately.
+            const visibleNames = [];
+            for (const pName of Object.keys(planetsData)) {
+                if (pName === 'Pluto' && !plutoEnabled) continue;
+                visibleNames.push(pName);
             }
-            if(plutoEnabled) maxDist = planetsData["Pluto"].visualDist;
-            const distRadius = maxDist * 1.1;
-            const vFOV = (Math.PI / 180.0) * camera.fov;
-            const hFOV = 2 * Math.atan(Math.tan(vFOV / 2) * camera.aspect);
-            const activeFOV = (camera.aspect < 1.0) ? hFOV : vFOV;
-            // Tighter framing in surface mode (no chrome competing for space).
-            const surfaceMargin = (SURFACE === 'main') ? 1.1 : 1.02;
-            const requiredDist = (distRadius * surfaceMargin) / Math.tan(activeFOV / 2);
-            // Camera tilt: 0 % = top-down (along +Y); 70 % = ~63° pitch toward
-            // the orbital plane. Look-at = origin, world up = +Y.
+
             const tiltAngleRad = CAMERA_TILT * Math.PI * 0.5;
             const cosT = Math.cos(tiltAngleRad);
             const sinT = Math.sin(tiltAngleRad);
-            camera.position.set(0, requiredDist * cosT, requiredDist * sinT);
+            // Camera direction (from origin) and screen-space basis.
+            const camDirUnit = new THREE.Vector3(0, cosT, sinT);
+            const upWorld = new THREE.Vector3(0, 1, 0);
+            // Right axis = camDir × up, then re-orthogonalised.
+            const rightUnit = new THREE.Vector3().crossVectors(camDirUnit, upWorld);
+            if (rightUnit.lengthSq() < 1e-6) rightUnit.set(1, 0, 0);
+            rightUnit.normalize();
+            const trueUpUnit = new THREE.Vector3().crossVectors(rightUnit, camDirUnit).normalize();
+
+            // Per-axis maximum offset of any visible orbital ring point from
+            // the origin, projected onto the camera's screen plane axes.
+            let maxScreenX = 0, maxScreenY = 0;
+            const _samp = new THREE.Vector3();
+            for (const name of visibleNames) {
+                const data = planetsData[name];
+                for (let i = 0; i < 36; i++) {
+                    const days = (i / 36) * (data.period * 365.25);
+                    const p = getOrbitPositionFast(data, days, true);
+                    _samp.set(p.x, p.y, p.z);
+                    const sx = Math.abs(_samp.dot(rightUnit));
+                    const sy = Math.abs(_samp.dot(trueUpUnit));
+                    if (sx > maxScreenX) maxScreenX = sx;
+                    if (sy > maxScreenY) maxScreenY = sy;
+                }
+            }
+
+            const surfaceMargin = (SURFACE === 'main') ? 1.10 : 1.04;
+            const vFOV = (Math.PI / 180.0) * camera.fov;
+            const hFOV = 2 * Math.atan(Math.tan(vFOV / 2) * camera.aspect);
+            // Required distance per axis: dist >= screenExtent / tan(halfFov).
+            // Take the max so both axes fit. This eliminates the slack the
+            // old "use the smaller FOV axis" approach left on the larger axis.
+            const requiredDistX = (maxScreenX * surfaceMargin) / Math.tan(hFOV / 2);
+            const requiredDistY = (maxScreenY * surfaceMargin) / Math.tan(vFOV / 2);
+            let requiredDist = Math.max(requiredDistX, requiredDistY);
+
+            camera.position.set(
+                camDirUnit.x * requiredDist,
+                camDirUnit.y * requiredDist,
+                camDirUnit.z * requiredDist
+            );
             controls.target.set(0, 0, 0);
             camera.up.set(0, 1, 0);
             camera.lookAt(0, 0, 0);
+
+            // F-A4 safety net: re-project visible rings into NDC; if any
+            // exceeds ±0.95, pull the camera further out by the violation
+            // ratio + 5% headroom. Catches edge cases where the analytical
+            // bbox underestimates the actual projected extent.
+            camera.updateProjectionMatrix();
+            camera.updateMatrixWorld();
+            const _projMat = new THREE.Matrix4().multiplyMatrices(
+                camera.projectionMatrix, camera.matrixWorldInverse
+            );
+            const _proj = new THREE.Vector3();
+            let maxNDC = 0;
+            for (const name of visibleNames) {
+                const data = planetsData[name];
+                for (let i = 0; i < 36; i++) {
+                    const days = (i / 36) * (data.period * 365.25);
+                    const p = getOrbitPositionFast(data, days, true);
+                    _proj.set(p.x, p.y, p.z).applyMatrix4(_projMat);
+                    const ndc = Math.max(Math.abs(_proj.x), Math.abs(_proj.y));
+                    if (ndc > maxNDC) maxNDC = ndc;
+                }
+            }
+            if (maxNDC > 0.95) {
+                const k = (maxNDC / 0.95) * 1.05;
+                camera.position.multiplyScalar(k);
+                requiredDist *= k;
+            }
+
             viewMode = "GALAXY";
             targetPlanet = null;
             lastResetCamDistance = requiredDist;
