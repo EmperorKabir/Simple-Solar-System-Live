@@ -7,6 +7,10 @@ android {
     namespace = "com.livesolar.solarsystem"
     compileSdk = 35
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.livesolar.solarsystem"
         minSdk = 31
@@ -47,6 +51,14 @@ android {
             if (releaseKeystoreExists) {
                 signingConfig = signingConfigs.getByName("release")
             }
+        }
+        create("diagnostic") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".diag"
+            versionNameSuffix = "-diag"
+            isDebuggable = true
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
     compileOptions {
