@@ -1,0 +1,1268 @@
+Providers:
+  [0] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.widgetapp.digitalclock.DigitalClockWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [1] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.widgetapp.digitalclock.DigitalClockIntegratedWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d01e9 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [2] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.app.clockpackage.alarmwidget.ClockAlarmWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [3] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.widgetapp.dualclockdigital.DualClockDigitalWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d01e9 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [4] provider ProviderId{user:0, app:10132, cmp:ComponentInfo{com.android.settings.intelligence/com.samsung.android.settings.intelligence.widget.GridTypeBatteryWidget}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c05ef initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [5] provider ProviderId{user:0, app:10287, cmp:ComponentInfo{com.android.chrome/org.chromium.chrome.browser.searchwidget.SearchWidgetProvider}}
+    min=(61441x12289)   minResize=(61441x12289) updatePeriodMillis=86400000 resizeMode=1 widgetCategory=5 autoAdvanceViewId=-1 initialLayout=#7f0e0389 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [6] provider ProviderId{user:0, app:10287, cmp:ComponentInfo{com.android.chrome/com.google.android.apps.chrome.appwidget.bookmarks.BookmarkThumbnailWidgetProvider}}
+    min=(46081x38401)   minResize=(16385x12289) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e00a1 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [7] provider ProviderId{user:0, app:10287, cmp:ComponentInfo{com.android.chrome/org.chromium.chrome.browser.quickactionsearchwidget.QuickActionSearchWidgetProvider$QuickActionSearchWidgetProviderDino}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0348 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [8] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.widgetapp.analogclock.AnalogClockWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d01e9 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [9] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.widgetapp.dualclockdigital.BaseAppDualClockWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d01e9 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [10] provider ProviderId{user:0, app:10132, cmp:ComponentInfo{com.android.settings.intelligence/com.samsung.android.settings.intelligence.widget.ListTypeBatteryWidget}}
+    min=(0x0)   minResize=(25601x23041) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0608 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [11] provider ProviderId{user:0, app:10287, cmp:ComponentInfo{com.android.chrome/org.chromium.chrome.browser.quickactionsearchwidget.QuickActionSearchWidgetProvider$QuickActionSearchWidgetProviderSearch}}
+    min=(66561x12289)   minResize=(66561x12289) updatePeriodMillis=0 resizeMode=3 widgetCategory=5 autoAdvanceViewId=-1 initialLayout=#7f0e034b initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [12] provider ProviderId{user:0, app:10132, cmp:ComponentInfo{com.android.settings.intelligence/com.samsung.android.settings.intelligence.widget.CoverArcWidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c05f1 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [13] provider ProviderId{user:0, app:10050, cmp:ComponentInfo{com.android.systemui/com.android.systemui.coverlauncher.widget.CoverLauncherLargeWidgetProvider}}
+    min=(191489x166401)   minResize=(191489x166401) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0d0619 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [14] provider ProviderId{user:0, app:10132, cmp:ComponentInfo{com.android.settings.intelligence/com.samsung.android.settings.intelligence.widget.GlanceListWidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c05f1 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [15] provider ProviderId{user:0, app:10280, cmp:ComponentInfo{com.android.vending/com.google.android.finsky.rubiks.cubes.widget.ContentForwardWidgetProvider}}
+    min=(32769x10241)   minResize=(32769x10241) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0028 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [16] provider ProviderId{user:0, app:10132, cmp:ComponentInfo{com.android.settings.intelligence/com.samsung.android.settings.intelligence.widget.CoverListWidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c05f1 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [17] provider ProviderId{user:0, app:10280, cmp:ComponentInfo{com.android.vending/com.google.android.finsky.rubiks.cubes.widget.CubesAppWidgetProvider}}
+    min=(32769x10241)   minResize=(32769x10241) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0028 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [18] provider ProviderId{user:0, app:10284, cmp:ComponentInfo{com.google.android.apps.bard/com.google.android.apps.bard.widget.RobinToolBarAppWidgetReceiver}}
+    min=(14337x14337)   minResize=(12289x12289) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0182 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [19] provider ProviderId{user:0, app:10301, cmp:ComponentInfo{com.google.android.apps.maps/com.google.android.apps.gmm.widget.SearchWidgetProvider}}
+    min=(56321x25601)   minResize=(40961x25601) updatePeriodMillis=43200000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e022a initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [20] provider ProviderId{user:0, app:10301, cmp:ComponentInfo{com.google.android.apps.maps/com.google.android.apps.gmm.widget.traffic.TrafficWidgetProvider}}
+    min=(56321x25601)   minResize=(35841x20481) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e0362 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [21] provider ProviderId{user:0, app:10289, cmp:ComponentInfo{com.google.android.apps.photos/com.google.android.apps.photos.widget.people.WidgetProviderPeoplePets}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0811 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [22] provider ProviderId{user:0, app:10300, cmp:ComponentInfo{com.google.android.gm/com.google.android.gm.widget.GmailWidgetProvider}}
+    min=(64001x28161)   minResize=(38401x28161) updatePeriodMillis=79200000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e0e43 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [23] provider ProviderId{user:0, app:10282, cmp:ComponentInfo{com.google.android.googlequicksearchbox/com.google.android.apps.gsa.staticplugins.smartspace.widget.SmartspaceWidgetProvider}}
+    min=(102401x12801)   minResize=(102401x12801) updatePeriodMillis=7200000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0502 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [24] provider ProviderId{user:0, app:10289, cmp:ComponentInfo{com.google.android.apps.photos/com.google.android.apps.photos.widget.WidgetProvider}}
+    min=(15361x25601)   minResize=(15361x25601) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e0811 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [25] provider ProviderId{user:0, app:10282, cmp:ComponentInfo{com.google.android.googlequicksearchbox/com.google.android.apps.search.widgets.stocks.StocksWidgetReceiver}}
+    min=(35841x23041)   minResize=(35841x23041) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e1120 initialKeyguardLayout=#7f0e1120   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [26] provider ProviderId{user:0, app:10282, cmp:ComponentInfo{com.google.android.googlequicksearchbox/com.google.android.googlequicksearchbox.SearchWidgetProvider}}
+    min=(71681x10241)   minResize=(20481x10241) updatePeriodMillis=0 resizeMode=1 widgetCategory=5 autoAdvanceViewId=-1 initialLayout=#7f0e0a73 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [27] provider ProviderId{user:0, app:10302, cmp:ComponentInfo{com.google.android.youtube/com.google.android.apps.youtube.app.widget.YtSearchWidgetProvider}}
+    min=(57345x12801)   minResize=(48641x12801) updatePeriodMillis=72000000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0072 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [28] provider ProviderId{user:0, app:10122, cmp:ComponentInfo{com.samsung.android.app.contacts/com.samsung.android.contacts.widget.CoverScreenWidgetProviderSmall}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [29] provider ProviderId{user:0, app:10282, cmp:ComponentInfo{com.google.android.googlequicksearchbox/com.google.android.apps.gsa.staticplugins.searchwidget.GoogleSearchWidgetProvider}}
+    min=(71681x10241)   minResize=(20481x10241) updatePeriodMillis=0 resizeMode=1 widgetCategory=5 autoAdvanceViewId=-1 initialLayout=#7f0e0a29 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [30] provider ProviderId{user:0, app:10302, cmp:ComponentInfo{com.google.android.youtube/com.google.android.apps.youtube.app.widget.YtQuickActionsWidgetProvider}}
+    min=(48641x30721)   minResize=(48641x12801) updatePeriodMillis=72000000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0072 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [31] provider ProviderId{user:0, app:10122, cmp:ComponentInfo{com.samsung.android.app.contacts/com.samsung.android.contacts.widget.CoverScreenWidgetProviderLarge}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [32] provider ProviderId{user:0, app:10122, cmp:ComponentInfo{com.samsung.android.app.contacts/com.samsung.android.contacts.directdialwidget.DirectDialWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [33] provider ProviderId{user:0, app:10122, cmp:ComponentInfo{com.samsung.android.app.contacts/com.samsung.android.contacts.widget.CoverScreenWidgetProvider}}
+    min=(131073x66561)   minResize=(131073x66561) updatePeriodMillis=0 resizeMode=3 widgetCategory=2050 autoAdvanceViewId=-1 initialLayout=#7f0d0186 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [34] provider ProviderId{user:0, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [35] provider ProviderId{user:0, app:10132, cmp:ComponentInfo{com.android.settings.intelligence/com.samsung.android.settings.intelligence.widget.GlanceCircleWidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c05f1 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [36] provider ProviderId{user:0, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetConversationProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [37] provider ProviderId{user:0, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetConversationLockScreenProvider}}
+    min=(0x0)   minResize=(7681x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [38] provider ProviderId{user:0, app:10050, cmp:ComponentInfo{com.samsung.android.app.routines/com.samsung.android.app.routines.appwidget.RoutineAppWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [39] provider ProviderId{user:0, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetListeningLockScreenProvider}}
+    min=(0x0)   minResize=(7681x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [40] provider ProviderId{user:0, app:10050, cmp:ComponentInfo{com.samsung.android.app.routines/com.samsung.android.app.routines.ui.appwidget.RoutineAppWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [41] provider ProviderId{user:0, app:10050, cmp:ComponentInfo{com.samsung.android.app.routines/com.samsung.android.app.routines.ui.appwidget.SingleWidgetModeProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [42] provider ProviderId{user:0, app:10050, cmp:ComponentInfo{com.samsung.android.app.routines/com.samsung.android.app.routines.domainmodel.widget.groupwidget.GroupRoutineWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [43] provider ProviderId{user:0, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetListeningProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [44] provider ProviderId{user:0, app:1000, cmp:ComponentInfo{com.samsung.android.forest/com.samsung.android.forest.widget.DwGlanceWidgetAppTimerProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c06e8 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [45] provider ProviderId{user:0, app:10050, cmp:ComponentInfo{com.samsung.android.app.routines/com.samsung.android.app.routines.domainmodel.widget.singlewidget.SingleRoutineWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [46] provider ProviderId{user:0, app:10050, cmp:ComponentInfo{com.samsung.android.app.routines/com.samsung.android.app.routines.domainmodel.widget.singlewidget.SingleModeWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [47] provider ProviderId{user:0, app:10124, cmp:ComponentInfo{com.samsung.android.dialer/com.samsung.android.dialer.widget.recents.CoverScreenRecentsWidgetProvider}}
+    min=(191489x166401)   minResize=(191489x166401) updatePeriodMillis=0 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0d052d initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [48] provider ProviderId{user:0, app:10050, cmp:ComponentInfo{com.samsung.android.app.routines/com.samsung.android.app.routines.domainmodel.widget.lockscreenbriefwidget.LockScreenSingleRoutineWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [49] provider ProviderId{user:0, app:10124, cmp:ComponentInfo{com.samsung.android.dialer/com.samsung.android.dialer.widget.recents.widgetprovider.RecentsCallLogLargeWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [50] provider ProviderId{user:0, app:10050, cmp:ComponentInfo{com.samsung.android.app.routines/com.samsung.android.app.routines.ui.groupwidget.GroupWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [51] provider ProviderId{user:0, app:1000, cmp:ComponentInfo{com.samsung.android.forest/com.samsung.android.forest.widget.DwWidgetAppTimerProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c06e8 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [52] provider ProviderId{user:0, app:1000, cmp:ComponentInfo{com.samsung.android.lool/com.samsung.android.sm.widgetapp.SMWidgetComplex}}
+    min=(25601x23041)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d074e initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [53] provider ProviderId{user:0, app:1000, cmp:ComponentInfo{com.samsung.android.lool/com.samsung.android.sm.widgetapp.SMWidgetOneButton}}
+    min=(25601x23041)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d074e initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [54] provider ProviderId{user:0, app:10133, cmp:ComponentInfo{com.samsung.android.smartsuggestions/com.samsung.android.smartsuggestions.feature.aisuggestion.ui.appwidget.AiSuggestionAppWidgetReceiver}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0711 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [55] provider ProviderId{user:0, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.ComplicationWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [56] provider ProviderId{user:0, app:10133, cmp:ComponentInfo{com.samsung.android.smartsuggestions/com.samsung.android.smartsuggestions.settings.about.developermode.widget.ShortcutContributionTestWidgetProvider}}
+    min=(102401x12801)   minResize=(102401x12801) updatePeriodMillis=3600000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0804 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [57] provider ProviderId{user:0, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.PhotoAppWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [58] provider ProviderId{user:0, app:10133, cmp:ComponentInfo{com.samsung.android.smartsuggestions/com.samsung.android.smartsuggestions.widget.appwidget.SmartSuggestionsWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=512 autoAdvanceViewId=-1 initialLayout=#7f0c0702 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [59] provider ProviderId{user:0, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.MultipleWidgetSmallProvider}}
+    min=(38401x34049)   minResize=(38401x34049) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [60] provider ProviderId{user:0, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.CoverScreenWidgetProvider}}
+    min=(191489x166401)   minResize=(191489x166401) updatePeriodMillis=0 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [61] provider ProviderId{user:0, app:10153, cmp:ComponentInfo{com.sec.android.app.launcher/com.android.homescreen.easyWidget.EasyModeWidgetProvider}}
+    min=(25601x10241)   minResize=(25601x10241) updatePeriodMillis=0 resizeMode=0 widgetCategory=512 autoAdvanceViewId=-1 initialLayout=#7f0d006c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [62] provider ProviderId{user:0, app:10121, cmp:ComponentInfo{com.sec.android.app.camera/com.sec.android.app.camera.setting.launcherwidget.CameraWidget}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d00de initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [63] provider ProviderId{user:0, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.ComplicationWidgetProviderSmall}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [64] provider ProviderId{user:0, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.MultipleWidgetLargeProvider}}
+    min=(79873x34049)   minResize=(79873x34049) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [65] provider ProviderId{user:0, app:1000, cmp:ComponentInfo{com.samsung.android.forest/com.samsung.android.forest.widget.DwGlanceWidgetScreenTimeProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c06ec initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [66] provider ProviderId{user:0, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.StoryWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=4096 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [67] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.widgetapp.analogclock.AnalogClockIntegratedWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d01e9 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [68] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherAppWidget2x1}}
+    min=(25601x23041)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c06f6 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [69] provider ProviderId{user:0, app:10124, cmp:ComponentInfo{com.samsung.android.dialer/com.samsung.android.dialer.widget.recents.widgetprovider.RecentCallLogSmallWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [70] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherCoverAppWidget}}
+    min=(131073x66561)   minResize=(131073x66561) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=2050 autoAdvanceViewId=-1 initialLayout=#7f0c014a initialKeyguardLayout=#7f0c014a   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [71] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherCoverMultiWidgetHourly}}
+    min=(79873x34049)   minResize=(79873x34049) updatePeriodMillis=86400000 resizeMode=0 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0c06f8 initialKeyguardLayout=#7f0c06f8   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [72] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherCoverFaceWidget}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0132 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [73] provider ProviderId{user:0, app:10125, cmp:ComponentInfo{com.sec.android.app.magnifier/com.sec.android.app.magnifier.MagnifierAppWidget}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=86400000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c031c initialKeyguardLayout=#7f0c0325   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [74] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherForecastWidget}}
+    min=(25601x23041)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c06f6 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [75] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherAppWidget}}
+    min=(25601x23041)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c06f6 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [76] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherForecastAppWidget}}
+    min=(25601x23041)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c06f6 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [77] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherInsightAppWidget}}
+    min=(25601x23041)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c06f6 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [78] provider ProviderId{user:0, app:1000, cmp:ComponentInfo{com.samsung.android.forest/com.samsung.android.forest.widget.DwWidgetScreenTimeProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c06ec initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [79] provider ProviderId{user:0, app:1000, cmp:ComponentInfo{com.samsung.android.lool/com.samsung.android.sm.widgetapp.SMGlanceWidgetProvider}}
+    min=(25601x23041)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0735 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [80] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherAestheticAppWidget}}
+    min=(25601x23041)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c06f6 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [81] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherCoverMultiWidgetSimple}}
+    min=(38401x34049)   minResize=(38401x34049) updatePeriodMillis=86400000 resizeMode=0 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0c06f8 initialKeyguardLayout=#7f0c06f8   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [82] provider ProviderId{user:0, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.InformativeWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [83] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.complication.receiver.ComplicationMoonReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0133 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [84] provider ProviderId{user:0, app:10359, cmp:ComponentInfo{ai.x.grok/ai.x.grok.widget.GrokAppWidgetReceiver}}
+    min=(27649x10241)   minResize=(27649x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0193 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [85] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.complication.receiver.ComplicationPrecipitationReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0135 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [86] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherCoverFaceDetailWidget}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0132 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [87] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.complication.receiver.ComplicationAirQualityReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0134 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [88] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.complication.receiver.ComplicationUVReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0134 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [89] provider ProviderId{user:0, app:10359, cmp:ComponentInfo{ai.x.grok/ai.x.grok.widget.GrokImagineWidgetReceiver}}
+    min=(20481x20481)   minResize=(20481x20481) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0193 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [90] provider ProviderId{user:0, app:10181, cmp:ComponentInfo{com.sec.android.widgetapp.easymodecontactswidget/com.sec.android.widgetapp.easymodecontactswidget.SeniorFavoriteWidgetProviderLarge}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=256 autoAdvanceViewId=-1 initialLayout=#7f0b0141 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [91] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.complication.receiver.ComplicationSunriseSunsetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0135 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [92] provider ProviderId{user:0, app:10359, cmp:ComponentInfo{ai.x.grok/ai.x.grok.widget.GrokChatWidgetReceiver}}
+    min=(20481x20481)   minResize=(20481x20481) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0193 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [93] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.complication.receiver.ComplicationWeatherDetailReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0132 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [94] provider ProviderId{user:0, app:10512, cmp:ComponentInfo{app.revanced.android.youtube/com.google.android.apps.youtube.app.widget.YtQuickActionsWidgetProvider}}
+    min=(48641x30721)   minResize=(48641x12801) updatePeriodMillis=72000000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e006f initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [95] provider ProviderId{user:0, app:10512, cmp:ComponentInfo{app.revanced.android.youtube/com.google.android.apps.youtube.app.widget.YtSearchWidgetProvider}}
+    min=(57345x12801)   minResize=(48641x12801) updatePeriodMillis=72000000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e006f initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [96] provider ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.complication.receiver.ComplicationSimpleWeatherReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0135 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [97] provider ProviderId{user:0, app:10547, cmp:ComponentInfo{app.symfonik.music.player/app.symfonik.ui.widgets.circle.CircleWidgetReceiver}}
+    min=(38401x25601)   minResize=(38401x25601) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [98] provider ProviderId{user:0, app:10547, cmp:ComponentInfo{app.symfonik.music.player/app.symfonik.ui.widgets.nowplaying.DefaultGlanceWidgetReceiver}}
+    min=(56321x7681)   minResize=(56321x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [99] provider ProviderId{user:0, app:10547, cmp:ComponentInfo{app.symfonik.music.player/app.symfonik.ui.widgets.shortcut.ShortcutWidgetReceiver}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=0 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [100] provider ProviderId{user:0, app:10416, cmp:ComponentInfo{cc.meowssage.astroweather/cc.meowssage.astroweather.widget.AstroweatherWidgetProvider}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0b0033 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [101] provider ProviderId{user:0, app:10349, cmp:ComponentInfo{com.alarmclock.xtreme.free/com.alarmclock.xtreme.alarms.widgetsproviders.LargeAnalogAppWidgetProvider}}
+    min=(28673x28673)   minResize=(28673x28673) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0d01d6 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [102] provider ProviderId{user:0, app:10349, cmp:ComponentInfo{com.alarmclock.xtreme.free/com.alarmclock.xtreme.alarms.widgetsproviders.NextAlarmTimeWidgetProvider}}
+    min=(28673x10241)   minResize=(28673x10241) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0d01d7 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [103] provider ProviderId{user:0, app:10523, cmp:ComponentInfo{com.alibaba.aliexpresshd/com.aliexpress.module.widget.widget.AESearch4x2NormalWidget}}
+    min=(76801x25601)   minResize=(76801x25601) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d09e9 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [104] provider ProviderId{user:0, app:10523, cmp:ComponentInfo{com.alibaba.aliexpresshd/com.aliexpress.module.widget.widget.AETracking2x2NormalWidget}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d09ed initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [105] provider ProviderId{user:0, app:10375, cmp:ComponentInfo{com.amazon.mShop.android.shopping/com.amazon.appunique.appwidget.DiscoverWidgetProvider}}
+    min=(30209x30209)   minResize=(30209x30209) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0d0113 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [106] provider ProviderId{user:0, app:10523, cmp:ComponentInfo{com.alibaba.aliexpresshd/com.aliexpress.module.widget.widget.AEInteraction2x2NormalWidget}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d09e8 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [107] provider ProviderId{user:0, app:10416, cmp:ComponentInfo{cc.meowssage.astroweather/cc.meowssage.astroweather.widget.RisetWidgetProvider}}
+    min=(28161x28161)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0b0033 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [108] provider ProviderId{user:0, app:10375, cmp:ComponentInfo{com.amazon.mShop.android.shopping/com.amazon.appunique.appwidget.YourOrdersWidgetProvider}}
+    min=(46081x28161)   minResize=(28161x28161) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0d02c3 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [109] provider ProviderId{user:0, app:10416, cmp:ComponentInfo{cc.meowssage.astroweather/cc.meowssage.astroweather.widget.SatelliteMapWidgetProvider}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0b0033 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [110] provider ProviderId{user:0, app:10409, cmp:ComponentInfo{com.audible.application/com.audible.ux.glancewidget.receiver.LargeGlanceWidgetReceiver}}
+    min=(90113x49153)   minResize=(32769x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e004f initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [111] provider ProviderId{user:0, app:10359, cmp:ComponentInfo{ai.x.grok/ai.x.grok.widget.GrokVoiceWidgetReceiver}}
+    min=(20481x20481)   minResize=(20481x20481) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0193 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [112] provider ProviderId{user:0, app:10409, cmp:ComponentInfo{com.audible.application/com.audible.ux.glancewidget.receiver.MediumGlanceWidgetReceiver}}
+    min=(90113x28673)   minResize=(32769x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e004f initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [113] provider ProviderId{user:0, app:10416, cmp:ComponentInfo{cc.meowssage.astroweather/cc.meowssage.astroweather.widget.NextSpacecraftPassWidgetProvider}}
+    min=(28161x10241)   minResize=(28161x10241) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0b0033 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [114] provider ProviderId{user:0, app:10409, cmp:ComponentInfo{com.audible.application/com.audible.application.player.widgets.BasePlayerWidgetProvider}}
+    min=(69633x10241)   minResize=(69633x10241) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e004d initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [115] provider ProviderId{user:0, app:10409, cmp:ComponentInfo{com.audible.application/com.audible.ux.glancewidget.receiver.SmallGlanceWidgetReceiver}}
+    min=(32769x10241)   minResize=(32769x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e004f initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [116] provider ProviderId{user:0, app:10523, cmp:ComponentInfo{com.alibaba.aliexpresshd/com.aliexpress.module.widget.widget.AECoin2x2NormalWidget}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d09e5 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [117] provider ProviderId{user:0, app:10547, cmp:ComponentInfo{app.symfonik.music.player/app.symfonik.ui.widgets.resizable.ResizableGlanceWidgetReceiver}}
+    min=(25601x25601)   minResize=(25601x25601) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [118] provider ProviderId{user:0, app:10523, cmp:ComponentInfo{com.alibaba.aliexpresshd/com.aliexpress.module.widget.widget.AEFarm2x2NormalWidget}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d09e7 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [119] provider ProviderId{user:0, app:10349, cmp:ComponentInfo{com.alarmclock.xtreme.free/com.alarmclock.xtreme.alarms.widgetsproviders.AnalogAppWidgetProvider}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0d01d6 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [120] provider ProviderId{user:0, app:10523, cmp:ComponentInfo{com.alibaba.aliexpresshd/com.aliexpress.module.widget.widget.AEDeals2x2NormalWidget}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d09e4 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [121] provider ProviderId{user:0, app:10514, cmp:ComponentInfo{com.anthropic.claude/com.anthropic.claude.widget.ClaudeAppWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c00e6 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [122] provider ProviderId{user:0, app:10407, cmp:ComponentInfo{com.brave.browser/org.chromium.chrome.browser.widget.quickactionsearchandbookmark.QuickActionSearchAndBookmarkWidgetProvider}}
+    min=(77825x11265)   minResize=(77825x11265) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e03a9 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [123] provider ProviderId{user:0, app:10407, cmp:ComponentInfo{com.brave.browser/com.google.android.apps.chrome.appwidget.bookmarks.BookmarkThumbnailWidgetProvider}}
+    min=(46081x38401)   minResize=(16385x12289) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e00b5 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [124] provider ProviderId{user:0, app:10399, cmp:ComponentInfo{com.facebook.katana/com.facebook.notifications.appwidget.SmallNotificationsWidgetProvider}}
+    min=(24577x24577)   minResize=(16385x12289) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f1d09d5 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [125] provider ProviderId{user:0, app:10394, cmp:ComponentInfo{com.calm.android/com.calm.android.widgets.DailyCalmWidget}}
+    min=(53761x10241)   minResize=(53761x10241) updatePeriodMillis=86400000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e01c8 initialKeyguardLayout=#7f0e01c8   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [126] provider ProviderId{user:0, app:10450, cmp:ComponentInfo{com.deliveroo.orderapp/com.deliveroo.orderapp.widget.ui.LargeReorderWidgetProvider}}
+    min=(87041x76801)   minResize=(87041x76801) updatePeriodMillis=86400000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d026d initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [127] provider ProviderId{user:0, app:10410, cmp:ComponentInfo{com.avast.android.cleaner/com.avast.android.cleaner.widget.ProjectAppWidgetProvider}}
+    min=(38401x12801)   minResize=(38401x12801) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0224 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [128] provider ProviderId{user:0, app:10394, cmp:ComponentInfo{com.calm.android/com.calm.android.widgets.RecommendedSleepStoryWidget}}
+    min=(53761x10241)   minResize=(53761x10241) updatePeriodMillis=86400000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e01c8 initialKeyguardLayout=#7f0e01c8   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [129] provider ProviderId{user:0, app:10399, cmp:ComponentInfo{com.facebook.katana/com.facebook.notifications.appwidget.MediumNotificationsWidgetProvider}}
+    min=(65537x24577)   minResize=(65537x12289) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f1d06ac initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [130] provider ProviderId{user:0, app:10407, cmp:ComponentInfo{com.brave.browser/org.chromium.chrome.browser.searchwidget.SearchWidgetProvider}}
+    min=(61441x12289)   minResize=(61441x12289) updatePeriodMillis=86400000 resizeMode=1 widgetCategory=5 autoAdvanceViewId=-1 initialLayout=#7f0e03ee initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [131] provider ProviderId{user:0, app:10450, cmp:ComponentInfo{com.deliveroo.orderapp/com.deliveroo.orderapp.widget.ui.MediumReorderWidgetProvider}}
+    min=(87041x30721)   minResize=(87041x30721) updatePeriodMillis=86400000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d026f initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [132] provider ProviderId{user:0, app:10428, cmp:ComponentInfo{com.fitbit.FitbitMobile/com.fitbit.widget.ui.QuickAccessWidgetProvider}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=0 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e083e initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [133] provider ProviderId{user:0, app:10415, cmp:ComponentInfo{com.bose.bosemusic/com.bose.madrid.widget.receivers.MadridAppWidgetReceiver}}
+    min=(122880x25600)   minResize=(122880x25600) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0291 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [134] provider ProviderId{user:0, app:10409, cmp:ComponentInfo{com.audible.application/com.audible.application.player.widgets.LargePlayerWidgetProvider}}
+    min=(69633x22529)   minResize=(69633x22529) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e004e initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [135] provider ProviderId{user:0, app:10373, cmp:ComponentInfo{com.google.android.apps.docs/com.google.android.apps.docs.drive.widget.suggestion.SuggestionAppWidgetProvider}}
+    min=(66561x28161)   minResize=(36353x25601) updatePeriodMillis=14400000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0d0044 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [136] provider ProviderId{user:0, app:10467, cmp:ComponentInfo{com.google.android.apps.translate/com.google.android.apps.translate.appwidget.QuickActionsAppWidgetProvider}}
+    min=(12801x12801)   minResize=(12801x12801) updatePeriodMillis=72000000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0049 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [137] provider ProviderId{user:0, app:10467, cmp:ComponentInfo{com.google.android.apps.translate/com.google.android.apps.translate.appwidget.SavedHistoryAppWidgetProvider}}
+    min=(46593x20481)   minResize=(46593x20481) updatePeriodMillis=72000000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0051 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [138] provider ProviderId{user:0, app:10467, cmp:ComponentInfo{com.google.android.apps.translate/com.google.android.apps.translate.appwidget.ClipboardAppWidgetProvider}}
+    min=(18433x18433)   minResize=(18433x18433) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0041 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [139] provider ProviderId{user:0, app:10353, cmp:ComponentInfo{com.google.android.apps.youtube.music/com.google.android.apps.youtube.music.player.widget.MusicWidgetProvider}}
+    min=(89089x14337)   minResize=(49153x14337) updatePeriodMillis=1800000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0049 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [140] provider ProviderId{user:0, app:10467, cmp:ComponentInfo{com.google.android.apps.translate/com.google.android.apps.translate.appwidget.DictationAppWidgetProvider}}
+    min=(18433x18433)   minResize=(18433x18433) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0042 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [141] provider ProviderId{user:0, app:10467, cmp:ComponentInfo{com.google.android.apps.translate/com.google.android.apps.translate.appwidget.TextTranslationAppWidgetProvider}}
+    min=(55297x18433)   minResize=(55297x18433) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0055 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [142] provider ProviderId{user:0, app:10467, cmp:ComponentInfo{com.google.android.apps.translate/com.google.android.apps.translate.appwidget.OpenMicAppWidgetProvider}}
+    min=(18433x18433)   minResize=(18433x18433) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0045 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [143] provider ProviderId{user:0, app:10353, cmp:ComponentInfo{com.google.android.apps.youtube.music/com.google.android.apps.youtube.music.player.widget.gm3.FreeformMusicWidgetProvider}}
+    min=(38401x25601)   minResize=(38401x25601) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e004a initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [144] provider ProviderId{user:0, app:10285, cmp:ComponentInfo{com.google.android.calendar/com.google.android.calendar.widgetmonth.MonthViewWidgetProvider}}
+    min=(64001x64001)   minResize=(64001x64001) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e0256 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [145] provider ProviderId{user:0, app:10467, cmp:ComponentInfo{com.google.android.apps.translate/com.google.android.apps.translate.appwidget.SpeakEasyAppWidgetProvider}}
+    min=(18433x18433)   minResize=(18433x18433) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0054 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [146] provider ProviderId{user:0, app:10373, cmp:ComponentInfo{com.google.android.apps.docs/com.google.android.apps.docs.drive.widget.CakemixAppWidgetProvider}}
+    min=(75777x18433)   minResize=(36353x12289) updatePeriodMillis=79200000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0242 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [147] provider ProviderId{user:0, app:10440, cmp:ComponentInfo{com.google.android.keep/com.google.android.keep.homescreenwidget.MemoryAppWidgetProvider}}
+    min=(53761x53761)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0d0256 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [148] provider ProviderId{user:0, app:10426, cmp:ComponentInfo{com.ifttt.ifttt/com.ifttt.widgets.LargeDoAppWidgetProvider}}
+    min=(53761x10241)   minResize=(53761x10241) updatePeriodMillis=900000 resizeMode=1 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0d0515 initialKeyguardLayout=#7f0d0515   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [149] provider ProviderId{user:0, app:10426, cmp:ComponentInfo{com.ifttt.ifttt/com.ifttt.widgets.SmallDoAppWidgetProvider}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=900000 resizeMode=1 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0d0518 initialKeyguardLayout=#7f0d0518   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [150] provider ProviderId{user:0, app:10440, cmp:ComponentInfo{com.google.android.keep/com.google.android.keep.quickaddwidget.QuickAddWidgetProvider}}
+    min=(46593x46593)   minResize=(35841x12289) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d01be initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [151] provider ProviderId{user:0, app:10467, cmp:ComponentInfo{com.google.android.apps.translate/com.google.android.apps.translate.appwidget.LensAppWidgetProvider}}
+    min=(18433x18433)   minResize=(18433x18433) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0043 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [152] provider ProviderId{user:0, app:10426, cmp:ComponentInfo{com.ifttt.ifttt/com.ifttt.widgets.notifications.NotificationsWidgetReceiver}}
+    min=(35841x35841)   minResize=(35841x35841) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0d0187 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [153] provider ProviderId{user:0, app:10443, cmp:ComponentInfo{com.intsig.camscanner/com.intsig.camscanner.shortcut.SingleModeNormalWidgetProvider}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0146 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [154] provider ProviderId{user:0, app:10443, cmp:ComponentInfo{com.intsig.camscanner/com.intsig.camscanner.shortcut.MultiModeNormalWidgetProvider}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0141 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [155] provider ProviderId{user:0, app:10443, cmp:ComponentInfo{com.intsig.camscanner/com.intsig.camscanner.shortcut.SingleModeLargeWidgetProvider}}
+    min=(33793x33793)   minResize=(33793x33793) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0148 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [156] provider ProviderId{user:0, app:10443, cmp:ComponentInfo{com.intsig.camscanner/com.intsig.camscanner.shortcut.QrCodeModeLargeWidgetProvider}}
+    min=(33793x33793)   minResize=(33793x33793) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0145 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [157] provider ProviderId{user:0, app:10443, cmp:ComponentInfo{com.intsig.camscanner/com.intsig.camscanner.shortcut.CaptureWidgetProvider}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0143 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [158] provider ProviderId{user:0, app:10443, cmp:ComponentInfo{com.intsig.camscanner/com.intsig.camscanner.shortcut.MainSearchWidgetProvider}}
+    min=(75777x33793)   minResize=(75777x33793) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0140 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [159] provider ProviderId{user:0, app:10343, cmp:ComponentInfo{com.linkedin.android/com.linkedin.android.appwidget.ResponsiveWidget}}
+    min=(64001x28161)   minResize=(64001x28161) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e04da initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [160] provider ProviderId{user:0, app:10392, cmp:ComponentInfo{com.google.android.apps.chromecast.app/com.google.android.apps.chromecast.app.appwidget.favorites.FavoritesWidgetReceiver}}
+    min=(51969x56321)   minResize=(25601x14337) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e03bc initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [161] provider ProviderId{user:0, app:10354, cmp:ComponentInfo{com.microsoft.office.outlook/com.acompli.acompli.AgendaWidgetProvider}}
+    min=(46081x46081)   minResize=(28161x28161) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e0095 initialKeyguardLayout=#7f0e0095   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [162] provider ProviderId{user:0, app:10343, cmp:ComponentInfo{com.linkedin.android/com.linkedin.android.profile.components.games.widget.GamesWidget}}
+    min=(64001x28161)   minResize=(64001x28161) updatePeriodMillis=10800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e00dd initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [163] provider ProviderId{user:0, app:10343, cmp:ComponentInfo{com.linkedin.android/com.linkedin.android.growth.appactivation.appwidgets.highlights.SmallHighlightsWidget}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e04e3 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [164] provider ProviderId{user:0, app:10443, cmp:ComponentInfo{com.intsig.camscanner/com.intsig.camscanner.shortcut.MultiModeLargeWidgetProvider}}
+    min=(33793x33793)   minResize=(33793x33793) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0142 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [165] provider ProviderId{user:0, app:10443, cmp:ComponentInfo{com.intsig.camscanner/com.intsig.camscanner.shortcut.QrCodeModeNormalWidgetProvider}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0144 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [166] provider ProviderId{user:0, app:10354, cmp:ComponentInfo{com.microsoft.office.outlook/com.acompli.acompli.InboxWidgetProvider}}
+    min=(64001x46081)   minResize=(28161x46081) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e0225 initialKeyguardLayout=#7f0e0225   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [167] provider ProviderId{user:0, app:10443, cmp:ComponentInfo{com.intsig.camscanner/com.intsig.camscanner.shortcut.RecentDocWidgetProvider}}
+    min=(75777x33793)   minResize=(75777x33793) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0b39 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [168] provider ProviderId{user:0, app:10454, cmp:ComponentInfo{com.mobilefootie.wc2010/com.mobilefootie.appwidget.TeamAppWidget}}
+    min=(25601x12801)   minResize=(28161x10241) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0046 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [169] provider ProviderId{user:0, app:10422, cmp:ComponentInfo{com.microsoft.copilot/com.microsoft.copilotn.features.oswidget.CopilotWidgetReceiver$PodcastWidgetReceiver}}
+    min=(56321x35841)   minResize=(56321x35841) updatePeriodMillis=10800000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d018c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [170] provider ProviderId{user:0, app:10454, cmp:ComponentInfo{com.mobilefootie.wc2010/no.norsebit.fotmobwidget.NewsWidgetProvider}}
+    min=(46081x28161)   minResize=(46081x28161) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=2131365129 initialLayout=#7f0d0748 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [171] provider ProviderId{user:0, app:10454, cmp:ComponentInfo{com.mobilefootie.wc2010/no.norsebit.fotmobwidget.FotMobWidget}}
+    min=(64001x10241)   minResize=(28161x10241) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0046 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [172] provider ProviderId{user:0, app:10524, cmp:ComponentInfo{com.nintendo.znca/com.nintendo.coral.game_widget.StageScheduleWidget}}
+    min=(76801x46081)   minResize=(76801x46081) updatePeriodMillis=0 resizeMode=2 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d00a9 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [173] provider ProviderId{user:0, app:10434, cmp:ComponentInfo{com.paypal.android.p2pmobile/com.paypal.android.p2pmobile.appwidget.WidgetLauncherProvider}}
+    min=(64001x10241)   minResize=(46081x10241) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0b17 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [174] provider ProviderId{user:0, app:10383, cmp:ComponentInfo{com.openai.chatgpt/com.openai.feature.widget.WidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=7 autoAdvanceViewId=-1 initialLayout=#7f0e05ac initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [175] provider ProviderId{user:0, app:10454, cmp:ComponentInfo{com.mobilefootie.wc2010/com.mobilefootie.appwidget.LeagueAppWidget}}
+    min=(64001x30721)   minResize=(46081x25601) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0046 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [176] provider ProviderId{user:0, app:10524, cmp:ComponentInfo{com.nintendo.znca/com.nintendo.coral.game_widget.LatestAlbumPhotoWidget}}
+    min=(25601x10241)   minResize=(25601x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=9 autoAdvanceViewId=-1 initialLayout=#7f0d0045 initialKeyguardLayout=#7f0d0045   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [177] provider ProviderId{user:0, app:10440, cmp:ComponentInfo{com.google.android.keep/com.google.android.apps.keep.ui.widgets.singlenote.SingleNoteWidgetProvider}}
+    min=(53761x53761)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0d0262 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [178] provider ProviderId{user:0, app:10437, cmp:ComponentInfo{com.revolut.revolut/com.revolut.feature.stock_widget.impl.StockWidgetProvider}}
+    min=(38401x25601)   minResize=(20481x13313) updatePeriodMillis=43200000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d085e initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [179] provider ProviderId{user:0, app:10490, cmp:ComponentInfo{com.ringapp/com.ringapp.widgetaccesscontrol.QuickControlWidget}}
+    min=(25601x10241)   minResize=(25601x10241) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e001d initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [180] provider ProviderId{user:0, app:10437, cmp:ComponentInfo{com.revolut.revolut/com.revolut.feature_account_widget.impl.AccountWidgetProvider}}
+    min=(38401x25601)   minResize=(20481x13313) updatePeriodMillis=43200000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d085e initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [181] provider ProviderId{user:0, app:10372, cmp:ComponentInfo{com.philips.lighting.hue2/com.signify.widgets.SingleActionWidget}}
+    min=(7681x7681)   minResize=(7681x7681) updatePeriodMillis=86400000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d00ba initialKeyguardLayout=#7f0d00ba   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [182] provider ProviderId{user:0, app:10490, cmp:ComponentInfo{com.ringapp/com.ringapp.widget.RingLiveViewWidget}}
+    min=(25601x10241)   minResize=(25601x10241) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0827 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [183] provider ProviderId{user:0, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.complication.BigComplicationWidgetReceiver}}
+    min=(28161x0)   minResize=(28161x0) updatePeriodMillis=0 resizeMode=1 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d0048 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [184] provider ProviderId{user:0, app:10285, cmp:ComponentInfo{com.google.android.calendar/com.android.calendar.widget.CalendarAppWidgetProvider}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e0256 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [185] provider ProviderId{user:0, app:10356, cmp:ComponentInfo{com.google.android.videos/com.google.android.apps.googletv.app.presentation.widgets.toppicks.TopPicksWidgetReceiver}}
+    min=(51201x51201)   minResize=(51201x51201) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e080d initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [186] provider ProviderId{user:0, app:10524, cmp:ComponentInfo{com.nintendo.znca/com.nintendo.coral.game_widget.LatestVsResultWidget}}
+    min=(38401x10241)   minResize=(38401x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=9 autoAdvanceViewId=-1 initialLayout=#7f0d004a initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [187] provider ProviderId{user:0, app:10428, cmp:ComponentInfo{com.fitbit.FitbitMobile/com.fitbit.widget.ui.PrimaryGoalWidgetProvider}}
+    min=(28161x28161)   minResize=(10241x10241) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e083f initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [188] provider ProviderId{user:0, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.complication.SmallComplicationWidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d078e initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [189] provider ProviderId{user:0, app:10450, cmp:ComponentInfo{com.deliveroo.orderapp/com.deliveroo.orderapp.widget.ui.SmallReorderWidgetProvider}}
+    min=(20481x30721)   minResize=(20481x30721) updatePeriodMillis=86400000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0271 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [190] provider ProviderId{user:0, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.ReminderCoverWidgetProvider}}
+    min=(184321x184321)   minResize=(184321x184321) updatePeriodMillis=0 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0d07c4 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [191] provider ProviderId{user:0, app:10409, cmp:ComponentInfo{com.audible.application/com.audible.ux.glancewidget.receiver.ExtraLargeGlanceWidgetReceiver}}
+    min=(90113x106497)   minResize=(32769x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e004f initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [192] provider ProviderId{user:0, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.ReminderCoverWidget4x2Provider}}
+    min=(79873x34049)   minResize=(79873x34049) updatePeriodMillis=0 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0d07c4 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [193] provider ProviderId{user:0, app:10495, cmp:ComponentInfo{com.samsung.android.goodlock/com.samsung.android.goodlock.ui.appwidget.cassette.CassetteAppWidgetReceiver}}
+    min=(81921x25601)   minResize=(81921x25601) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0189 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [194] provider ProviderId{user:0, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.SelectedReminderWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=300000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d07b1 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [195] provider ProviderId{user:0, app:10507, cmp:ComponentInfo{com.samsung.android.multistar/com.samsung.android.coverstar.appwidget.AppsLauncherWidgetProvider}}
+    min=(90113x86785)   minResize=(90113x86785) updatePeriodMillis=0 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0c000f initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [196] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.app.clockpackage.alarmwidget.ClockAlarmIntegratedWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d01e9 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [197] provider ProviderId{user:0, app:10507, cmp:ComponentInfo{com.samsung.android.multistar/com.samsung.android.coverstar.CoverLauncherLauncherWidgetProvider}}
+    min=(131073x66561)   minResize=(131073x66561) updatePeriodMillis=0 resizeMode=3 widgetCategory=2048 autoAdvanceViewId=-1 initialLayout=#7f0c0016 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [198] provider ProviderId{user:0, app:10507, cmp:ComponentInfo{com.samsung.android.multistar/com.samsung.android.coverstar.appwidget.GameSnacksWidgetProvider}}
+    min=(90113x86785)   minResize=(90113x86785) updatePeriodMillis=0 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0c003e initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [199] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.app.clockpackage.alarmwidget.AlarmGlanceWidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d0030 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [200] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.app.clockpackage.timerwidget.TimerWidgetProvider}}
+    min=(131073x66561)   minResize=(131073x66561) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=2048 autoAdvanceViewId=-1 initialLayout=#7f0d084d initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [201] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.app.clockpackage.timerwidget.TimerWidget2X2Provider}}
+    min=(38401x34049)   minResize=(38401x34049) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d0833 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [202] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.app.clockpackage.alarmwidget.AlarmB5WidgetProvider}}
+    min=(191489x166401)   minResize=(191489x166401) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0d01e7 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [203] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.app.clockpackage.stopwatchwidget.StopwatchCoverWidget2X2Provider}}
+    min=(38401x34049)   minResize=(38401x34049) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d0816 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [204] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.app.clockpackage.timerwidget.TimerWidget4X2Provider}}
+    min=(79873x34049)   minResize=(79873x34049) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d0834 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [205] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.app.clockpackage.stopwatchwidget.StopwatchCoverWidget4X2Provider}}
+    min=(79873x34049)   minResize=(79873x34049) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d0817 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [206] provider ProviderId{user:0, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.ReminderCoverWidget2x2Provider}}
+    min=(38401x34049)   minResize=(38401x34049) updatePeriodMillis=0 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0d07c4 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [207] provider ProviderId{user:0, app:10362, cmp:ComponentInfo{com.sec.android.app.popupcalculator/com.sec.android.app.popupcalculator.widget.CalculatorWidgetProvider2x2}}
+    min=(38401x34049)   minResize=(38401x34049) updatePeriodMillis=86400000 resizeMode=0 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0c00f1 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [208] provider ProviderId{user:0, app:10446, cmp:ComponentInfo{com.shazam.android/com.shazam.popup.android.appwidget.WidgetProvider}}
+    min=(76801x5121)   minResize=(8193x8193) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [209] provider ProviderId{user:0, app:10446, cmp:ComponentInfo{com.shazam.android/com.shazam.popup.android.appwidget.ShazamOnStartupWidgetProvider}}
+    min=(14337x14337)   minResize=(8193x8193) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [210] provider ProviderId{user:0, app:10427, cmp:ComponentInfo{com.superthomaslab.hueessentials/com.superthomaslab.hueessentials.widgets.temperatures.TemperaturesWidget}}
+    min=(46081x28161)   minResize=(28161x10241) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c004d initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [211] provider ProviderId{user:0, app:10425, cmp:ComponentInfo{com.surfshark.vpnclient.android/com.surfshark.vpnclient.android.legacyapp.core.feature.remote.widgets.SmallSharkWidgetProvider}}
+    min=(25601x39681)   minResize=(30721x12801) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e018d initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [212] provider ProviderId{user:0, app:10366, cmp:ComponentInfo{com.spotify.music/com.spotify.proactiveplatforms.npvwidget.NpvWidgetProvider}}
+    min=(76801x29697)   minResize=(28161x14337) updatePeriodMillis=14400000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0a32 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [213] provider ProviderId{user:0, app:10427, cmp:ComponentInfo{com.superthomaslab.hueessentials/com.superthomaslab.hueessentials.widgets.groups.GroupsWidget}}
+    min=(63489x30721)   minResize=(46081x15361) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0048 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [214] provider ProviderId{user:0, app:10425, cmp:ComponentInfo{com.surfshark.vpnclient.android/com.surfshark.vpnclient.android.legacyapp.core.feature.remote.widget.vpn.large.VpnLargeWidgetProvider}}
+    min=(69121x76801)   minResize=(33281x56321) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e018b initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [215] provider ProviderId{user:0, app:10427, cmp:ComponentInfo{com.superthomaslab.hueessentials/com.superthomaslab.hueessentials.widgets.group.GroupWidget}}
+    min=(63489x12289)   minResize=(46081x10241) updatePeriodMillis=21600000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0044 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [216] provider ProviderId{user:0, app:10366, cmp:ComponentInfo{com.spotify.music/com.spotify.widget.widget.widgetimpl.SpotifyWidget}}
+    min=(64001x10241)   minResize=(64001x10241) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0a31 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [217] provider ProviderId{user:0, app:10362, cmp:ComponentInfo{com.sec.android.app.popupcalculator/com.sec.android.app.popupcalculator.widget.CalculatorGlanceWidgetMediumReceiver}}
+    min=(39937x35329)   minResize=(39937x35329) updatePeriodMillis=86400000 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c00f1 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [218] provider ProviderId{user:0, app:10427, cmp:ComponentInfo{com.superthomaslab.hueessentials/com.superthomaslab.hueessentials.widgets.action.ActionWidget}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c003f initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [219] provider ProviderId{user:0, app:10425, cmp:ComponentInfo{com.surfshark.vpnclient.android/com.surfshark.vpnclient.android.legacyapp.core.feature.remote.widgets.MediumSharkWidgetProvider}}
+    min=(69121x39681)   minResize=(30721x12801) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e018c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [220] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.app.clockpackage.alarmwidget.AlarmMultiCoverWidgetProvider4X2}}
+    min=(79873x34049)   minResize=(79873x34049) updatePeriodMillis=3600000 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d01e9 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [221] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.app.clockpackage.WorldClockGlanceWidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d0874 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [222] provider ProviderId{user:0, app:10366, cmp:ComponentInfo{com.spotify.music/com.spotify.proactiveplatforms.npvwidget.CoverScreenWidgetProvider}}
+    min=(76801x29697)   minResize=(28161x29697) updatePeriodMillis=14400000 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0e0a32 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [223] provider ProviderId{user:0, app:10362, cmp:ComponentInfo{com.sec.android.app.popupcalculator/com.sec.android.app.popupcalculator.widget.CalculatorWidgetProvider}}
+    min=(189441x166401)   minResize=(189441x166401) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0c00f2 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [224] provider ProviderId{user:0, app:10357, cmp:ComponentInfo{com.sec.android.app.clockpackage/com.sec.android.app.clockpackage.alarmwidget.AlarmMultiCoverWidgetProvider2X2}}
+    min=(38401x34049)   minResize=(38401x34049) updatePeriodMillis=3600000 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d01e9 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [225] provider ProviderId{user:0, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.ReminderWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=300000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d07c6 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [226] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.sensorwidget.PresenceSensorWidgetProvider}}
+    min=(46081x10241)   minResize=(46081x10241) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d12a2 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [227] provider ProviderId{user:0, app:10380, cmp:ComponentInfo{com.zhiliaoapp.musically/com.ss.android.ugc.aweme.story.widget.SmallStoryWidget}}
+    min=(33793x33793)   minResize=(33793x33793) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d01bd initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [228] provider ProviderId{user:0, app:10380, cmp:ComponentInfo{com.zhiliaoapp.musically/com.ss.android.ugc.aweme.story.widget.LargeStoryWidget}}
+    min=(76289x76289)   minResize=(76289x76289) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d01bb initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [229] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.plugwidget.WidgetOnOffProvider}}
+    min=(46081x10241)   minResize=(28161x10241) updatePeriodMillis=1800000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d12a0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [230] provider ProviderId{user:0, app:10396, cmp:ComponentInfo{com.whatsapp/com.whatsapp.appwidget.WidgetProvider}}
+    min=(64001x28161)   minResize=(10241x10241) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e1452 initialKeyguardLayout=#7f0e1452   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [231] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.relaymotor.RelayMotorWidgetProvider}}
+    min=(64001x10241)   minResize=(64001x10241) updatePeriodMillis=1800000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d12a7 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [232] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.robotwidget.RobotExtendedWidgetProvider}}
+    min=(64001x10241)   minResize=(64001x10241) updatePeriodMillis=30000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d14da initialKeyguardLayout=#7f0d14da   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [233] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.trvwidget.TrvWidgetProvider}}
+    min=(64001x10241)   minResize=(64001x10241) updatePeriodMillis=1800000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0e57 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [234] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.switchwidget.FanAppWidgetProvider}}
+    min=(64001x10241)   minResize=(64001x10241) updatePeriodMillis=1800000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d12aa initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [235] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.camerawidget.CameraWidgetProvider}}
+    min=(64001x46081)   minResize=(46081x46081) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d12a8 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [236] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.bulbwidget.BulbWidgetProvider}}
+    min=(64001x10241)   minResize=(64001x10241) updatePeriodMillis=1800000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d12a7 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [237] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.sensorwidget.SensorWidgetProvider}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d12a3 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [238] provider ProviderId{user:0, app:10380, cmp:ComponentInfo{com.zhiliaoapp.musically/com.ss.android.ugc.aweme.search.widget.core.ui.SearchMiddleWidget}}
+    min=(76289x33793)   minResize=(76289x33793) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d01c0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [239] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.multishortcutswidget.MultiShortcutsAppWidgetProvider}}
+    min=(64001x28161)   minResize=(64001x28161) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d117c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [240] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.robotwidget.RobotWidgetProvider}}
+    min=(46081x10241)   minResize=(46081x10241) updatePeriodMillis=30000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d14da initialKeyguardLayout=#7f0d14da   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [241] provider ProviderId{user:0, app:10469, cmp:ComponentInfo{com.withings.wiscale2/com.withings.widget.steps.StepWidgetReceiver}}
+    min=(51201x24577)   minResize=(30721x24577) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e06ed initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [242] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.doorlockwidget.DoorLockLockStatusWidgetProvider}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=1800000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d129b initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [243] provider ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.singleshortcutwidget.SingleShortcutAppWidgetProvider}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=1800000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d117e initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [244] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_1_1}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [245] provider ProviderId{user:0, app:10380, cmp:ComponentInfo{com.zhiliaoapp.musically/com.ss.android.ugc.aweme.appwidget.CameraWidgetProvider}}
+    min=(13825x13825)   minResize=(13825x13825) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d01b9 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [246] provider ProviderId{user:0, app:10425, cmp:ComponentInfo{com.surfshark.vpnclient.android/com.surfshark.vpnclient.android.legacyapp.core.feature.remote.widget.search.SearchWidgetProvider}}
+    min=(25601x39681)   minResize=(30721x12801) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0189 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [247] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_1_4}}
+    min=(10241x64001)   minResize=(10241x64001) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [248] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_1_2}}
+    min=(10241x28161)   minResize=(10241x28161) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [249] provider ProviderId{user:0, app:10380, cmp:ComponentInfo{com.zhiliaoapp.musically/com.ss.android.ugc.aweme.follow.widget.FollowBigWidgetProvider}}
+    min=(84481x30721)   minResize=(84481x30721) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d15d5 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [250] provider ProviderId{user:0, app:10474, cmp:ComponentInfo{de.bmw.connected.mobile20.row/com.bmw.native_extension_flutter_plugin.src.NativeBMWVehicleStatusWidget}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0504 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [251] provider ProviderId{user:0, app:10380, cmp:ComponentInfo{com.zhiliaoapp.musically/com.bytedance.touchpoint.core.appwidget.ReferralWidget}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d22dc initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [252] provider ProviderId{user:0, app:10474, cmp:ComponentInfo{de.bmw.connected.mobile20.row/com.bmw.native_extension_flutter_plugin.src.NativeBMWControlWidget}}
+    min=(74241x34561)   minResize=(74241x34561) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d029c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [253] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_3_4}}
+    min=(46081x64001)   minResize=(46081x64001) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [254] provider ProviderId{user:0, app:10371, cmp:ComponentInfo{de.renewahl.all4hue/de.renewahl.all4hue.widgets.WidgetShortcut}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=0 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e01b2 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [255] provider ProviderId{user:0, app:10371, cmp:ComponentInfo{de.renewahl.all4hue/de.renewahl.all4hue.widgets.WidgetScenes}}
+    min=(46081x28161)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e01b0 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [256] provider ProviderId{user:0, app:10371, cmp:ComponentInfo{de.renewahl.all4hue/de.renewahl.all4hue.widgets.WidgetMultiple}}
+    min=(64001x10241)   minResize=(28161x10241) updatePeriodMillis=0 resizeMode=1 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e01ae initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [257] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_1_5}}
+    min=(10241x92929)   minResize=(10241x92929) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [258] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_3_5}}
+    min=(46081x92929)   minResize=(46081x92929) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [259] provider ProviderId{user:0, app:10475, cmp:ComponentInfo{ee.mtakso.client/eu.bolt.client.homewidget.HomeWidgetProvider}}
+    min=(76801x20481)   minResize=(76801x20481) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d00f8 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [260] provider ProviderId{user:0, app:10371, cmp:ComponentInfo{de.renewahl.all4hue/de.renewahl.all4hue.widgets.WidgetGroup}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e01ac initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [261] provider ProviderId{user:0, app:10474, cmp:ComponentInfo{de.bmw.connected.mobile20.row/com.bmw.native_extension_flutter_plugin.src.NativeBMWVehicleOverviewWidget}}
+    min=(74241x64001)   minResize=(74241x64001) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0503 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [262] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_5_4}}
+    min=(92929x81665)   minResize=(92929x81665) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [263] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_5_3}}
+    min=(92929x46081)   minResize=(92929x46081) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [264] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_6_1}}
+    min=(130561x10241)   minResize=(130561x10241) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [265] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_5_5}}
+    min=(92929x92929)   minResize=(92929x92929) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [266] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_5_1}}
+    min=(92929x10241)   minResize=(92929x10241) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [267] provider ProviderId{user:0, app:10474, cmp:ComponentInfo{de.bmw.connected.mobile20.row/com.bmw.native_extension_flutter_plugin.src.NativeBMWStatisticsTripWidget}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0505 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [268] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_6_5}}
+    min=(130561x94721)   minResize=(130561x94721) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [269] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_4_3}}
+    min=(64001x46081)   minResize=(64001x46081) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [270] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_6_6}}
+    min=(130561x130561)   minResize=(130561x130561) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [271] provider ProviderId{user:0, app:10474, cmp:ComponentInfo{de.bmw.connected.mobile20.row/com.bmw.native_extension_flutter_plugin.src.NativeBMWRemainingMileageWidget}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0315 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [272] provider ProviderId{user:0, app:10380, cmp:ComponentInfo{com.zhiliaoapp.musically/com.ss.android.ugc.aweme.core.SmallAppWidgetProvider}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=10800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d01bf initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [273] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_Resizable_4_4}}
+    min=(64001x64001)   minResize=(10241x10241) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [274] provider ProviderId{user:0, app:10493, cmp:ComponentInfo{org.torproject.torbrowser/org.mozilla.gecko.search.SearchWidgetProvider}}
+    min=(81921x10241)   minResize=(7681x10241) updatePeriodMillis=3600000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0183 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [275] provider ProviderId{user:0, app:10386, cmp:ComponentInfo{org.videolan.vlc/org.videolan.vlc.widget.MiniPlayerAppWidgetProvider}}
+    min=(64001x10241)   minResize=(30721x8193) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d018e initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [276] provider ProviderId{user:0, app:10527, cmp:ComponentInfo{org.mozilla.firefox/org.mozilla.gecko.search.SearchWidgetProvider}}
+    min=(81921x10241)   minResize=(7681x10241) updatePeriodMillis=3600000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0175 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [277] provider ProviderId{user:150, app:10132, cmp:ComponentInfo{com.android.settings.intelligence/com.samsung.android.settings.intelligence.widget.GlanceListWidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c05f1 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [278] provider ProviderId{user:150, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetConversationCoverLockScreenProvider}}
+    min=(0x0)   minResize=(7681x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [279] provider ProviderId{user:150, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetCoverProvider2x2}}
+    min=(38401x34049)   minResize=(38401x34049) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d0373 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [280] provider ProviderId{user:150, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetListeningProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [281] provider ProviderId{user:150, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetConversationProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [282] provider ProviderId{user:150, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetConversationLockScreenProvider}}
+    min=(0x0)   minResize=(7681x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [283] provider ProviderId{user:150, app:10122, cmp:ComponentInfo{com.samsung.android.app.contacts/com.samsung.android.contacts.widget.CoverScreenWidgetProviderSmall}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [284] provider ProviderId{user:150, app:10132, cmp:ComponentInfo{com.android.settings.intelligence/com.samsung.android.settings.intelligence.widget.CoverListWidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c05f1 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [285] provider ProviderId{user:150, app:10132, cmp:ComponentInfo{com.android.settings.intelligence/com.samsung.android.settings.intelligence.widget.GridTypeBatteryWidget}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c05ef initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [286] provider ProviderId{user:150, app:10132, cmp:ComponentInfo{com.android.settings.intelligence/com.samsung.android.settings.intelligence.widget.GlanceCircleWidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c05f1 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [287] provider ProviderId{user:150, app:10050, cmp:ComponentInfo{com.android.systemui/com.android.systemui.coverlauncher.widget.CoverLauncherLargeWidgetProvider}}
+    min=(191489x166401)   minResize=(191489x166401) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0d0619 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [288] provider ProviderId{user:150, app:10122, cmp:ComponentInfo{com.samsung.android.app.contacts/com.samsung.android.contacts.widget.CoverScreenWidgetProvider}}
+    min=(131073x66561)   minResize=(131073x66561) updatePeriodMillis=0 resizeMode=3 widgetCategory=2050 autoAdvanceViewId=-1 initialLayout=#7f0d0186 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [289] provider ProviderId{user:150, app:10132, cmp:ComponentInfo{com.android.settings.intelligence/com.samsung.android.settings.intelligence.widget.CoverArcWidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c05f1 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [290] provider ProviderId{user:150, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.StoryWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=4096 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [291] provider ProviderId{user:150, app:10122, cmp:ComponentInfo{com.samsung.android.app.contacts/com.samsung.android.contacts.directdialwidget.DirectDialWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [292] provider ProviderId{user:150, app:10122, cmp:ComponentInfo{com.samsung.android.app.contacts/com.samsung.android.contacts.widget.CoverScreenWidgetProviderLarge}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [293] provider ProviderId{user:150, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetCoverProvider4x2}}
+    min=(79873x34049)   minResize=(79873x34049) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d0373 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [294] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_5_2}}
+    min=(92929x28161)   minResize=(92929x28161) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [295] provider ProviderId{user:150, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetListeningLockScreenProvider}}
+    min=(0x0)   minResize=(7681x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [296] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_6_2}}
+    min=(130561x28161)   minResize=(130561x28161) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [297] provider ProviderId{user:150, app:10057, cmp:ComponentInfo{com.samsung.android.app.interpreter/com.samsung.android.app.interpreter.interpretation.receiver.InterpretationAppWidgetProvider}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [298] provider ProviderId{user:150, app:10132, cmp:ComponentInfo{com.android.settings.intelligence/com.samsung.android.settings.intelligence.widget.ListTypeBatteryWidget}}
+    min=(0x0)   minResize=(25601x23041) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0608 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [299] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_1_3}}
+    min=(10241x46081)   minResize=(10241x46081) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [300] provider ProviderId{user:0, app:10474, cmp:ComponentInfo{de.bmw.connected.mobile20.row/com.bmw.native_extension_flutter_plugin.src.NativeBMWLastTripWidget}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0505 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=true
+  [301] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_2_4}}
+    min=(28161x64001)   minResize=(28161x64001) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [302] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_4_2}}
+    min=(64001x28161)   minResize=(64001x28161) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [303] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_2_5}}
+    min=(28161x92929)   minResize=(28161x92929) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [304] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_3_3}}
+    min=(46081x46081)   minResize=(46081x46081) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [305] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_4_5}}
+    min=(81665x92929)   minResize=(81665x92929) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [306] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_4_4}}
+    min=(64001x64001)   minResize=(64001x64001) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [307] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_2_1}}
+    min=(28161x10241)   minResize=(28161x10241) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [308] provider ProviderId{user:150, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.ComplicationWidgetProviderSmall}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [309] provider ProviderId{user:150, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.MultipleWidgetLargeProvider}}
+    min=(79873x34049)   minResize=(79873x34049) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [310] provider ProviderId{user:150, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.complication.BigComplicationWidgetReceiver}}
+    min=(28161x0)   minResize=(28161x0) updatePeriodMillis=0 resizeMode=1 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d0048 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [311] provider ProviderId{user:150, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.ReminderCoverWidget2x2Provider}}
+    min=(38401x34049)   minResize=(38401x34049) updatePeriodMillis=0 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0d07c4 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [312] provider ProviderId{user:150, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.ReminderCoverWidget4x2Provider}}
+    min=(79873x34049)   minResize=(79873x34049) updatePeriodMillis=0 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0d07c4 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [313] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_2_2}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [314] provider ProviderId{user:150, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.SelectedReminderWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=300000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d07b1 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [315] provider ProviderId{user:150, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.complication.SmallComplicationWidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0d078e initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [316] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_3_2}}
+    min=(46081x28161)   minResize=(46081x28161) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [317] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_4_1}}
+    min=(64001x10241)   minResize=(64001x10241) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [318] provider ProviderId{user:150, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.ReminderWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=300000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d07c6 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [319] provider ProviderId{user:150, app:10346, cmp:ComponentInfo{com.samsung.android.app.reminder/com.samsung.android.app.reminder.remote.widget.ReminderCoverWidgetProvider}}
+    min=(184321x184321)   minResize=(184321x184321) updatePeriodMillis=0 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0d07c4 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [320] provider ProviderId{user:150, app:10181, cmp:ComponentInfo{com.sec.android.widgetapp.easymodecontactswidget/com.sec.android.widgetapp.easymodecontactswidget.SeniorFavoriteWidgetProviderLarge}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=256 autoAdvanceViewId=-1 initialLayout=#7f0b0141 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [321] provider ProviderId{user:150, app:10121, cmp:ComponentInfo{com.sec.android.app.camera/com.sec.android.app.camera.setting.launcherwidget.CameraWidget}}
+    min=(0x0)   minResize=(25601x7681) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d00de initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=true
+  [322] provider ProviderId{user:150, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.MultipleWidgetSmallProvider}}
+    min=(38401x34049)   minResize=(38401x34049) updatePeriodMillis=0 resizeMode=3 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [323] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_2_3}}
+    min=(28161x46081)   minResize=(28161x46081) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [324] provider ProviderId{user:150, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.PhotoAppWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [325] provider ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_3_1}}
+    min=(46081x10241)   minResize=(46081x10241) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c024c initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [326] provider ProviderId{user:150, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.InformativeWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [327] provider ProviderId{user:150, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.CoverScreenWidgetProvider}}
+    min=(191489x166401)   minResize=(191489x166401) updatePeriodMillis=0 resizeMode=3 widgetCategory=2 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [328] provider ProviderId{user:150, app:10079, cmp:ComponentInfo{com.samsung.android.widget.pictureframe/com.samsung.android.widget.pictureframe.ComplicationWidgetProvider}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=0 widgetCategory=8192 autoAdvanceViewId=-1 initialLayout=#7f0c0008 initialKeyguardLayout=#0   zombie=false
+    masked locked=true quiet=true superLocked=false suspendedPkg=false stoppedPkg=false
+  [329] provider ProviderId{user:0, app:10400, cmp:ComponentInfo{com.instagram.android/com.instagram.ui.widget.profileqrcode.QRCodeAppWidgetProvider}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=21600000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e12fa initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+  [330] provider ProviderId{user:0, app:10571, cmp:ComponentInfo{com.livesolar.solarsystem.diag/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}
+    min=(71681x71681)   minResize=(46081x46081) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0b0029 initialKeyguardLayout=#0   zombie=false
+    masked locked=false quiet=false superLocked=false suspendedPkg=false stoppedPkg=false
+ 
+Widgets:
+  [0] id=12
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10402, cmp:ComponentInfo{com.tplink.iot/com.tplink.libwidgetui.multishortcutswidget.MultiShortcutsAppWidgetProvider}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@c4fd6f9
+    options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=0.71428573, appWidgetMaxHeight=257, semAppWidgetRowSpan=2, appWidgetCategory=1, semAppWidgetColumnSpan=6, hsMode=OneUI, appWidgetMaxWidth=520, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=257, semWidgetSize=16, semDisplayDensity=1.94375, semWidgetStyle=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=520, semHostType=1, hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[520.1286x257.7492]}]
+  [1] id=2
+    host=HostId{user:0, app:10153, hostId:1024, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherForecastWidget}}
+    host.callbacks=null
+    views=android.widget.RemoteViews@f14963e
+    options=Bundle[{appWidgetMaxHeight=0, appWidgetCategory=1, appWidgetMaxWidth=0, appWidgetMinHeight=0, appWidgetMinWidth=0}]
+  [2] id=3
+    host=HostId{user:0, app:10153, hostId:1024, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10133, cmp:ComponentInfo{com.samsung.android.smartsuggestions/com.samsung.android.smartsuggestions.feature.aisuggestion.ui.appwidget.AiSuggestionAppWidgetReceiver}}
+    host.callbacks=null
+    views=android.widget.RemoteViews@37f0c9f
+    options=Bundle[{appWidgetMaxHeight=0, appWidgetCategory=1, appWidgetMaxWidth=0, appWidgetMinHeight=0, appWidgetMinWidth=0}]
+  [3] id=5
+    host=HostId{user:0, app:10153, hostId:1024, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10282, cmp:ComponentInfo{com.google.android.googlequicksearchbox/com.google.android.googlequicksearchbox.SearchWidgetProvider}}
+    host.callbacks=null
+    views=android.widget.RemoteViews@4eb01ec
+    options=Bundle[{appWidgetMaxHeight=0, appWidgetCategory=1, appWidgetMaxWidth=0, appWidgetMinHeight=0, appWidgetMinWidth=0}]
+  [4] id=15
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10133, cmp:ComponentInfo{com.samsung.android.smartsuggestions/com.samsung.android.smartsuggestions.feature.aisuggestion.ui.appwidget.AiSuggestionAppWidgetReceiver}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@b2de9b5
+    options=Bundle[{appWidgetMaxHeight=48, semAppWidgetRowSpan=1, appWidgetCategory=1, semAppWidgetColumnSpan=3, appWidgetMaxWidth=149, appWidgetMinHeight=48, appWidgetMinWidth=149, appWidgetSizes=[149.33333x48.761906]}]
+  [5] id=16
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:1000, cmp:ComponentInfo{com.samsung.android.lool/com.samsung.android.sm.widgetapp.SMGlanceWidgetProvider}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@6bfd84a
+    options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=1.0, appWidgetMaxHeight=56, semAppWidgetRowSpan=1, appWidgetCategory=1, semAppWidgetColumnSpan=2, hsMode=OneUI, appWidgetMaxWidth=114, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=56, semWidgetSize=2, semDisplayDensity=1.94375, semWidgetStyle=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=114, semHostType=1, hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[114.21222x56.07717]}]
+  [6] id=17
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:1000, cmp:ComponentInfo{com.samsung.android.forest/com.samsung.android.forest.widget.DwGlanceWidgetScreenTimeProvider}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@6d1d3bb
+    options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=1.0, appWidgetMaxHeight=184, semAppWidgetRowSpan=2, appWidgetCategory=1, semAppWidgetColumnSpan=7, hsMode=OneUI, appWidgetMaxWidth=435, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=184, semWidgetSize=16, semDisplayDensity=1.94375, semWidgetStyle=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=435, semHostType=1, hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[435.7556x184.18007]}]
+  [7] id=18
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10428, cmp:ComponentInfo{com.fitbit.FitbitMobile/com.fitbit.widget.ui.PrimaryGoalWidgetProvider}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@37c50d8
+    options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=0.71428573, appWidgetMaxHeight=257, semAppWidgetRowSpan=2, appWidgetCategory=1, semAppWidgetColumnSpan=5, hsMode=OneUI, appWidgetMaxWidth=430, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=257, semWidgetSize=16, semDisplayDensity=1.94375, semWidgetStyle=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=430, semHostType=1, hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[430.09647x257.7492]}]
+  [8] id=20
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10372, cmp:ComponentInfo{com.philips.lighting.hue2/com.signify.widgets.SingleActionWidget}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@ba06c31
+    options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=0.71428573, appWidgetMaxHeight=110, semAppWidgetRowSpan=1, appWidgetCategory=1, semAppWidgetColumnSpan=1, hsMode=OneUI, appWidgetMaxWidth=85, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=110, semWidgetSize=1, semDisplayDensity=1.94375, semWidgetStyle=1, STATE=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=85, semHostType=1, hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[85.9164x110.09646]}]
+  [9] id=21
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10396, cmp:ComponentInfo{com.whatsapp/com.whatsapp.appwidget.WidgetProvider}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@32b2f16
+    options=Bundle[{appWidgetMaxHeight=359, semAppWidgetRowSpan=3, appWidgetCategory=1, semAppWidgetColumnSpan=7, appWidgetMaxWidth=512, appWidgetMinHeight=359, appWidgetMinWidth=512, appWidgetSizes=[512.0x359.61905]}]
+  [10] id=23
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_6_6}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@2bff097
+    options=Bundle[{appWidgetMaxHeight=692, semAppWidgetRowSpan=6, appWidgetCategory=1, semAppWidgetColumnSpan=5, appWidgetMaxWidth=506, appWidgetMinHeight=692, appWidgetMinWidth=506, appWidgetSizes=[506.2857x692.1905]}]
+  [11] id=24
+    host=HostId{user:0, app:10050, hostId:2304, pkg:com.android.systemui}
+    provider=ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.complication.receiver.ComplicationMoonReceiver}}
+    host.callbacks=null
+    views=android.widget.RemoteViews@2d1a284
+    options=Bundle[{appWidgetMaxHeight=0, semAppWidgetRowSpan=1, appWidgetCategory=8192, semAppWidgetColumnSpan=1, appWidgetMaxWidth=0, appWidgetMinHeight=0, semWidgetSize=1, semWidgetStyle=2, appWidgetMinWidth=0, semHostType=2, appWidgetSizes=[85.6987x85.40193]}]
+  [12] id=25
+    host=HostId{user:0, app:10050, hostId:2304, pkg:com.android.systemui}
+    provider=ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.complication.receiver.ComplicationWeatherDetailReceiver}}
+    host.callbacks=null
+    views=android.widget.RemoteViews@8de9a6d
+    options=Bundle[{appWidgetMaxHeight=0, semAppWidgetRowSpan=1, appWidgetCategory=8192, semAppWidgetColumnSpan=2, appWidgetMaxWidth=0, appWidgetMinHeight=0, semWidgetSize=2, semWidgetStyle=2, appWidgetMinWidth=0, semHostType=2, appWidgetSizes=[189.10706x85.40193]}]
+  [13] id=26
+    host=HostId{user:0, app:10050, hostId:2304, pkg:com.android.systemui}
+    provider=ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.complication.receiver.ComplicationSunriseSunsetReceiver}}
+    host.callbacks=null
+    views=android.widget.RemoteViews@72326a2
+    options=Bundle[{appWidgetMaxHeight=0, semAppWidgetRowSpan=1, appWidgetCategory=8192, semAppWidgetColumnSpan=1, appWidgetMaxWidth=0, appWidgetMinHeight=0, semWidgetSize=1, semWidgetStyle=2, appWidgetMinWidth=0, semHostType=2, appWidgetSizes=[85.6987x85.40193]}]
+  [14] id=34
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10492, cmp:ComponentInfo{jp.co.johospace.jorte/jp.co.johospace.jorte.widget.JorteWidget_Resizable_4_4}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@308ff33
+    options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=0.71428573, appWidgetMaxHeight=996, semAppWidgetRowSpan=7, appWidgetCategory=1, semAppWidgetColumnSpan=7, hsMode=OneUI, appWidgetMaxWidth=610, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=996, semWidgetSize=64, semDisplayDensity=1.94375, semWidgetStyle=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=610, semHostType=1, hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[610.16077x996.0129]}]
+  [15] id=35
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10396, cmp:ComponentInfo{com.whatsapp/com.whatsapp.appwidget.WidgetProvider}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@d0862f0
+    options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=0.71428573, appWidgetMaxHeight=996, semAppWidgetRowSpan=7, appWidgetCategory=1, semAppWidgetColumnSpan=7, hsMode=OneUI, appWidgetMaxWidth=610, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=996, semWidgetSize=64, semDisplayDensity=1.94375, semWidgetStyle=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=610, semHostType=1, hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[610.16077x996.0129]}]
+  [16] id=36
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10284, cmp:ComponentInfo{com.google.android.apps.bard/com.google.android.apps.bard.widget.RobinToolBarAppWidgetReceiver}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@577069
+    options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=0.71428573, appWidgetMaxHeight=110, semAppWidgetRowSpan=1, appWidgetCategory=1, semAppWidgetColumnSpan=1, hsMode=OneUI, appWidgetMaxWidth=85, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=110, semWidgetSize=1, semDisplayDensity=1.94375, semWidgetStyle=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=85, semHostType=1, hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[85.9164x110.09646]}]
+  [17] id=37
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherForecastWidget}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@3b10aee
+    options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=1.0, appWidgetMaxHeight=184, semAppWidgetRowSpan=2, appWidgetCategory=1, semAppWidgetColumnSpan=7, hsMode=OneUI, appWidgetMaxWidth=435, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=184, semWidgetSize=16, semDisplayDensity=1.94375, semWidgetStyle=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=435, semHostType=1, hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[435.7556x184.18007]}]
+  [18] id=38
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10239, cmp:ComponentInfo{com.sec.android.daemonapp/com.sec.android.daemonapp.appwidget.WeatherForecastWidget}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@5ca5b8f
+    options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=1.0, appWidgetMaxHeight=184, semAppWidgetRowSpan=2, appWidgetCategory=1, semAppWidgetColumnSpan=7, hsMode=OneUI, appWidgetMaxWidth=435, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=184, semWidgetSize=16, semDisplayDensity=1.94375, semWidgetStyle=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=435, semHostType=1, hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[435.7556x184.18007]}]
+  [19] id=40
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10383, cmp:ComponentInfo{com.openai.chatgpt/com.openai.feature.widget.WidgetReceiver}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@ea8be1c
+    options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=0.71428573, appWidgetMaxHeight=110, semAppWidgetRowSpan=1, appWidgetCategory=1, semAppWidgetColumnSpan=1, hsMode=OneUI, appWidgetMaxWidth=85, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=110, semWidgetSize=1, semDisplayDensity=1.94375, semWidgetStyle=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=85, semHostType=1, hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[85.9164x110.09646]}]
+  [20] id=58
+    host=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    provider=ProviderId{user:0, app:10571, cmp:ComponentInfo{com.livesolar.solarsystem.diag/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    views=android.widget.RemoteViews@d6daa25
+    options=Bundle[{hsWidgetDisplayId=0, hsResizeRatio=0.71428573, appWidgetMaxHeight=553, semAppWidgetRowSpan=4, appWidgetCategory=1, semAppWidgetColumnSpan=4, hsMode=OneUI, appWidgetMaxWidth=340, hsHomeGrid=Supplier{VAL_PARCELABLE@372+68}, appWidgetMinHeight=553, semWidgetSize=8, semDisplayDensity=1.94375, semWidgetStyle=1, darkModeStatus=32, hsIconLabelEnabled=true, hsForcedOrientation=1, appWidgetMinWidth=340, semHostType=1, hsWidgetLabelEnabled=false, hsCurrentOrientation=2, appWidgetSizes=[340.0643x553.0546]}]
+ 
+Hosts:
+  [0] hostId=HostId{user:0, app:10153, hostId:1024, pkg:com.sec.android.app.launcher}
+    callbacks=null
+    widgets.size=3 zombie=false
+  [1] hostId=HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+    callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@8772c78
+    widgets.size=15 zombie=false
+  [2] hostId=HostId{user:0, app:1000, hostId:2304, pkg:com.samsung.android.app.dressroom}
+    callbacks=null
+    widgets.size=0 zombie=false
+  [3] hostId=HostId{user:0, app:10050, hostId:2304, pkg:com.android.systemui}
+    callbacks=null
+    widgets.size=3 zombie=false
+ 
+Grants:
+ 
+Host history:
+  [05-07 01:27:11.231] Start listening : HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher} 0
+  [05-07 01:27:27.671] Stop listening : HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+  [05-07 01:32:04.708] Start listening : HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher} 0
+  [05-07 01:32:05.380] Stop listening : HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher}
+  [05-07 01:34:42.792] Start listening : HostId{user:0, app:10153, hostId:1025, pkg:com.sec.android.app.launcher} 0
+  [05-07 01:06:52.076] Start listening : HostId{user:0, app:10050, hostId:2304, pkg:com.android.systemui} 0
+  [05-07 01:11:46.778] Stop listening : HostId{user:0, app:10050, hostId:2304, pkg:com.android.systemui}
+ 
+Appwidget providers history:
+  [05-07 00:17:50.367] getInstalledProvidersForProfiles 10153 com.spotify.music t:8 r:8
+  [05-07 00:17:50.451] getInstalledProvidersForProfiles 10153 null t:0 r:0
+  [05-07 00:17:50.458] getInstalledProvidersForProfiles 10153 null t:0 r:0
+  [05-07 00:23:29.347] getInstalledProvidersForProfiles 10415 com.bose.bosemusic t:0 r:0
+  [05-07 00:23:51.963] getInstalledProvidersForProfiles 10415 com.bose.bosemusic t:7 r:0
+  [05-07 00:23:53.598] getInstalledProvidersForProfiles 10415 com.bose.bosemusic t:3 r:0
+  [05-07 00:23:54.071] getInstalledProvidersForProfiles 10568 com.livesolar.solarsystem t:0 r:0
+  [05-07 00:23:55.125] getInstalledProvidersForProfiles 10428 com.fitbit.FitbitMobile t:0 r:0
+  [05-07 00:23:57.500] getInstalledProvidersForProfiles 10396 com.whatsapp t:0 r:0
+  [05-07 00:23:58.956] getInstalledProvidersForProfiles 10302 com.google.android.youtube t:0 r:0
+  [05-07 00:24:05.845] getInstalledProvidersForProfiles 10425 com.surfshark.vpnclient.android t:0 r:0
+  [05-07 00:24:07.051] getInstalledProvidersForProfiles 10122 com.samsung.android.app.contacts t:0 r:0
+  [05-07 00:24:07.214] getInstalledProvidersForProfiles 10124 com.samsung.android.dialer t:0 r:0
+  [05-07 00:24:09.804] getInstalledProvidersForProfiles 10301 com.google.android.apps.maps t:1 r:0
+  [05-07 00:24:20.100] getInstalledProvidersForProfiles 10122 com.samsung.android.app.contacts t:0 r:0
+  [05-07 00:24:20.219] getInstalledProvidersForProfiles 10124 com.samsung.android.dialer t:0 r:0
+  [05-07 00:24:22.379] getInstalledProvidersForProfiles 10301 com.google.android.apps.maps t:0 r:0
+  [05-07 00:24:36.872] getInstalledProvidersForProfiles 10512 app.revanced.android.youtube t:0 r:0
+  [05-07 00:24:50.977] getInstalledProvidersForProfiles 10301 com.google.android.apps.maps t:0 r:0
+  [05-07 00:25:40.393] getInstalledProvidersForProfiles 10512 app.revanced.android.youtube t:0 r:0
+  [05-07 00:28:51.789] getInstalledProvidersForProfiles 10301 com.google.android.apps.maps t:0 r:0
+  [05-07 00:30:05.598] getInstalledProvidersForProfiles 10050 com.samsung.android.app.routines t:0 r:0
+  [05-07 00:32:38.864] getInstalledProvidersForProfiles 10492 jp.co.johospace.jorte t:0 r:0
+  [05-07 00:32:38.875] getInstalledProvidersForProfiles 10492 jp.co.johospace.jorte t:0 r:0
+  [05-07 00:32:39.274] getInstalledProvidersForProfiles 10402 com.tplink.iot t:0 r:0
+  [05-07 00:34:20.298] getInstalledProvidersForProfiles 10302 com.google.android.youtube t:0 r:0
+  [05-07 00:36:19.292] getInstalledProvidersForProfiles 10354 com.microsoft.office.outlook t:0 r:0
+  [05-07 00:41:07.681] getInstalledProvidersForProfiles 10512 app.revanced.android.youtube t:0 r:0
+  [05-07 00:41:34.369] getInstalledProvidersForProfiles 10153 com.powermediaplayer t:0 r:0
+  [05-07 00:42:37.977] getInstalledProvidersForProfiles 1000 com.samsung.android.forest t:0 r:0
+  [05-07 00:42:38.016] getInstalledProvidersForProfiles 1000 com.samsung.android.lool t:0 r:0
+  [05-07 00:42:38.082] getInstalledProvidersForProfiles 1000 com.samsung.android.lool t:0 r:0
+  [05-07 00:42:38.311] setTemplateWidgetPreview 1000 t:0
+  [05-07 00:43:02.772] getInstalledProvidersForProfiles 10492 jp.co.johospace.jorte t:0 r:0
+  [05-07 00:51:10.239] getInstalledProvidersForProfiles 10153 com.powermediaplayer t:0 r:0
+  [05-07 00:51:10.419] getInstalledProvidersForProfiles 10239 com.sec.android.daemonapp t:0 r:0
+  [05-07 00:51:10.504] getInstalledProvidersForProfiles 10239 com.sec.android.daemonapp t:0 r:0
+  [05-07 00:51:17.056] setTemplateWidgetPreview 10239 t:0
+  [05-07 00:51:17.158] getInstalledProvidersForProfiles 10153 null t:0 r:0
+  [05-07 00:51:17.170] getInstalledProvidersForProfiles 10153 null t:1 r:0
+  [05-07 00:51:17.477] setTemplateWidgetPreview 10239 t:0
+  [05-07 00:51:17.578] getInstalledProvidersForProfiles 10153 null t:0 r:0
+  [05-07 00:51:17.590] getInstalledProvidersForProfiles 10153 null t:0 r:0
+  [05-07 00:54:27.929] getInstalledProvidersForProfiles 10280 com.android.vending t:0 r:0
+  [05-07 00:54:27.976] getInstalledProvidersForProfiles 1000 com.samsung.android.forest t:0 r:0
+  [05-07 00:54:39.077] getInstalledProvidersForProfiles 10153 com.powermediaplayer t:0 r:0
+  [05-07 00:54:39.079] getInstalledProvidersForProfiles 10153 com.powermediaplayer t:0 r:0
+  [05-07 00:54:40.673] getInstalledProvidersForProfiles 10415 com.bose.bosemusic t:0 r:0
+  [05-07 00:55:00.836] getInstalledProvidersForProfiles 10153 com.powermediaplayer t:0 r:0
+  [05-07 01:04:29.162] getInstalledProvidersForProfiles 10302 com.google.android.youtube t:0 r:0
+  [05-07 01:06:30.436] getInstalledProvidersForProfiles 10492 jp.co.johospace.jorte t:0 r:0
+  [05-07 01:09:22.274] getInstalledProvidersForProfiles 10512 app.revanced.android.youtube t:0 r:0
+  [05-07 01:10:45.505] getInstalledProvidersForProfiles 10153 com.facebook.appmanager t:0 r:0
+  [05-07 01:10:56.601] getInstalledProvidersForProfiles 10153 com.livesolar.solarsystem.diag t:2 r:2
+  [05-07 01:10:56.610] getInstalledProvidersForProfiles 10153 com.livesolar.solarsystem.diag t:0 r:0
+  [05-07 01:11:03.678] getInstalledProvidersForProfiles 10153 com.livesolar.solarsystem.diag t:0 r:0
+  [05-07 01:12:21.734] setTemplateWidgetPreview 1000 t:0
+  [05-07 01:19:42.549] getInstalledProvidersForProfiles 10124 com.samsung.android.dialer t:0 r:0
+  [05-07 01:21:08.278] getInstalledProvidersForProfiles 10415 com.bose.bosemusic t:1 r:0
+  [05-07 01:21:10.055] getInstalledProvidersForProfiles 10428 com.fitbit.FitbitMobile t:34 r:0
+  [05-07 01:21:16.632] getInstalledProvidersForProfiles 10415 com.bose.bosemusic t:5 r:0
+  [05-07 01:21:17.695] getInstalledProvidersForProfiles 10428 com.fitbit.FitbitMobile t:0 r:0
+  [05-07 01:21:38.088] getInstalledProvidersForProfiles 10122 com.samsung.android.app.contacts t:0 r:0
+  [05-07 01:21:38.232] getInstalledProvidersForProfiles 10124 com.samsung.android.dialer t:0 r:0
+  [05-07 01:21:57.335] getInstalledProvidersForProfiles 10415 com.bose.bosemusic t:0 r:0
+  [05-07 01:23:31.041] getInstalledProvidersForProfiles 10396 com.whatsapp t:0 r:0
+  [05-07 01:25:15.809] getInstalledProvidersForProfiles 10301 com.google.android.apps.maps t:0 r:0
+  [05-07 01:26:00.976] getInstalledProvidersForProfiles 10153 com.facebook.appmanager t:0 r:0
+  [05-07 01:27:11.499] getInstalledProvidersForProfiles 10153 null t:11 r:10
+  [05-07 01:27:11.553] getInstalledProvidersForProfiles 10153 null t:1 r:0
+  [05-07 01:27:11.841] getInstalledProvidersForProfiles 10153 com.livesolar.solarsystem.diag t:0 r:0
+  [05-07 01:29:58.073] getInstalledProvidersForProfiles 10302 com.google.android.youtube t:0 r:0
+  [05-07 01:32:04.826] getInstalledProvidersForProfiles 10153 com.livesolar.solarsystem.diag t:0 r:0
+  [05-07 01:32:04.871] getInstalledProvidersForProfiles 10153 null t:0 r:0
+  [05-07 01:32:04.896] getInstalledProvidersForProfiles 10153 null t:0 r:0
+  [05-07 01:32:18.657] getInstalledProvidersForProfiles 10402 com.tplink.iot t:0 r:0
+  [05-07 01:32:18.885] getInstalledProvidersForProfiles 10492 jp.co.johospace.jorte t:0 r:0
+  [05-07 01:32:19.035] getInstalledProvidersForProfiles 10492 jp.co.johospace.jorte t:1 r:0
+  [05-07 01:34:49.036] getInstalledProvidersForProfiles 10153 null t:1 r:0
+  [05-07 01:34:49.058] getInstalledProvidersForProfiles 10153 null t:0 r:0
+  [05-07 01:34:55.456] getInstalledProvidersForProfiles 10571 com.livesolar.solarsystem.diag t:0 r:0
+  [05-07 01:35:09.481] getInstalledProvidersForProfiles 10239 com.sec.android.daemonapp t:0 r:0
+  [05-07 01:35:09.540] getInstalledProvidersForProfiles 10239 com.sec.android.daemonapp t:0 r:0
+  [05-07 01:35:34.013] getInstalledProvidersForProfiles 10287 com.android.chrome t:0 r:0
+  [05-07 01:35:56.611] getInstalledProvidersForProfiles 10301 com.google.android.apps.maps t:0 r:0
+  [05-07 01:36:35.740] getInstalledProvidersForProfiles 10354 com.microsoft.office.outlook t:1 r:0
+  [05-07 00:00:46.844] getInstalledProvidersForProfiles 10153 com.mcdonalds.app.uk t:0 r:0
+  [05-07 00:00:49.694] getInstalledProvidersForProfiles 1000 com.samsung.android.forest t:1 r:0
+  [05-07 00:00:50.195] getInstalledProvidersForProfiles 10373 com.google.android.apps.docs t:0 r:0
+  [05-07 00:00:51.188] getInstalledProvidersForProfiles 10153 com.google.android.apps.docs t:1 r:1
+  [05-07 00:00:51.268] getInstalledProvidersForProfiles 10153 null t:0 r:0
+  [05-07 00:00:51.279] getInstalledProvidersForProfiles 10153 null t:0 r:0
+  [05-07 00:03:49.467] getInstalledProvidersForProfiles 10301 com.google.android.apps.maps t:1 r:0
+  [05-07 00:04:39.502] getInstalledProvidersForProfiles 10492 jp.co.johospace.jorte t:0 r:0
+  [05-07 00:05:43.535] getInstalledProvidersForProfiles 10153 com.powermediaplayer t:0 r:0
+  [05-07 00:07:38.336] getInstalledProvidersForProfiles 10366 com.spotify.music t:0 r:0
+  [05-07 00:07:39.677] getInstalledProvidersForProfiles 10153 com.spotify.music t:1 r:1
+  [05-07 00:09:01.868] getInstalledProvidersForProfiles 10440 com.google.android.keep t:0 r:0
+  [05-07 00:13:37.226] getInstalledProvidersForProfiles 10153 com.powermediaplayer t:0 r:0
+  [05-07 00:17:36.645] getInstalledProvidersForProfiles 1000 com.android.settings t:0 r:0
+ 
+AppWidget alarm history:
+  [05-07 01:10:08.103] cancel =Provider{ProviderId{user:0, app:10568, cmp:ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}}
+  [05-07 01:34:55.452] add =Provider{ProviderId{user:0, app:10571, cmp:ComponentInfo{com.livesolar.solarsystem.diag/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}}
+  [05-06 01:20:21.090] add =Provider{ProviderId{user:0, app:10568, cmp:ComponentInfo{com.livesolar.solarsystem/com.livesolar.solarsystem.SolarSystemAppWidgetProvider}}}
+  [05-06 08:58:10.403] add =Provider{ProviderId{user:0, app:10428, cmp:ComponentInfo{com.fitbit.FitbitMobile/com.fitbit.widget.ui.PrimaryGoalWidgetProvider}}}
+  [05-06 09:10:39.669] add =Provider{ProviderId{user:0, app:10428, cmp:ComponentInfo{com.fitbit.FitbitMobile/com.fitbit.widget.ui.PrimaryGoalWidgetProvider}}}
+  [05-06 21:32:44.770] add =Provider{ProviderId{user:0, app:10428, cmp:ComponentInfo{com.fitbit.FitbitMobile/com.fitbit.widget.ui.PrimaryGoalWidgetProvider}}}
+  [05-06 21:33:09.117] add =Provider{ProviderId{user:0, app:10428, cmp:ComponentInfo{com.fitbit.FitbitMobile/com.fitbit.widget.ui.PrimaryGoalWidgetProvider}}}
+ 
+AppWidget restore history:
+
+
+ 
+AppWidget last read provider info time:
+    startTime=105948463
+    endTime=105948464
+    providerCount=331
+    infoLoadTime=0
