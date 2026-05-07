@@ -2270,10 +2270,11 @@
 
                 camera.position.set(placement.cameraPos.x, placement.cameraPos.y, placement.cameraPos.z);
                 controls.target.copy(worldPos);
-                // Set explicit up so OrbitControls doesn't flip the frame on
-                // near-vertical views (cases A/B at high tilt).
-                camera.up.set(placement.upAxis.x, placement.upAxis.y, placement.upAxis.z);
-                camera.lookAt(worldPos);
+                // Leave camera.up at world (0,1,0) so OrbitControls keeps the
+                // scene right-side-up after lookAt. Setting a custom up vector
+                // here flips the apparent world orientation when the moon is
+                // at a high vertical offset (tested 2026-05-07 — caused
+                // upside-down view of solar system from inside Earth's Moon).
             } else {
                 // === PLANET SELECTED ===
                 // Restore standard FOV
@@ -2454,9 +2455,14 @@
             const trueUpUnit = new THREE.Vector3().crossVectors(rightUnit, camDirUnit).normalize();
 
             // Per-axis maximum offset of any visible orbital ring point from
-            // the origin, projected onto the camera's screen plane axes.
+            // the origin, projected onto the camera's screen plane axes. Also
+            // includes the current planet body position + body radius — this
+            // is what fills extra extent past the orbit ring (e.g. Pluto body
+            // sitting on one side of its orbit makes that side extend further
+            // than the other side, so margin must accommodate it).
             let maxScreenX = 0, maxScreenY = 0;
             const _samp = new THREE.Vector3();
+            const _bodyPos = new THREE.Vector3();
             for (const name of visibleNames) {
                 const data = planetsData[name];
                 for (let i = 0; i < 36; i++) {
@@ -2467,6 +2473,27 @@
                     const sy = Math.abs(_samp.dot(trueUpUnit));
                     if (sx > maxScreenX) maxScreenX = sx;
                     if (sy > maxScreenY) maxScreenY = sy;
+                }
+                // Include the planet's CURRENT body position + body radius.
+                const planetMesh = planets[name];
+                if (planetMesh) {
+                    planetMesh.getWorldPosition(_bodyPos);
+                    const bodyR = data.size || 0.05;
+                    // Sample 4 cardinal points on the body's silhouette so any
+                    // direction the body extends contributes to the bbox.
+                    for (const offDir of [
+                        rightUnit, { x: -rightUnit.x, y: -rightUnit.y, z: -rightUnit.z },
+                        trueUpUnit, { x: -trueUpUnit.x, y: -trueUpUnit.y, z: -trueUpUnit.z }
+                    ]) {
+                        const sx = Math.abs((_bodyPos.x + offDir.x * bodyR) * rightUnit.x +
+                                            (_bodyPos.y + offDir.y * bodyR) * rightUnit.y +
+                                            (_bodyPos.z + offDir.z * bodyR) * rightUnit.z);
+                        const sy = Math.abs((_bodyPos.x + offDir.x * bodyR) * trueUpUnit.x +
+                                            (_bodyPos.y + offDir.y * bodyR) * trueUpUnit.y +
+                                            (_bodyPos.z + offDir.z * bodyR) * trueUpUnit.z);
+                        if (sx > maxScreenX) maxScreenX = sx;
+                        if (sy > maxScreenY) maxScreenY = sy;
+                    }
                 }
             }
 

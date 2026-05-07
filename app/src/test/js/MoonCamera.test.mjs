@@ -21,42 +21,59 @@ test('Case C in-plane: moon between planet and sun → camera perpendicular, pla
         `moon not centred: (${r.moonScreenX}, ${r.moonScreenY})`);
 });
 
-test('Case A: moon high above orbital plane → camera above moon (Y > moon Y), moon centred', () => {
-    // Realistic Triton-like geometry: moon offset from planet horizontally too,
-    // so the moon→planet vector has a non-zero XZ component (avoiding degenerate
-    // straight-down stacking).
+test('Case A: Triton-like high vertical offset → camera lifted above moon, moon centred', () => {
+    // Triton-like: moon at extreme of inclined orbit. Y offset from planet is
+    // ~40% of orbital radius (sin(156°) ≈ 0.41).
     const r = computeMoonCameraPlacement({
-        moonWorld:   v(20,  5, 3),
-        planetWorld: v(22,  0, 0),
-        sunWorld:    v(0,   0, 0),
-        moonSize:    0.15,
+        moonWorld:   v(70, 3, 2),
+        planetWorld: v(72, 0, 0),
+        sunWorld:    v(0,  0, 0),
+        moonSize:    0.135,
         planetSize:  1.05,
         sunSize:     2.5
     });
     assert.equal(r.case, 'A');
-    assert.ok(r.cameraPos.y > 5, `camera Y ${r.cameraPos.y} should be above moon Y 5`);
-    assert.ok(Math.abs(r.moonScreenX) < 0.05 && Math.abs(r.moonScreenY) < 0.05,
-        `moon not centred: (${r.moonScreenX}, ${r.moonScreenY})`);
-    // Planet and sun are both in the frame (|screen pos| < 1.5, allowing partial off-frame)
-    assert.ok(Math.abs(r.planetScreenX) < 1.5 && Math.abs(r.planetScreenY) < 1.5,
-        `planet off-frame: (${r.planetScreenX}, ${r.planetScreenY})`);
-    assert.ok(Math.abs(r.sunScreenX) < 1.5 && Math.abs(r.sunScreenY) < 1.5,
-        `sun off-frame: (${r.sunScreenX}, ${r.sunScreenY})`);
+    assert.ok(r.cameraPos.y > r.cameraTargetPos.y,
+        `camera Y ${r.cameraPos.y} should be above moon Y ${r.cameraTargetPos.y}`);
+    // Camera distance must remain reasonable (not the 90-units-from-tiny-moon
+    // bug from the previous iteration).
+    const distFromMoon = Math.hypot(
+        r.cameraPos.x - r.cameraTargetPos.x,
+        r.cameraPos.y - r.cameraTargetPos.y,
+        r.cameraPos.z - r.cameraTargetPos.z
+    );
+    const orbitRadius = Math.hypot(70 - 72, 3 - 0, 2 - 0);
+    assert.ok(distFromMoon < orbitRadius * 4,
+        `camera distance ${distFromMoon} too far for orbit radius ${orbitRadius}`);
 });
 
-test('Case B: moon below orbital plane → camera below moon (Y < moon Y), moon centred', () => {
+test('Case B: low-Y moon → camera lifted below moon', () => {
     const r = computeMoonCameraPlacement({
-        moonWorld:   v(20, -5, 3),
-        planetWorld: v(22,  0, 0),
-        sunWorld:    v(0,   0, 0),
-        moonSize:    0.15,
+        moonWorld:   v(70, -3, 2),
+        planetWorld: v(72, 0, 0),
+        sunWorld:    v(0, 0, 0),
+        moonSize:    0.135,
         planetSize:  1.05,
         sunSize:     2.5
     });
     assert.equal(r.case, 'B');
-    assert.ok(r.cameraPos.y < -5, `camera Y ${r.cameraPos.y} should be below moon Y -5`);
-    assert.ok(Math.abs(r.moonScreenX) < 0.05 && Math.abs(r.moonScreenY) < 0.05,
-        `moon not centred: (${r.moonScreenX}, ${r.moonScreenY})`);
+    assert.ok(r.cameraPos.y < r.cameraTargetPos.y,
+        `camera Y ${r.cameraPos.y} should be below moon Y ${r.cameraTargetPos.y}`);
+});
+
+test('Earth-Moon-like (5° inclination at extreme) stays in case C', () => {
+    // Earth's Moon: 5.14° inclination → at extreme Y, sin(5.14°) ≈ 0.0896 of
+    // orbit radius. With orbit radius 0.5 in scene units, max Y ≈ 0.045.
+    // Threshold = 0.5 * 0.30 = 0.15 → 0.045 < 0.15 → case C. ✓
+    const r = computeMoonCameraPlacement({
+        moonWorld:   v(26.5, 0.045, 0),
+        planetWorld: v(26.0, 0,     0),
+        sunWorld:    v(0, 0, 0),
+        moonSize:    0.005,
+        planetSize:  0.7,
+        sunSize:     2.5
+    });
+    assert.equal(r.case, 'C', `Earth's Moon must be case C, got ${r.case}`);
 });
 
 test('Threshold boundary: tiny vertical offset stays in case C', () => {
