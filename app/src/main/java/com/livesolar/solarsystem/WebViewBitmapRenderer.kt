@@ -25,6 +25,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
 import org.json.JSONObject
+import com.livesolar.solarsystem.BuildConfig
 
 /**
  * Offscreen WebView → Bitmap renderer for the home-screen widget and live
@@ -115,7 +116,7 @@ object WebViewBitmapRenderer {
             handler.post {
                 var bm: Bitmap? = null
                 try {
-                    bm = composeBitmap(json, widthPx, heightPx)
+                    bm = composeBitmap(json, widthPx, heightPx, app, urlParams)
                 } catch (t: Throwable) {
                     Log.w(TAG, "compose failed", t)
                 } finally {
@@ -155,7 +156,13 @@ object WebViewBitmapRenderer {
         wv.loadUrl("https://appassets.androidplatform.net/assets/index.html$urlParams")
     }
 
-    private fun composeBitmap(metaJson: String, requestedW: Int, requestedH: Int): Bitmap? {
+    private fun composeBitmap(
+        metaJson: String,
+        requestedW: Int,
+        requestedH: Int,
+        diagContext: Context? = null,
+        diagTag: String = ""
+    ): Bitmap? {
         val meta = JSONObject(metaJson)
         val sceneDataUrl = meta.getString("sceneDataUrl")
         val sceneBitmap = decodeDataUrl(sceneDataUrl) ?: return null
@@ -198,6 +205,22 @@ object WebViewBitmapRenderer {
                 val xOut = xCss * dpr * sceneScaleX
                 val yOut = drawTop + (yCss * dpr * sceneScaleY) + labelPaint.textSize
                 canvas.drawText(text, xOut, yOut, labelPaint)
+            }
+        }
+
+        if (BuildConfig.DEBUG && diagContext != null) {
+            try {
+                val diagDir = java.io.File(diagContext.filesDir, "diag")
+                diagDir.mkdirs()
+                val ts = System.currentTimeMillis()
+                val safeTag = diagTag.replace(Regex("[^A-Za-z0-9._-]"), "_").take(120)
+                val fname = "render_${ts}_${requestedW}x${requestedH}_${safeTag}.png"
+                java.io.FileOutputStream(java.io.File(diagDir, fname)).use { fos ->
+                    out.compress(Bitmap.CompressFormat.PNG, 100, fos)
+                }
+                Log.i("SolarDiag", "DUMP $fname")
+            } catch (t: Throwable) {
+                Log.w("SolarDiag", "dump failed", t)
             }
         }
 
