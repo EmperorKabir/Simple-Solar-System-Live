@@ -863,6 +863,7 @@
         import { renderGuide } from './js/UserGuide.js';
         import { computePlanetPosition, computePlanetPositionVSOP87, VSOP87B, computeMoonPosition, computeBodyRotation, computeSunRotation } from './js/OrbitalEngine.js';
         import { phobos as PHOBOS_ELEMENTS, deimos as DEIMOS_ELEMENTS } from './js/data/martianMoons.js';
+        import { computeMoonCameraPlacement } from './js/MoonCamera.mjs';
         const MARS_MOON_ELEMENTS = { phobos: PHOBOS_ELEMENTS, deimos: DEIMOS_ELEMENTS };
 
         // ============================================================
@@ -2245,94 +2246,34 @@
                 camera.position.set(worldPos.x, worldPos.y + camDist * 0.15, worldPos.z + camDist);
                 controls.target.copy(worldPos);
             } else if (isMoon) {
-                // === MOON CAMERA v17 — 3-case geometric approach ===
-                //
-                // Key insight: camera placement depends on whether the planet and Sun
-                // are in the SAME or OPPOSITE half-sphere as seen from the moon.
-                //
-                // Let dotHS = dot(moonToHost, moonToSun):
-                //   dotHS ≈ +1: planet+sun nearly same direction (full/opposition moon) → PERPENDICULAR
-                //   dotHS ≈ -1: planet+sun opposite (new/conjunction) → bisector degenerate → PERPENDICULAR
-                //   dotHS ∈ (0, 0.8]: planet+sun same half-sphere → NEGATIVE BISECTOR (camera outer side)
-                //   dotHS ≤ 0:        planet+sun opposite halves → POSITIVE BISECTOR (standard)
+                // === MOON CAMERA v18 — 4-axis (above/below/in-plane) ===
+                // Algorithm extracted to ./js/MoonCamera.mjs (pure-function,
+                // unit-tested in Node). Geometry decides LEFT/RIGHT placement
+                // of planet & sun in the frame.
                 camera.fov = 70;
                 camera.updateProjectionMatrix();
-                
+
                 const hostPivot = planets[isMoon.host];
                 const hostWorldPos = new THREE.Vector3();
                 if (hostPivot) hostPivot.getWorldPosition(hostWorldPos);
-                
-                const hostDist = worldPos.distanceTo(hostWorldPos);
-                const hostSize = planetsData[isMoon.host]?.size || 1.0;
-                
-                // Moon → planet and moon → sun (XZ only, ecliptic plane)
-                let moonToHostXZ = new THREE.Vector2(
-                    hostWorldPos.x - worldPos.x, hostWorldPos.z - worldPos.z
-                );
-                if (moonToHostXZ.length() < 0.001) moonToHostXZ.set(1, 0);
-                moonToHostXZ.normalize();
-                const moonToSunXZ = new THREE.Vector2(-worldPos.x, -worldPos.z).normalize();
-                
-                // Bisector and geometry
-                const bisectorRaw = new THREE.Vector2(
-                    moonToHostXZ.x + moonToSunXZ.x, moonToHostXZ.y + moonToSunXZ.y
-                );
-                const bisectorLen = bisectorRaw.length();
-                const dotHS = moonToHostXZ.dot(moonToSunXZ);
-                
-                // Anti-sun perpendicular (used in CASE 1)
-                const planetToMoonXZ = moonToHostXZ.clone().negate();
-                const perp1 = new THREE.Vector2(-planetToMoonXZ.y, planetToMoonXZ.x);
-                const antiSunPerp = perp1.dot(moonToSunXZ) > 0 ? perp1.clone().negate() : perp1.clone();
-                
-                const halfFOV_rad = 35.0 * Math.PI / 180.0;
-                const angRadius = Math.atan2(hostSize, hostDist);
-                const targetAngle = halfFOV_rad + angRadius / 3.0;
-                
-                let finalDirXZ, camDist;
-                
-                if (bisectorLen < 0.15 || dotHS > 0.8) {
-                    // CASE 1 — PERPENDICULAR
-                    // New moon: bisector ≈ 0 (planet+sun antiparallel from moon).
-                    // Full moon: dotHS > 0.8, bisector valid but pos-bisector puts camera
-                    //            at planet position hiding the Sun behind camera.
-                    // Fix: camera perpendicular to planet→moon, anti-Sun bias.
-                    // Analytically: planet at targetAngle → camDist = hostDist/tan(targetAngle).
-                    finalDirXZ = antiSunPerp.clone();
-                    camDist = hostDist / Math.tan(targetAngle);
-                    
-                } else if (dotHS > 0) {
-                    // CASE 2 — NEGATIVE BISECTOR (outer moon)
-                    // Planet+sun are in SAME half-sphere from moon (e.g. Callisto at opposition,
-                    // Io with Sun+Jupiter both inward). Positive bisector hides Sun behind camera.
-                    // Solution: camera on OUTER side (−bisector from moon), looks inward.
-                    // Analytically: planet+sun perpendicular components are constant w.r.t. camDist,
-                    // and both have depth > 0 for all camDist since we look toward them.
-                    // Jupiter appears at most halfAngle=acos(dotHS)/2 off-center (geometric limit).
-                    finalDirXZ = bisectorRaw.clone().normalize().negate();
-                    camDist = Math.max(isMoon.size * 6.0, hostDist * 0.25);
-                    
-                } else {
-                    // CASE 3 — POSITIVE BISECTOR (standard)
-                    // Planet+sun in opposite half-spheres from moon.
-                    // Camera along bisector: planet one edge, sun other edge.
-                    // Analytically solve camDist so planet center at targetAngle from view axis.
-                    finalDirXZ = bisectorRaw.clone().normalize();
-                    const cosHalf = moonToHostXZ.dot(finalDirXZ);
-                    const halfAngle = Math.acos(Math.max(-1, Math.min(1, cosHalf)));
-                    camDist = hostDist * Math.cos(halfAngle)
-                            + hostDist * Math.sin(halfAngle) / Math.tan(targetAngle);
-                }
-                
-                camDist = Math.max(camDist, isMoon.size * 4.0);
-                camDist = Math.max(camDist, hostDist * 0.15);
-                
-                camera.position.set(
-                    worldPos.x + finalDirXZ.x * camDist,
-                    camDist * 0.02,
-                    worldPos.z + finalDirXZ.y * camDist
-                );
+                const planetSize = planetsData[isMoon.host]?.size || 1.0;
+                const sunVisualR = sunVisualRadius;
+
+                const placement = computeMoonCameraPlacement({
+                    moonWorld:   { x: worldPos.x,     y: worldPos.y,     z: worldPos.z     },
+                    planetWorld: { x: hostWorldPos.x, y: hostWorldPos.y, z: hostWorldPos.z },
+                    sunWorld:    { x: 0, y: 0, z: 0 },
+                    moonSize:   isMoon.size,
+                    planetSize: planetSize,
+                    sunSize:    sunVisualR
+                });
+
+                camera.position.set(placement.cameraPos.x, placement.cameraPos.y, placement.cameraPos.z);
                 controls.target.copy(worldPos);
+                // Set explicit up so OrbitControls doesn't flip the frame on
+                // near-vertical views (cases A/B at high tilt).
+                camera.up.set(placement.upAxis.x, placement.upAxis.y, placement.upAxis.z);
+                camera.lookAt(worldPos);
             } else {
                 // === PLANET SELECTED ===
                 // Restore standard FOV
