@@ -1,0 +1,22 @@
+D — pre-fix baseline (2026-05-07)
+=================================
+
+Build: app-diagnostic.apk (commit 7d75168 — pre-D-fix code, just diagnostic variant)
+Device: Samsung Z Fold 6 (RFCY70BARDJ)
+Test sequence: launch app → user folded → user unfolded
+
+Evidence: docs/diag/2026-05-07-evidence/D-prefix-logcat.log (29 MB, 145,958 lines)
+
+Key findings:
+- 4 'finishDrawing of relaunch' events for com.livesolar.solarsystem.diag/MainActivity
+  - 01:20:38.980 (first display event after fold)
+  - 01:20:40.446 (second display event after fold — multi-event Samsung pattern)
+  - 01:24:04.891 (first display event after unfold)
+  - 01:24:06.251 (second display event after unfold)
+- 5 distinct SurfaceFlinger surface IDs created for the same MainActivity ActivityRecord
+  (23028 initial + 23051, 23066, 23085, 23100 from relaunches)
+- Activity relaunch = WebView destroyed + recreated + index.html re-loaded + textures re-decoded.
+  Each relaunch costs ~4-8 s of black/blank screen.
+
+Verdict: PRE-FIX BUG REPRODUCED. Activity recreates per display change, exactly matching
+spec D root cause. Proceeding with D.2 manifest configChanges + onConfigurationChanged fix.
