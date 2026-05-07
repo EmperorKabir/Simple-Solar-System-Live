@@ -7,6 +7,7 @@ import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -92,6 +93,19 @@ class MainActivity : Activity() {
         }
 
         setContentView(webView)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Activity is preserved across fold/unfold via manifest configChanges.
+        // Dispatch a JS resize event so the WebView's existing listener
+        // (index.html:2836) updates camera.aspect + renderer.setSize.
+        // Android does not auto-fire 'resize' inside a WebView whose host
+        // Activity handled the configChange itself.
+        pendingWebView?.evaluateJavascript(
+            "window.dispatchEvent(new Event('resize'));",
+            null
+        )
     }
 
     /**
