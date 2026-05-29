@@ -24,6 +24,16 @@ internal object SlssSyntheticEventDetector {
     // Ring of recent child-event labels for correlation (label -> mono ms).
     private val recent = ArrayDeque<Pair<String, Long>>()
 
+    // Per-surface baseline centroid offset (surface -> [xPct, yPct]) for the
+    // lock-screen-shift detector (plan §3.17). Updated on stable renders.
+    private val baselines = HashMap<String, DoubleArray>()
+
+    // Drift (in % of bitmap dimension) past which a post-trigger render is
+    // flagged as a lock-screen shift.
+    private const val SHIFT_DRIFT_PCT = 5.0
+    // Window after a screen-on / fold within which a render is "preceded by" it.
+    private const val SHIFT_WINDOW_MS = 2000L
+
     fun noteChild(label: String) {
         synchronized(lock) {
             recent.addLast(label to SystemClock.elapsedRealtime())
@@ -69,6 +79,7 @@ internal object SlssSyntheticEventDetector {
         if (ratio < FOLD_AREA_RATIO) return // rotation / minor reconfig, not a fold
 
         val direction = if (area > prevArea) "unfold" else "fold"
+        noteChild("fold_unfold")
         val now = SystemClock.elapsedRealtime()
         val window = synchronized(lock) {
             recent.filter { now - it.second <= 1500L }.map { it.first }
@@ -87,6 +98,51 @@ internal object SlssSyntheticEventDetector {
                 "child_events_correlated" to window
             )
         )
+    }
+
+    /**
+     * Feed a wallpaper render's centroid offset. Emits lock_shift_observation
+     * (plan §3.17) when this render was preceded (within [SHIFT_WINDOW_MS]) by a
+     * screen-on / fold / unfold AND the centroid drifted past [SHIFT_DRIFT_PCT]
+     * from the surface's stable baseline. Baseline is (re)seeded on stable
+     * (non-triggered) renders.
+     */
+    fun noteWallpaperRender(surface: String, xPct: Double, yPct: Double, correlationId: String?) {
+        val now = SystemClock.elapsedRealtime()
+        val triggers = synchronized(lock) {
+            recent.filter {
+                now - it.second <= SHIFT_WINDOW_MS && (
+                    it.first.startsWith("screen_SCREEN_ON") ||
+                        it.first == "screen_USER_PRESENT" ||
+                        it.first == "fold_unfold"
+                    )
+            }.map { it.first }
+        }
+        val base = synchronized(lock) { baselines[surface]?.copyOf() }
+        if (base != null && triggers.isNotEmpty()) {
+            val driftX = xPct - base[0]
+            val driftY = yPct - base[1]
+            if (kotlin.math.abs(driftX) > SHIFT_DRIFT_PCT || kotlin.math.abs(driftY) > SHIFT_DRIFT_PCT) {
+                SlssLogger.logEvent(
+                    "lock_shift_observation",
+                    mapOf(
+                        "surface" to surface,
+                        "preceded_by" to triggers,
+                        "baseline_centroid_x_pct" to base[0],
+                        "baseline_centroid_y_pct" to base[1],
+                        "current_centroid_x_pct" to xPct,
+                        "current_centroid_y_pct" to yPct,
+                        "centroid_drift_x_pct" to driftX,
+                        "centroid_drift_y_pct" to driftY
+                    ),
+                    correlationId = correlationId
+                )
+            }
+        }
+        // Seed/refresh baseline on a stable render (no recent trigger), or first time.
+        if (triggers.isEmpty() || base == null) {
+            synchronized(lock) { baselines[surface] = doubleArrayOf(xPct, yPct) }
+        }
     }
 
     private fun inferState(prevArea: Long, newArea: Long, invert: Boolean): String {

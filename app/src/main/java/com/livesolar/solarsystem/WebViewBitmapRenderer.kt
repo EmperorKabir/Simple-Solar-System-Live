@@ -26,6 +26,9 @@ import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
 import org.json.JSONObject
 import com.livesolar.solarsystem.BuildConfig
+// SLSS_DIAG_TEMPORARY — render-pipeline diagnostic logging.
+import com.livesolar.solarsystem.diag.SlssLogger
+import com.livesolar.solarsystem.diag.SlssLoggerJsBridge
 
 /**
  * Offscreen WebView → Bitmap renderer for the home-screen widget and live
@@ -52,6 +55,12 @@ object WebViewBitmapRenderer {
         widthPx: Int,
         heightPx: Int,
         urlParams: String,
+        // SLSS_DIAG_TEMPORARY params (defaulted so non-diagnostic callers are
+        // unaffected). surfaceKind drives the event type (widget_render vs
+        // wallpaper_render); correlationId ties the worker/engine span to the
+        // render-pipeline stages and to the JS framing diagnostics.
+        surfaceKind: String = "widget",
+        correlationId: String? = null,
         onResult: (Bitmap?) -> Unit
     ) {
         require(Looper.myLooper() == Looper.getMainLooper()) {
@@ -64,6 +73,22 @@ object WebViewBitmapRenderer {
         var done = false
         val tStart = android.os.SystemClock.elapsedRealtime()
         Log.i(TAG, "DIAG render start ${widthPx}x${heightPx} surface=${urlParams}")
+
+        // SLSS_DIAG_TEMPORARY — render-pipeline stage logging.
+        val slssEvt = if (surfaceKind == "widget") "widget_render" else "wallpaper_render"
+        if (SlssLogger.enabled) {
+            SlssLogger.logEvent(
+                slssEvt,
+                mapOf(
+                    "stage" to "renderer_construct",
+                    "surface" to surfaceKind,
+                    "requested_dims_px" to mapOf("w" to widthPx, "h" to heightPx),
+                    "css_aspect" to widthPx.toDouble() / heightPx,
+                    "url_params" to urlParams
+                ),
+                correlationId = correlationId
+            )
+        }
 
         val imageReader = ImageReader.newInstance(widthPx, heightPx, PixelFormat.RGBA_8888, 2)
         val displayManager = app.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
@@ -112,16 +137,41 @@ object WebViewBitmapRenderer {
         val bridge = SnapshotBridge { json ->
             if (done) return@SnapshotBridge
             done = true
-            Log.i(TAG, "DIAG snapshot received t=${android.os.SystemClock.elapsedRealtime() - tStart}ms chars=${json.length}")
+            val tSnap = android.os.SystemClock.elapsedRealtime()
+            Log.i(TAG, "DIAG snapshot received t=${tSnap - tStart}ms chars=${json.length}")
+            if (SlssLogger.enabled) {
+                SlssLogger.logEvent(
+                    slssEvt,
+                    mapOf(
+                        "stage" to "js_snapshot_ready",
+                        "surface" to surfaceKind,
+                        "snapshot_chars" to json.length,
+                        "ms_since_start" to (tSnap - tStart)
+                    ),
+                    correlationId = correlationId
+                )
+            }
             handler.post {
                 var bm: Bitmap? = null
                 try {
-                    bm = composeBitmap(json, widthPx, heightPx, app, urlParams)
+                    bm = composeBitmap(json, widthPx, heightPx, app, urlParams, surfaceKind, correlationId)
                 } catch (t: Throwable) {
                     Log.w(TAG, "compose failed", t)
                 } finally {
                     cleanup()
                     Log.i(TAG, "DIAG bitmap done t=${android.os.SystemClock.elapsedRealtime() - tStart}ms")
+                    if (SlssLogger.enabled) {
+                        SlssLogger.logEvent(
+                            slssEvt,
+                            mapOf(
+                                "stage" to "callback_returned",
+                                "surface" to surfaceKind,
+                                "bitmap_null" to (bm == null),
+                                "total_ms" to (android.os.SystemClock.elapsedRealtime() - tStart)
+                            ),
+                            correlationId = correlationId
+                        )
+                    }
                     onResult(bm)
                 }
             }
@@ -135,6 +185,12 @@ object WebViewBitmapRenderer {
         wv.settings.loadWithOverviewMode = false
         wv.setBackgroundColor(Color.BLACK)
         wv.addJavascriptInterface(bridge, "SnapshotBridge")
+        // SLSS_DIAG_TEMPORARY — expose the diagnostic bridge to the offscreen
+        // render WebView so calcResetView's per-planet framing diagnostics
+        // (the widget L/R asymmetry data) reach the logger.
+        if (SlssLogger.enabled) {
+            wv.addJavascriptInterface(SlssLoggerJsBridge("WebViewBitmapRenderer-$surfaceKind"), "SlssLog")
+        }
         wv.webChromeClient = WebChromeClient()
         wv.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
@@ -153,7 +209,11 @@ object WebViewBitmapRenderer {
             cleanup(); onResult(null)
         }, OVERALL_TIMEOUT_MS)
 
-        wv.loadUrl("https://appassets.androidplatform.net/assets/index.html$urlParams")
+        // SLSS_DIAG_TEMPORARY — pass the correlation id into JS so calcResetView
+        // can tag its framing diagnostics with the same span id.
+        val finalUrl = "https://appassets.androidplatform.net/assets/index.html$urlParams" +
+            if (SlssLogger.enabled && correlationId != null) "&slssCorr=$correlationId" else ""
+        wv.loadUrl(finalUrl)
     }
 
     private fun composeBitmap(
@@ -161,7 +221,9 @@ object WebViewBitmapRenderer {
         requestedW: Int,
         requestedH: Int,
         diagContext: Context? = null,
-        diagTag: String = ""
+        diagTag: String = "",
+        surfaceKind: String = "widget",
+        correlationId: String? = null
     ): Bitmap? {
         val meta = JSONObject(metaJson)
         val sceneDataUrl = meta.getString("sceneDataUrl")
@@ -181,8 +243,36 @@ object WebViewBitmapRenderer {
         val drawTop = offsetTopPxOut + (targetH - drawH) / 2
         val srcRect = android.graphics.Rect(0, 0, sceneBitmap.width, sceneBitmap.height)
         val dstRect = android.graphics.Rect(0, drawTop, drawW, drawTop + drawH)
+        // SLSS_DIAG_TEMPORARY — record the compose-rect maths BEFORE recycling.
+        val sceneW = sceneBitmap.width
+        val sceneH = sceneBitmap.height
         canvas.drawBitmap(sceneBitmap, srcRect, dstRect, Paint(Paint.FILTER_BITMAP_FLAG))
         sceneBitmap.recycle()
+
+        if (SlssLogger.enabled) {
+            val evt = if (surfaceKind == "widget") "widget_render" else "wallpaper_render"
+            SlssLogger.logEvent(
+                evt,
+                mapOf(
+                    "stage" to "compose_done",
+                    "surface" to surfaceKind,
+                    "scene_bitmap_dims_px" to mapOf("w" to sceneW, "h" to sceneH),
+                    "scene_aspect" to sceneAspect,
+                    "compose_meta" to mapOf(
+                        "offsetY_meta" to offsetY,
+                        "offset_top_px" to offsetTopPxOut,
+                        "target_h" to targetH,
+                        "draw_w_px" to drawW,
+                        "draw_h_px" to drawH,
+                        "draw_top_px" to drawTop,
+                        "src_rect" to listOf(srcRect.left, srcRect.top, srcRect.right, srcRect.bottom),
+                        "dst_rect" to listOf(dstRect.left, dstRect.top, dstRect.right, dstRect.bottom),
+                        "labels_count" to (meta.optJSONArray("labels")?.length() ?: 0)
+                    )
+                ),
+                correlationId = correlationId
+            )
+        }
 
         val labelsArr = meta.optJSONArray("labels")
         if (labelsArr != null && labelsArr.length() > 0) {

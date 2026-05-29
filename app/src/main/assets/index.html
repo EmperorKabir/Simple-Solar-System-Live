@@ -2651,6 +2651,70 @@
                 requiredDist *= k;
             }
 
+            // SLSS_DIAG_TEMPORARY — widget framing diagnostics (plan §4.2).
+            // Read-only: recomputes per-planet SIGNED screen + NDC extents
+            // (min/max separately, unlike the framing maths which only tracks
+            // the absolute max) so the L-vs-R asymmetry is measurable. Does NOT
+            // move the camera. Surface renders only (widget/wallpaper).
+            if (SURFACE !== 'main' && slssEnabled()) {
+                try {
+                    const _slssCorr = new URLSearchParams(location.search).get('slssCorr') || undefined;
+                    camera.updateProjectionMatrix();
+                    camera.updateMatrixWorld();
+                    const _pm = new THREE.Matrix4().multiplyMatrices(
+                        camera.projectionMatrix, camera.matrixWorldInverse
+                    );
+                    const _pv = new THREE.Vector3();
+                    const _ssX = {}, _ssY = {}, _ndcX = {}, _ndcY = {};
+                    for (const name of visibleNames) {
+                        const data = planetsData[name];
+                        let minSx = Infinity, maxSx = -Infinity, minSy = Infinity, maxSy = -Infinity;
+                        let minNx = Infinity, maxNx = -Infinity, minNy = Infinity, maxNy = -Infinity;
+                        for (let i = 0; i < 360; i++) {
+                            const days = (i / 360) * (data.period * 365.25);
+                            const p = getOrbitPositionFast(data, days, true);
+                            _samp.set(p.x, p.y, p.z);
+                            const sx = _samp.dot(rightUnit), sy = _samp.dot(trueUpUnit);
+                            if (sx < minSx) minSx = sx; if (sx > maxSx) maxSx = sx;
+                            if (sy < minSy) minSy = sy; if (sy > maxSy) maxSy = sy;
+                            _pv.set(p.x, p.y, p.z).applyMatrix4(_pm);
+                            if (_pv.x < minNx) minNx = _pv.x; if (_pv.x > maxNx) maxNx = _pv.x;
+                            if (_pv.y < minNy) minNy = _pv.y; if (_pv.y > maxNy) maxNy = _pv.y;
+                        }
+                        _ssX[name] = { min: minSx, max: maxSx };
+                        _ssY[name] = { min: minSy, max: maxSy };
+                        _ndcX[name] = { min: minNx, max: maxNx };
+                        _ndcY[name] = { min: minNy, max: maxNy };
+                    }
+                    slssEvent('widget_render', {
+                        stage: 'framing_diagnostics_js',
+                        correlation_id: _slssCorr,
+                        surface: SURFACE,
+                        visible_planets: visibleNames,
+                        ring_samples_per_planet: 360,
+                        surface_margin: surfaceMargin,
+                        camera_aspect: camera.aspect,
+                        vFOV_rad: vFOV,
+                        hFOV_rad: hFOV,
+                        max_screen_x_abs: maxScreenX,
+                        max_screen_y_abs: maxScreenY,
+                        required_dist_x: requiredDistX,
+                        required_dist_y: requiredDistY,
+                        required_dist_final: requiredDist,
+                        safety_net_max_ndc: maxNDC,
+                        safety_net_fired: maxNDC > 0.95,
+                        camera_position_final: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                        camera_up_final: { x: camera.up.x, y: camera.up.y, z: camera.up.z },
+                        per_planet_screen_x_signed: _ssX,
+                        per_planet_screen_y_signed: _ssY,
+                        per_planet_ndc_x_signed: _ndcX,
+                        per_planet_ndc_y_signed: _ndcY
+                    });
+                } catch (e) {
+                    slssEvent('error', { severity: 'warn', source: 'js', message: 'framing_diag failed: ' + (e && e.message) });
+                }
+            }
+
             viewMode = "GALAXY";
             targetPlanet = null;
             lastResetCamDistance = requiredDist;

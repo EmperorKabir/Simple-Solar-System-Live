@@ -11,6 +11,10 @@ import android.os.Handler
 import android.os.Looper
 import android.service.wallpaper.WallpaperService
 import android.view.SurfaceHolder
+// SLSS_DIAG_TEMPORARY — wallpaper render + lock-shift diagnostics.
+import com.livesolar.solarsystem.diag.SlssLogger
+import com.livesolar.solarsystem.diag.SlssCentroidProbe
+import com.livesolar.solarsystem.diag.SlssSyntheticEventDetector
 
 /**
  * Base live-wallpaper service that paints the chromeless solar system
@@ -32,6 +36,9 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
      * enqueue widget refreshes. Home is the canonical owner.
      */
     open fun ownsFoldRefresh(): Boolean = false
+
+    // SLSS_DIAG_TEMPORARY — short surface discriminator for render diagnostics.
+    open fun surfaceKind(): String = "home"
 
     override fun onCreateEngine(): Engine = SolarEngine()
 
@@ -206,12 +213,54 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         private fun currentParams(): String =
             SurfaceSettings(applicationContext, namespace(), defaultOffsetY()).urlParams("wallpaper")
 
+        // SLSS_DIAG_TEMPORARY — last successful render wall-clock for throttle diag.
+        private var slssLastRenderTs = 0L
+
         private fun renderAndPaint() {
             if (widthPx <= 0 || heightPx <= 0 || rendering) return
             rendering = true
             val params = currentParams()
-            WebViewBitmapRenderer.render(applicationContext, widthPx, heightPx, params) { bm ->
+            val sKind = surfaceKind()
+            val corr = SlssLogger.newCorrelationId()
+            if (SlssLogger.enabled) {
+                SlssLogger.logEvent(
+                    "wallpaper_render",
+                    mapOf(
+                        "stage" to "engine_render_start",
+                        "surface" to sKind,
+                        "service_class" to this@SolarSystemWallpaperService.javaClass.simpleName,
+                        "engine_visible" to visible,
+                        "engine_preview" to isPreview,
+                        "surface_holder_dims_px" to mapOf("w" to widthPx, "h" to heightPx),
+                        "throttle_state" to mapOf(
+                            "last_render_ts_ms" to slssLastRenderTs,
+                            "ms_since_last" to if (slssLastRenderTs > 0) System.currentTimeMillis() - slssLastRenderTs else -1L
+                        )
+                    ),
+                    correlationId = corr
+                )
+            }
+            slssLastRenderTs = System.currentTimeMillis()
+            WebViewBitmapRenderer.render(applicationContext, widthPx, heightPx, params, sKind, corr) { bm ->
                 rendering = false
+                if (SlssLogger.enabled) {
+                    val c = SlssCentroidProbe.measure(bm)
+                    SlssLogger.logEvent(
+                        "wallpaper_render",
+                        mapOf(
+                            "stage" to "post_compose_centroid",
+                            "surface" to sKind,
+                            "bitmap_null" to (bm == null),
+                            "post_compose_centroid" to c?.toMap()
+                        ),
+                        correlationId = corr
+                    )
+                    if (c != null) {
+                        SlssSyntheticEventDetector.noteWallpaperRender(
+                            sKind, c.offsetXPct, c.offsetYPct, corr
+                        )
+                    }
+                }
                 if (bm != null) {
                     lastBitmap = bm
                     // Only mark these params 'last seen' once we successfully
@@ -273,4 +322,5 @@ class SolarSystemHomeWallpaperService : SolarSystemWallpaperService() {
 class SolarSystemLockWallpaperService : SolarSystemWallpaperService() {
     override fun namespace() = SurfaceSettings.LOCK_WALLPAPER_NAMESPACE
     override fun defaultOffsetY() = SurfaceSettings.DEFAULT_LOCK_OFFSET_Y
+    override fun surfaceKind() = "lock"
 }
