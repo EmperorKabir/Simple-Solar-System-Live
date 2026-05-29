@@ -16,8 +16,11 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.hardware.TriggerEvent
+import android.hardware.TriggerEventListener
 import android.hardware.display.DisplayManager
 import android.os.Bundle
+import android.os.PowerManager
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -47,6 +50,8 @@ internal object SlssLoggerObservers {
         // degrees) and via display-geometry deltas feeding the fold_unfold
         // synthetic event — both public APIs.
         installHingeSensor(app)
+        installThermalListener(app)
+        installSignificantMotion(app)
         installScreenReceiver(app)
         // Periodic memory + CPU sampler (background thread).
         SlssMetrics.start(app)
@@ -220,6 +225,42 @@ internal object SlssLoggerObservers {
 
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
         }, hinge, SensorManager.SENSOR_DELAY_NORMAL)
+    }
+
+    private fun installThermalListener(app: Application) {
+        val pm = app.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
+        try {
+            pm.addThermalStatusListener(app.mainExecutor) { status ->
+                SlssLogger.logEvent("thermal_change", mapOf("thermal_status" to status))
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "thermal listener registration failed: ${e.message}")
+        }
+    }
+
+    private fun installSignificantMotion(app: Application) {
+        val sm = app.getSystemService(Context.SENSOR_SERVICE) as? SensorManager ?: return
+        val sensor = try {
+            sm.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION)
+        } catch (_: Throwable) {
+            null
+        } ?: return
+        val listener = object : TriggerEventListener() {
+            override fun onTrigger(event: TriggerEvent) {
+                SlssSyntheticEventDetector.noteChild("significant_motion")
+                SlssLogger.logEvent("significant_motion", mapOf("values" to event.values.toList()))
+                // Trigger sensors fire once then disarm — re-request.
+                try {
+                    sm.requestTriggerSensor(this, sensor)
+                } catch (_: Throwable) {
+                }
+            }
+        }
+        try {
+            sm.requestTriggerSensor(listener, sensor)
+        } catch (e: Throwable) {
+            Log.w(TAG, "significant motion request failed: ${e.message}")
+        }
     }
 
     private fun installScreenReceiver(app: Application) {

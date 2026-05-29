@@ -7,9 +7,13 @@ package com.livesolar.solarsystem.diag
 
 import android.app.ActivityManager
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
 import android.os.Debug
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.PowerManager
 import android.os.Process
 import java.io.File
 
@@ -42,6 +46,7 @@ internal object SlssMetrics {
                 try {
                     snapshotMemory("periodic_10s")
                     sampleCpu()
+                    sampleBatteryThermal()
                 } catch (_: Throwable) {
                 }
                 h.postDelayed(this, PERIOD_MS)
@@ -130,6 +135,35 @@ internal object SlssMetrics {
         } catch (_: Throwable) {
             -1L
         }
+
+    private fun sampleBatteryThermal() {
+        if (!SlssLogger.enabled) return
+        val ctx = appContext ?: return
+        val bm = ctx.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
+        val capacity = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
+        val status = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS) ?: -1
+        val batteryIntent = try {
+            ctx.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        } catch (_: Throwable) {
+            null
+        }
+        val temp = batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) ?: -1
+        val voltage = batteryIntent?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1) ?: -1
+        val plugged = batteryIntent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: -1
+        val pm = ctx.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        SlssLogger.logEvent(
+            "battery_thermal",
+            mapOf(
+                "battery_pct" to capacity,
+                "battery_status" to status,
+                "battery_temp_decic" to temp,
+                "battery_voltage_mv" to voltage,
+                "plugged" to plugged,
+                "thermal_status" to (pm?.currentThermalStatus ?: -1),
+                "power_save_mode" to (pm?.isPowerSaveMode ?: false)
+            )
+        )
+    }
 
     private fun sampleCpu() {
         if (!SlssLogger.enabled) return
