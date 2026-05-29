@@ -69,16 +69,21 @@ The logging is the agreed next step BEFORE any more moon-camera code changes. Ra
 
 ## 9. Implementation progress (logging plan phases)
 
-- **L0 (core infra)**: IN PROGRESS. `BuildConfig.BUILD_COMMIT` added to build.gradle.kts (DONE). NEXT: create `SolarSystemApplication.kt`, `diag/SlssLogger.kt`, `diag/SlssLoggerSinks.kt`, register Application in manifest, hello-world event per process, build + verify.
-- L1 lifecycle/display/screen/fold observers — pending
-- L2 JS bridge + moon_select + 60-frame trace — pending
-- L3 widget/wallpaper render logging + centroid probe + lock_shift synthetic — pending
-- L4 memory/CPU/GPU/texture snapshots — pending
-- L5 webview console + touch + frame_trace(ON) + error — pending
-- L6 pull tooling + in-app share export — pending
-- L7 sensors/battery/thermal/hinge extras — pending
+**ALL PHASES L0–L7 COMPLETE + verified on emulator + committed.** Diagnostic logging system is done. Commits: L0=8af9ffd, L1=2072ca0, L2=81f3529, L3=3470e55, L4=5b13eba, L5=6636d2f, L6=7b3afc1, L7=6cbf0db.
 
-Task IDs in tracker: L0=#22, L1=#23, L2=#24, L3=#25, L4=#26, L5=#27, L6=#28, L7=#29.
+- **L0** ✅ SlssLogger (async queue, JSONL envelope, drop-oldest), rotating+gzip JsonlFileSink (10MB/200MB), Logcat+Memory sinks, SolarSystemApplication, gating via explicit BuildConfig.SLSS_DIAG_ENABLED (release=false), per-boot session_id sentinel.
+- **L1** ✅ ActivityLifecycleCallbacks, ComponentCallbacks2 (config_change+trim), DisplayListener, hinge sensor, runtime screen-state receiver, fold_unfold synthetic. (DeviceStateManager dropped — @SystemApi, unreachable.)
+- **L2** ✅ JS bridge (window.SlssLog), SlssLog.mjs, moon_select full schema + 60-frame moon_select_frames. MoonCamera.mjs diag enrichment (read-only).
+- **L3** ✅ widget_render/wallpaper_render stages, OPTION_APPWIDGET_SIZES, SlssCentroidProbe (Kotlin port), framing_diagnostics_js (signed per-planet NDC), lock_shift_observation synthetic.
+- **L4** ✅ SlssMetrics: memory_snapshot, cpu_sample (per-thread), gpu_info, texture_load.
+- **L5** ✅ webview_console (both WebViews), touch_input, frame_trace (ON by default, ?trace=off), error (JS global handlers).
+- **L6** ✅ tools/diag/pull-logs.mjs + log-parse.mjs (auto-summarises moon/widget/lock/perf), in-app export (SlssLoggerExport + FileProvider + long-press warning icon).
+- **L7** ✅ battery_thermal, thermal_change, significant_motion.
+
+Task IDs in tracker (all completed): L0=#22 … L7=#29.
+
+### KEY FINDING (from L2 logs, see memory `moon-camera-aspect-bug`)
+MoonCamera.mjs `projectToScreen` ignores aspect ratio → on portrait (aspect 0.45) planet+Sun fly off the narrow horizontal edges (actual NDC = predicted/aspect). This is the moon-camera root cause. FIX = task #19, AFTER the on-device harvest (user wants to be in the loop; phone's true aspect + high-inc outer moons Triton/Iapetus are the real targets).
 
 ## 10. Integration points (file:purpose)
 
@@ -105,4 +110,14 @@ Task IDs in tracker: L0=#22, L1=#23, L2=#24, L3=#25, L4=#26, L5=#27, L6=#28, L7=
 
 ## 13. Immediate next action after resume
 
-Continue Phase L0: create `SolarSystemApplication.kt` + `diag/SlssLogger.kt` + `diag/SlssLoggerSinks.kt`, register Application in manifest, then `./gradlew.bat assembleDiagnostic` to verify it compiles, install, confirm a hello-world event lands in `filesDir/slss_logs/`. Then proceed L1→L7. After all phases: build, install on phone, user tests, pulls logs, I analyse.
+Logging system is COMPLETE. Next step is the ON-DEVICE HARVEST (awaiting user):
+1. Build is ready: `app/build/outputs/apk/diagnostic/app-diagnostic.apk` (package `com.livesolar.solarsystem.diag`).
+2. User installs on the Z Fold 6, exercises: select moons (esp. Triton, Iapetus, Io, Earth's Moon) folded AND unfolded; place the widget; set the live wallpaper (home + lock); fold/unfold several times; lock/unlock.
+3. User plugs in → I run `node tools/diag/pull-logs.mjs --serial <phone-serial>` then `node tools/diag/log-parse.mjs docs/diag/<date>/<serial>`.
+4. The parser auto-reports moon framing (predicted vs actual NDC + acceptance), widget signed-NDC L/R asymmetry, lock_shift/fold timeline, perf.
+5. THEN fix the moon camera (task #19) using the aspect-ratio finding (memory `moon-camera-aspect-bug`), re-harvest to confirm acceptance_checks flip true. Also resolve widget L/R asymmetry from the framing_diagnostics_js signed extents.
+
+Install command (phone serial RFCY70BARDJ):
+`adb -s RFCY70BARDJ install -r app/build/outputs/apk/diagnostic/app-diagnostic.apk`
+
+Cleanup later: `grep -r SLSS_DIAG_TEMPORARY` → full hit list (plan §9).
