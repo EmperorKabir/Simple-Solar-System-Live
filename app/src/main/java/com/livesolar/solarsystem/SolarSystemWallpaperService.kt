@@ -15,6 +15,7 @@ import android.view.SurfaceHolder
 import com.livesolar.solarsystem.diag.SlssLogger
 import com.livesolar.solarsystem.diag.SlssCentroidProbe
 import com.livesolar.solarsystem.diag.SlssSyntheticEventDetector
+import com.livesolar.solarsystem.diag.SlssMetrics
 
 /**
  * Base live-wallpaper service that paints the chromeless solar system
@@ -239,6 +240,7 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                     ),
                     correlationId = corr
                 )
+                SlssMetrics.snapshotMemoryAsync("pre_wallpaper_render")
             }
             slssLastRenderTs = System.currentTimeMillis()
             WebViewBitmapRenderer.render(applicationContext, widthPx, heightPx, params, sKind, corr) { bm ->
@@ -260,6 +262,7 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                             sKind, c.offsetXPct, c.offsetYPct, corr
                         )
                     }
+                    SlssMetrics.snapshotMemoryAsync("post_wallpaper_render")
                 }
                 if (bm != null) {
                     lastBitmap = bm

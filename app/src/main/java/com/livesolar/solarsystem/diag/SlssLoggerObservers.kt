@@ -48,6 +48,8 @@ internal object SlssLoggerObservers {
         // synthetic event — both public APIs.
         installHingeSensor(app)
         installScreenReceiver(app)
+        // Periodic memory + CPU sampler (background thread).
+        SlssMetrics.start(app)
         // Seed the fold detector with the current default-display geometry.
         seedDisplayGeometry(app)
     }

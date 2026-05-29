@@ -15,6 +15,7 @@ import com.google.common.util.concurrent.ListenableFuture
 // SLSS_DIAG_TEMPORARY — widget render diagnostics.
 import com.livesolar.solarsystem.diag.SlssLogger
 import com.livesolar.solarsystem.diag.SlssCentroidProbe
+import com.livesolar.solarsystem.diag.SlssMetrics
 
 class SolarSystemWidgetWorker(
     ctx: Context, params: WorkerParameters
@@ -74,6 +75,7 @@ class SolarSystemWidgetWorker(
                 ),
                 correlationId = corr
             )
+            SlssMetrics.snapshotMemoryAsync("pre_widget_render")
         }
 
         Handler(Looper.getMainLooper()).post {
@@ -91,6 +93,7 @@ class SolarSystemWidgetWorker(
                         ),
                         correlationId = corr
                     )
+                    SlssMetrics.snapshotMemoryAsync("post_widget_render")
                 }
                 if (bitmap != null) {
                     try {

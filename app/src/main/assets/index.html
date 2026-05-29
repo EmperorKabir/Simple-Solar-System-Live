@@ -1483,11 +1483,20 @@
         const texLoadPromises = [];
         for (let k in urls) {
             texLoadPromises.push(new Promise((resolve) => {
+                // SLSS_DIAG_TEMPORARY — per-texture decode timing (plan §3.13).
+                const _slssTexT0 = (typeof performance !== 'undefined') ? performance.now() : 0;
+                const _slssTexMs = () => ((typeof performance !== 'undefined') ? performance.now() : 0) - _slssTexT0;
                 tex[k] = tLoad.load(
                     urls[k],
-                    () => resolve(),                  // onLoad
+                    () => {                            // onLoad
+                        if (slssEnabled()) slssEvent('texture_load', { key: k, url: urls[k], load_ms: _slssTexMs(), success: true, anisotropy_set: (tex[k] && tex[k].anisotropy) || null });
+                        resolve();
+                    },
                     undefined,                        // onProgress (unused)
-                    () => resolve()                   // onError → still resolve so one bad texture can't freeze the loader
+                    () => {                            // onError → still resolve so one bad texture can't freeze the loader
+                        if (slssEnabled()) slssEvent('texture_load', { key: k, url: urls[k], load_ms: _slssTexMs(), success: false });
+                        resolve();
+                    }
                 );
                 tex[k].colorSpace = THREE.SRGBColorSpace;
                 if (SURFACE === 'main' && renderer.capabilities.getMaxAnisotropy) {
@@ -2911,6 +2920,27 @@
                 } catch (e) {
                     _slssMoonTrace = null;
                 }
+            }
+
+            // SLSS_DIAG_TEMPORARY — gpu_info every 60 frames (main surface, plan §3.11).
+            if (slssEnabled() && SURFACE === 'main' && frameCount % 60 === 0) {
+                try {
+                    const _ri = renderer.info;
+                    slssEvent('gpu_info', {
+                        trigger: 'render_loop_tick',
+                        frame: frameCount,
+                        renderer_info: {
+                            calls: _ri.render.calls,
+                            triangles: _ri.render.triangles,
+                            lines: _ri.render.lines,
+                            points: _ri.render.points,
+                            geometries: _ri.memory.geometries,
+                            textures: _ri.memory.textures
+                        },
+                        view_mode: viewMode,
+                        target_planet: targetPlanet ? targetPlanet.name : null
+                    });
+                } catch (e) { /* noop */ }
             }
 
             // Throttled Label Occlusion (every 5 frames). Skipped in surface
