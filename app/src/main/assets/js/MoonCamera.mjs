@@ -41,9 +41,12 @@ const PHI_RANGE = (85 * Math.PI) / 180; // +/- range around the bisector to sear
 // it as a recognisable body. Such solutions are rejected so e.g. Io folded
 // doesn't count Jupiter-as-a-wall as "both visible".
 const MAX_BODY_RADIUS_NDC = 1.2;
-// C_auto: use the both-bodies framing only if the moon's apparent radius is at
-// least this (otherwise both would shrink the moon too much → mode B).
-const BOTH_MIN_MOON_RADIUS = 0.025;
+// C_auto: show BOTH bodies (zooming out as needed) when the parent planet sits
+// as a clean disc (radius <= this). A close, crowding planet (e.g. Io→Jupiter,
+// radius ~1.2) instead triggers mode B (drop the planet, keep the moon big).
+// Confirmed on-device: Io folded planet radius 1.20 -> B; Titan/Titania/Triton/
+// Iapetus folded 0.15-0.37 -> show both.
+const PLANET_CLEAN_RADIUS = 0.6;
 // Mode B target: keep the moon at least this prominent (cap the zoom-out here).
 const MOON_PROMINENT_FLOOR = 0.09;
 
@@ -158,7 +161,30 @@ export function computeMoonCameraPlacement({
         return r;
     };
 
-    const both = searchAzimuth(bothPred);   // smallest-d both-bodies orientation
+    // Both-bodies search: smallest distance (biggest moon), and among the
+    // orientations achieving that distance, the most SYMMETRIC one (planet &
+    // Sun balanced around the centred moon: |planetNDC.x + sunNDC.x| minimal).
+    const searchBoth = () => {
+        const cands = [];
+        let dMin = Infinity;
+        for (let i = 0; i < N_PHI; i++) {
+            const phi = phi0 - PHI_RANGE + (2 * PHI_RANGE * i) / (N_PHI - 1);
+            const b = basisFor(phi);
+            const d = smallestD(b, bothPred);
+            if (isFinite(d)) { cands.push({ b, d, phi }); if (d < dMin) dMin = d; }
+        }
+        if (!cands.length) return null;
+        let r = null;
+        for (const c of cands) {
+            if (c.d > dMin * 1.05 + 1e-9) continue; // only near-tightest-zoom orientations
+            const e = evalAt(c.b, c.d);
+            const sym = Math.abs(e.pj.x + e.sj.x);
+            if (r === null || sym < r.sym) r = { b: c.b, d: c.d, phi: c.phi, sym };
+        }
+        return r;
+    };
+
+    const both = searchBoth();              // symmetric smallest-d both-bodies orientation
     const sunOnly = searchAzimuth(sunPred);  // smallest-d Sun-only orientation
     // Distance at which the moon's apparent radius hits the "prominent" floor.
     const dCapMoon = moonSize / (MOON_PROMINENT_FLOOR * Math.tan(halfV));
@@ -180,8 +206,14 @@ export function computeMoonCameraPlacement({
         // If both happen to fit while the moon is still prominent, prefer that.
         if (both && both.d <= dCapMoon) { chosen = both; fallbackMode = 'B_both'; }
     } else {
-        // C_auto: both if it fits with a reasonably-sized moon, else mode B.
-        if (both && moonSize / both.d / Math.tan(halfV) >= BOTH_MIN_MOON_RADIUS) {
+        // C_auto: show both (zoom out as needed) when the parent planet is a
+        // CLEAN disc; drop a close, crowding planet (mode B) instead.
+        let planetClean = false;
+        if (both) {
+            const e = evalAt(both.b, both.d);
+            planetClean = e.pr.x <= PLANET_CLEAN_RADIUS && e.pr.y <= PLANET_CLEAN_RADIUS;
+        }
+        if (both && planetClean) {
             chosen = both; fallbackMode = 'C_both';
         } else {
             const m = modeB(); chosen = m; fallbackMode = both ? 'C_to_B' : m.mode;

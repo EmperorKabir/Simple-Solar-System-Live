@@ -42,28 +42,32 @@ for (const [name, g] of Object.entries(CASES)) {
             assert.ok(Math.abs(r.viewDir.y) < 0.02, `viewDir not horizontal: y=${r.viewDir.y.toFixed(3)}`);
             assert.ok(r.up.x === 0 && r.up.y === 1 && r.up.z === 0, `up must be world up`);
             assert.ok(r.sunVisibleFrac >= 0.15 - 1e-6,
-                `Sun must stay >=20% visible, got ${(r.sunVisibleFrac * 100).toFixed(1)}% (mode ${r.fallbackMode})`);
-            assert.ok(r.moonRadiusNDC.y > 0.02,
-                `moon is a dot: radiusNDC.y ${r.moonRadiusNDC.y.toFixed(4)} (camDist ${r.camDist.toFixed(1)}, mode ${r.fallbackMode})`);
+                `Sun must stay >=15% visible, got ${(r.sunVisibleFrac * 100).toFixed(1)}% (mode ${r.fallbackMode})`);
+            // (Far moons folded legitimately go tiny to show both — no dot floor here.)
             assert.ok(r.camDist >= 1.0 - 1e-6 && r.camDist <= 750, `camDist ${r.camDist} out of [1,750]`);
         });
     }
 }
 
-test('Io UNFOLDED: shows BOTH (the orientation fix) with a prominent moon', () => {
-    const r = place(CASES.Io, 1.11);
-    assert.ok(r.fallbackMode.includes('both'), `Io unfolded should fit both, got ${r.fallbackMode}`);
-    assert.ok(r.planetVisibleFrac >= 0.15 && r.sunVisibleFrac >= 0.15,
-        `both expected: planet ${r.planetVisibleFrac.toFixed(2)} sun ${r.sunVisibleFrac.toFixed(2)}`);
-    assert.ok(r.moonRadiusNDC.y >= 0.08,
-        `Io moon must stay prominent, got ${r.moonRadiusNDC.y.toFixed(3)} (camDist ${r.camDist.toFixed(1)})`);
+test('Io (close crowding planet) → mode B: keep moon prominent + Sun, drop Jupiter', () => {
+    for (const aspect of [1.11, 0.43]) {
+        const r = place(CASES.Io, aspect);
+        assert.ok(r.fallbackMode.startsWith('B') || r.fallbackMode === 'C_to_B',
+            `Io should drop the crowding planet, got ${r.fallbackMode} (aspect ${aspect})`);
+        assert.ok(r.sunVisibleFrac >= 0.15, `Sun kept, got ${r.sunVisibleFrac.toFixed(2)}`);
+        assert.ok(r.moonRadiusNDC.y >= 0.09, `moon prominent, got ${r.moonRadiusNDC.y.toFixed(3)}`);
+    }
 });
 
-test('Fittable moons (unfolded) show BOTH bodies', () => {
-    for (const name of ['Triton', 'Iapetus', 'Dione', 'Moon', 'Titan']) {
-        const r = place(CASES[name], 1.11);
-        assert.ok(r.planetVisibleFrac >= 0.15 && r.sunVisibleFrac >= 0.15,
-            `${name}: both expected, planet ${r.planetVisibleFrac.toFixed(2)} sun ${r.sunVisibleFrac.toFixed(2)} (mode ${r.fallbackMode})`);
+test('Far outer moons show BOTH bodies (clean planet), symmetric, both fold modes', () => {
+    for (const name of ['Triton', 'Iapetus', 'Titan']) {
+        for (const aspect of [1.11, 0.43]) {
+            const r = place(CASES[name], aspect);
+            assert.ok(r.planetVisibleFrac >= 0.15 && r.sunVisibleFrac >= 0.15,
+                `${name}(${aspect}): both expected, planet ${r.planetVisibleFrac.toFixed(2)} sun ${r.sunVisibleFrac.toFixed(2)} (${r.fallbackMode})`);
+            const sym = Math.abs(r.planetNDC.x + r.sunNDC.x);
+            assert.ok(sym < 0.4, `${name}(${aspect}): expected symmetric, |pNDC+sNDC|=${sym.toFixed(2)}`);
+        }
     }
 });
 
