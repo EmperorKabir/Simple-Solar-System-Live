@@ -13,7 +13,9 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowInsets
+import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -72,6 +74,26 @@ class MainActivity : Activity() {
             }
 
             addJavascriptInterface(WallpaperPickerBridge(this@MainActivity), "WallpaperPicker")
+
+            // SLSS_DIAG_TEMPORARY — forward JS console output to webview_console
+            // (plan §3.8). Lets us see JS logs/errors in the diagnostic log.
+            if (com.livesolar.solarsystem.diag.SlssLogger.enabled) {
+                webChromeClient = object : WebChromeClient() {
+                    override fun onConsoleMessage(cm: ConsoleMessage): Boolean {
+                        com.livesolar.solarsystem.diag.SlssLogger.logEvent(
+                            "webview_console",
+                            mapOf(
+                                "webview_owner" to "MainActivity",
+                                "level" to cm.messageLevel().name,
+                                "source_id" to cm.sourceId(),
+                                "line_number" to cm.lineNumber(),
+                                "message" to cm.message()
+                            )
+                        )
+                        return false
+                    }
+                }
+            }
 
             // SLSS_DIAG_TEMPORARY — expose the diagnostic logging bridge to JS
             // as window.SlssLog (diagnostic builds only). Remove with the diag/

@@ -875,6 +875,36 @@
         let _slssMoonTrace = null;
         let _slssLastFrameMs = 0;
         const _slssProjScratch = new THREE.Vector3();
+        // frame_trace ON by default (user directive); ?trace=off disables it.
+        const _slssFrameTraceOn = (new URLSearchParams(location.search).get('trace') !== 'off');
+        let _slssFrameLastMs = 0;
+        const _slssCamPosLast = new THREE.Vector3();
+        const _slssCamTgtLast = new THREE.Vector3();
+        let _slssCamLastInit = false;
+
+        // SLSS_DIAG_TEMPORARY — global JS error + promise-rejection capture (plan §3.18).
+        if (slssEnabled()) {
+            window.addEventListener('error', (ev) => {
+                try {
+                    slssEvent('error', {
+                        severity: 'error', source: 'js',
+                        message: (ev && ev.message) || String(ev && ev.error),
+                        filename: ev && ev.filename, lineno: ev && ev.lineno, colno: ev && ev.colno,
+                        stack: ev && ev.error && ev.error.stack
+                    });
+                } catch (_) { /* noop */ }
+            });
+            window.addEventListener('unhandledrejection', (ev) => {
+                try {
+                    const r = ev && ev.reason;
+                    slssEvent('error', {
+                        severity: 'error', source: 'js',
+                        message: 'unhandledrejection: ' + (r && (r.message || r)),
+                        stack: r && r.stack
+                    });
+                } catch (_) { /* noop */ }
+            });
+        }
 
         // ============================================================
         // 1. Core WebGL Engine Setup
@@ -2511,6 +2541,22 @@
                 }
             }
             
+            // SLSS_DIAG_TEMPORARY — touch_input around tap-to-select (plan §3.14).
+            if (slssEnabled()) {
+                try {
+                    let _hitName = null;
+                    if (clickedPlanet) _hitName = clickedPlanet.name || (clickedPlanet.config && clickedPlanet.config.name) || null;
+                    slssEvent('touch_input', {
+                        phase: 'up',
+                        x_css: event.clientX,
+                        y_css: event.clientY,
+                        hit_test_result: _hitName,
+                        target_tag: event.target.tagName,
+                        via: event.target.classList.contains('planet-label') ? 'label' : 'canvas'
+                    });
+                } catch (e) { /* noop */ }
+            }
+
             if (clickedPlanet) flyToBody(clickedPlanet);
         });
 
@@ -2939,6 +2985,33 @@
                         },
                         view_mode: viewMode,
                         target_planet: targetPlanet ? targetPlanet.name : null
+                    });
+                } catch (e) { /* noop */ }
+            }
+
+            // SLSS_DIAG_TEMPORARY — frame_trace every frame (plan §3.12).
+            // ON by default per user directive (?trace=off to disable).
+            if (slssEnabled() && SURFACE === 'main' && _slssFrameTraceOn) {
+                try {
+                    const _ftNow = (typeof performance !== 'undefined') ? performance.now() : 0;
+                    const _ftDt = _slssFrameLastMs ? (_ftNow - _slssFrameLastMs) : 0;
+                    _slssFrameLastMs = _ftNow;
+                    let _posDelta = 0, _tgtDelta = 0;
+                    if (_slssCamLastInit) {
+                        _posDelta = camera.position.distanceTo(_slssCamPosLast);
+                        _tgtDelta = controls.target.distanceTo(_slssCamTgtLast);
+                    }
+                    _slssCamPosLast.copy(camera.position);
+                    _slssCamTgtLast.copy(controls.target);
+                    _slssCamLastInit = true;
+                    slssEvent('frame_trace', {
+                        frame_idx: frameCount,
+                        render_dt_ms: _ftDt,
+                        view_mode: viewMode,
+                        target_planet: targetPlanet ? targetPlanet.name : null,
+                        camera_pos_delta_since_last: _posDelta,
+                        camera_target_delta_since_last: _tgtDelta,
+                        cam_dist_origin: camera.position.length()
                     });
                 } catch (e) { /* noop */ }
             }

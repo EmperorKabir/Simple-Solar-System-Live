@@ -191,7 +191,28 @@ object WebViewBitmapRenderer {
         if (SlssLogger.enabled) {
             wv.addJavascriptInterface(SlssLoggerJsBridge("WebViewBitmapRenderer-$surfaceKind"), "SlssLog")
         }
-        wv.webChromeClient = WebChromeClient()
+        // SLSS_DIAG_TEMPORARY — forward the offscreen render WebView's JS console
+        // (the widget/wallpaper render can't be DevTools-inspected) to the log.
+        wv.webChromeClient = if (SlssLogger.enabled) {
+            object : WebChromeClient() {
+                override fun onConsoleMessage(cm: android.webkit.ConsoleMessage): Boolean {
+                    SlssLogger.logEvent(
+                        "webview_console",
+                        mapOf(
+                            "webview_owner" to "WebViewBitmapRenderer-$surfaceKind",
+                            "level" to cm.messageLevel().name,
+                            "source_id" to cm.sourceId(),
+                            "line_number" to cm.lineNumber(),
+                            "message" to cm.message()
+                        ),
+                        correlationId = correlationId
+                    )
+                    return false
+                }
+            }
+        } else {
+            WebChromeClient()
+        }
         wv.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
                 assetLoader.shouldInterceptRequest(request.url)
