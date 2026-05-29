@@ -2071,7 +2071,8 @@
             const _modes = ['A_both', 'B_moon', 'C_auto'];
             const _btn = document.createElement('button');
             _btn.type = 'button';
-            _btn.style.cssText = 'position:fixed;top:8px;right:8px;z-index:9999;' +
+            _btn.style.cssText = 'position:fixed;right:8px;z-index:9999;' +
+                'top:calc(var(--safe-top, 0px) + 8px);' +
                 'background:rgba(20,20,30,0.85);color:#9fd;border:1px solid #9fd;' +
                 'border-radius:8px;padding:6px 10px;font:600 13px sans-serif;';
             const _label = () => { _btn.textContent = 'MOON: ' + window.__slssMoonMode.replace('_', ' '); };
