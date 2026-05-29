@@ -2063,6 +2063,34 @@
             if (e.target === infoModal) infoModal.classList.remove('visible');
         });
 
+        // SLSS_DIAG_TEMPORARY — moon-framing mode toggle (diagnostic builds).
+        // Cycles A_both / B_moon / C_auto so the user can compare the three
+        // over-constrained-case behaviours in isolation on the same moon.
+        if (typeof slssEnabled === 'function' && slssEnabled()) {
+            window.__slssMoonMode = window.__slssMoonMode || 'C_auto';
+            const _modes = ['A_both', 'B_moon', 'C_auto'];
+            const _btn = document.createElement('button');
+            _btn.type = 'button';
+            _btn.style.cssText = 'position:fixed;top:8px;right:8px;z-index:9999;' +
+                'background:rgba(20,20,30,0.85);color:#9fd;border:1px solid #9fd;' +
+                'border-radius:8px;padding:6px 10px;font:600 13px sans-serif;';
+            const _label = () => { _btn.textContent = 'MOON: ' + window.__slssMoonMode.replace('_', ' '); };
+            _label();
+            _btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const i = _modes.indexOf(window.__slssMoonMode);
+                window.__slssMoonMode = _modes[(i + 1) % _modes.length];
+                _label();
+                // Re-frame the current moon immediately so the change is visible.
+                if (viewMode === 'PLANET' && targetPlanet &&
+                    typeof moonSystemConfig !== 'undefined' &&
+                    moonSystemConfig.find(m => m.name === targetPlanet.name)) {
+                    flyToBody(targetPlanet);
+                }
+            });
+            document.body.appendChild(_btn);
+        }
+
         // ── Warning modal: tap icon to open, tap backdrop or OK to close ──
         const warningIcon  = document.getElementById('warning-icon');
         const warningModal = document.getElementById('warning-modal');
@@ -2378,7 +2406,8 @@
                     planetSize: planetSize,
                     sunSize:    sunVisualR,
                     aspect:     camera.aspect,   // aspect-correct framing (v20)
-                    fovDeg:     70
+                    fovDeg:     70,
+                    framingMode: (typeof window !== 'undefined' && window.__slssMoonMode) || 'C_auto'
                 });
 
                 camera.position.set(placement.cameraPos.x, placement.cameraPos.y, placement.cameraPos.z);
@@ -2409,7 +2438,9 @@
                         slssEvent('moon_select', {
                             correlation_id: _corr,
                             trigger: 'select',
-                            algo: 'v20',
+                            algo: 'v22c',
+                            framing_mode: (window.__slssMoonMode || 'C_auto'),
+                            fallback_mode: placement.fallbackMode,
                             moon: {
                                 name: targetPlanet.name, host: isMoon.host,
                                 size_scene: isMoon.size, config_period_days: isMoon.p,

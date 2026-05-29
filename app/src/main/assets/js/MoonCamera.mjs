@@ -41,11 +41,11 @@ const PHI_RANGE = (85 * Math.PI) / 180; // +/- range around the bisector to sear
 // it as a recognisable body. Such solutions are rejected so e.g. Io folded
 // doesn't count Jupiter-as-a-wall as "both visible".
 const MAX_BODY_RADIUS_NDC = 1.2;
-// If fitting BOTH bodies forces the moon's apparent radius below this, both is
-// "not physically possible" → fall back to Sun + moon. Tuned so Triton folded
-// (moon radius ~0.027 with both visible) still counts as fittable, while Io
-// folded (Jupiter unfittable without a dot) falls back.
-const FALLBACK_MOON_RADIUS = 0.025;
+// C_auto: use the both-bodies framing only if the moon's apparent radius is at
+// least this (otherwise both would shrink the moon too much → mode B).
+const BOTH_MIN_MOON_RADIUS = 0.025;
+// Mode B target: keep the moon at least this prominent (cap the zoom-out here).
+const MOON_PROMINENT_FLOOR = 0.09;
 
 function projNDC(world, camPos, viewDir, right, trueUp, halfH, halfV) {
     const rel = sub(world, camPos);
@@ -81,6 +81,12 @@ export function computeMoonCameraPlacement({
     moonWorld, planetWorld, sunWorld,
     moonSize, planetSize, sunSize,
     aspect = 1, fovDeg = 70,
+    // Framing mode for the over-constrained case (can't have a big moon AND
+    // both bodies). Toggleable on-device to compare:
+    //   'A_both'  — show both even if the moon goes tiny (zoom out as needed)
+    //   'B_moon'  — keep the moon big + Sun, drop the planet
+    //   'C_auto'  — both if they fit with a reasonably-sized moon, else B
+    framingMode = 'C_auto',
 }) {
     const halfV = (fovDeg * Math.PI) / 360;
     const halfH = Math.atan(Math.tan(halfV) * aspect);
@@ -92,9 +98,11 @@ export function computeMoonCameraPlacement({
     const bx = pXZ.x + sXZ.x;
     const bz = pXZ.z + sXZ.z;
     const degenerate = Math.hypot(bx, bz) < 0.15;
-    // Centre of the azimuth search: the bisector of (moon→planet, moon→Sun) in
-    // the ecliptic, or the planet axis when they are ~opposite.
-    const phi0 = degenerate ? Math.atan2(pXZ.z, pXZ.x) : Math.atan2(bz, bx);
+    // Centre of the azimuth search. Normally the bisector of (moon→planet,
+    // moon→Sun) so both straddle the view. When they are ~opposite (moon
+    // between planet and Sun — both can't share one FOV), aim at the SUN (the
+    // priority body) so it stays in frame; the planet then falls behind.
+    const phi0 = degenerate ? Math.atan2(sXZ.z, sXZ.x) : Math.atan2(bz, bx);
 
     // Build an ecliptic-horizontal camera basis for a given view azimuth.
     const basisFor = (phi) => {
@@ -137,34 +145,49 @@ export function computeMoonCameraPlacement({
         (e.pj.x * e.sj.x < 0);
     const sunPred = (e) => visible(e.sj, e.sr);
 
-    // PRIMARY: search azimuth for the orientation that fits BOTH bodies at the
-    // smallest distance (= largest moon).
-    let best = null;
-    for (let i = 0; i < N_PHI; i++) {
-        const phi = phi0 - PHI_RANGE + (2 * PHI_RANGE * i) / (N_PHI - 1);
-        const b = basisFor(phi);
-        const d = smallestD(b, bothPred);
-        if (isFinite(d) && (best === null || d < best.d)) best = { b, d, phi };
-    }
-
-    let chosen, fallbackMode;
-    if (best && moonSize / best.d / Math.tan(halfV) >= FALLBACK_MOON_RADIUS) {
-        chosen = best;
-        fallbackMode = 'both';
-    } else {
-        // FALLBACK: keep the Sun + moon (drop the planet). Largest moon keeping
-        // the Sun >=20% visible across the azimuth sweep.
-        let fb = null;
+    // Search the azimuth for the orientation fitting a predicate at the smallest
+    // distance (= largest moon). Returns {b,d,phi} or null.
+    const searchAzimuth = (pred) => {
+        let r = null;
         for (let i = 0; i < N_PHI; i++) {
             const phi = phi0 - PHI_RANGE + (2 * PHI_RANGE * i) / (N_PHI - 1);
             const b = basisFor(phi);
-            const d = smallestD(b, sunPred);
-            if (isFinite(d) && (fb === null || d < fb.d)) fb = { b, d, phi };
+            const d = smallestD(b, pred);
+            if (isFinite(d) && (r === null || d < r.d)) r = { b, d, phi };
         }
-        if (fb) { chosen = fb; fallbackMode = 'sun_only'; }
-        else if (best) { chosen = best; fallbackMode = 'both_tiny'; }
-        else { chosen = { b: basisFor(phi0), d: MIN_DIST, phi: phi0 }; fallbackMode = 'none'; }
+        return r;
+    };
+
+    const both = searchAzimuth(bothPred);   // smallest-d both-bodies orientation
+    const sunOnly = searchAzimuth(sunPred);  // smallest-d Sun-only orientation
+    // Distance at which the moon's apparent radius hits the "prominent" floor.
+    const dCapMoon = moonSize / (MOON_PROMINENT_FLOOR * Math.tan(halfV));
+
+    // B: keep the moon prominent + Sun, planet falls where it falls. Largest
+    // moon (smallest d) that keeps the Sun visible, but never zoomed out past
+    // the moon floor.
+    const modeB = () => {
+        const base = sunOnly || both || { b: basisFor(phi0), d: MIN_DIST, phi: phi0 };
+        return { b: base.b, d: Math.min(base.d, dCapMoon), mode: sunOnly ? 'B_moon' : 'B_moon_nofit' };
+    };
+
+    let chosen, fallbackMode;
+    if (framingMode === 'A_both') {
+        if (both) { chosen = both; fallbackMode = 'A_both'; }
+        else { const m = modeB(); chosen = m; fallbackMode = 'A_to_B'; }
+    } else if (framingMode === 'B_moon') {
+        const m = modeB(); chosen = m; fallbackMode = m.mode;
+        // If both happen to fit while the moon is still prominent, prefer that.
+        if (both && both.d <= dCapMoon) { chosen = both; fallbackMode = 'B_both'; }
+    } else {
+        // C_auto: both if it fits with a reasonably-sized moon, else mode B.
+        if (both && moonSize / both.d / Math.tan(halfV) >= BOTH_MIN_MOON_RADIUS) {
+            chosen = both; fallbackMode = 'C_both';
+        } else {
+            const m = modeB(); chosen = m; fallbackMode = both ? 'C_to_B' : m.mode;
+        }
     }
+    chosen.d = Math.max(MIN_DIST, Math.min(chosen.d, MAX_DIST));
 
     const d = Math.max(MIN_DIST, Math.min(chosen.d, MAX_DIST));
     const b = chosen.b;

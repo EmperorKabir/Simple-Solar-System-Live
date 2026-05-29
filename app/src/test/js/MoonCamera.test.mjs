@@ -52,7 +52,7 @@ for (const [name, g] of Object.entries(CASES)) {
 
 test('Io UNFOLDED: shows BOTH (the orientation fix) with a prominent moon', () => {
     const r = place(CASES.Io, 1.11);
-    assert.equal(r.fallbackMode, 'both', `Io unfolded should fit both, got ${r.fallbackMode}`);
+    assert.ok(r.fallbackMode.includes('both'), `Io unfolded should fit both, got ${r.fallbackMode}`);
     assert.ok(r.planetVisibleFrac >= 0.15 && r.sunVisibleFrac >= 0.15,
         `both expected: planet ${r.planetVisibleFrac.toFixed(2)} sun ${r.sunVisibleFrac.toFixed(2)}`);
     assert.ok(r.moonRadiusNDC.y >= 0.08,
