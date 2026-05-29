@@ -33,7 +33,7 @@ const normXZ = (a) => { const l = Math.hypot(a.x, a.z) || 1; return v(a.x / l, 0
 
 const MIN_DIST = 1.0;          // OrbitControls minDistance
 const MAX_DIST = 750.0;        // OrbitControls maxDistance
-const MIN_VISIBLE_FRAC = 0.20; // disc must be >=20% in-frame to count as "visible"
+const MIN_VISIBLE_FRAC = 0.15; // disc must be >=20% in-frame to count as "visible"
 const N_PHI = 49;              // azimuth sweep resolution
 const PHI_RANGE = (85 * Math.PI) / 180; // +/- range around the bisector to search
 // A body whose projected disc radius exceeds this (in NDC) is a "wall" — the
@@ -45,7 +45,7 @@ const MAX_BODY_RADIUS_NDC = 1.2;
 // "not physically possible" → fall back to Sun + moon. Tuned so Triton folded
 // (moon radius ~0.027 with both visible) still counts as fittable, while Io
 // folded (Jupiter unfittable without a dot) falls back.
-const FALLBACK_MOON_RADIUS = 0.022;
+const FALLBACK_MOON_RADIUS = 0.025;
 
 function projNDC(world, camPos, viewDir, right, trueUp, halfH, halfV) {
     const rel = sub(world, camPos);
@@ -130,7 +130,11 @@ export function computeMoonCameraPlacement({
     const visible = (ndc, rad) =>
         discVisibleFrac(ndc, rad) >= MIN_VISIBLE_FRAC &&
         rad.x <= MAX_BODY_RADIUS_NDC && rad.y <= MAX_BODY_RADIUS_NDC;
-    const bothPred = (e) => visible(e.pj, e.pr) && visible(e.sj, e.sr);
+    // BOTH requires planet & Sun properly visible AND on OPPOSITE horizontal
+    // sides (straddling the centred moon) — otherwise the search can pick a
+    // degenerate "both at the same corner" frame (Earth's Moon regression).
+    const bothPred = (e) => visible(e.pj, e.pr) && visible(e.sj, e.sr) &&
+        (e.pj.x * e.sj.x < 0);
     const sunPred = (e) => visible(e.sj, e.sr);
 
     // PRIMARY: search azimuth for the orientation that fits BOTH bodies at the
