@@ -3,6 +3,20 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+// SLSS_DIAG_TEMPORARY — read short git SHA at configuration time so diagnostic
+// logs can be tied to the exact commit that produced the build. Falls back to
+// "unknown" if git is unavailable. Remove with the rest of the diagnostic
+// logging system once the investigation concludes.
+val gitCommitSha: String = try {
+    val proc = ProcessBuilder("git", "rev-parse", "--short", "HEAD")
+        .directory(rootDir)
+        .redirectErrorStream(true)
+        .start()
+    proc.inputStream.bufferedReader().readText().trim().ifEmpty { "unknown" }
+} catch (_: Exception) {
+    "unknown"
+}
+
 android {
     namespace = "com.livesolar.solarsystem"
     compileSdk = 35
@@ -17,6 +31,9 @@ android {
         targetSdk = 35
         versionCode = 6
         versionName = "1.0.5"
+
+        // SLSS_DIAG_TEMPORARY — build commit for diagnostic log envelope.
+        buildConfigField("String", "BUILD_COMMIT", "\"$gitCommitSha\"")
     }
 
     testOptions {
