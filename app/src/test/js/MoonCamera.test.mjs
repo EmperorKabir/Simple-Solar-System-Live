@@ -36,7 +36,7 @@ function place(g, aspect) {
 
 for (const [name, g] of Object.entries(CASES)) {
     for (const [mode, aspect] of Object.entries(ASPECTS)) {
-        test(`${name} (${mode}, aspect ${aspect}): moon centred, ecliptic view, both discs >=20% visible`, () => {
+        test(`${name} (${mode}, aspect ${aspect}): moon centred + prominent, ecliptic view`, () => {
             const r = place(g, aspect);
 
             // Moon centred.
@@ -47,11 +47,11 @@ for (const [name, g] of Object.entries(CASES)) {
             assert.ok(Math.abs(r.viewDir.y) < 0.02, `viewDir not horizontal: y=${r.viewDir.y.toFixed(3)}`);
             assert.ok(r.up.x === 0 && r.up.y === 1 && r.up.z === 0, `up must be world up, got ${JSON.stringify(r.up)}`);
 
-            // Both bodies' discs >= 20% visible.
-            assert.ok(r.planetVisibleFrac >= 0.2 - 1e-6,
-                `planet only ${(r.planetVisibleFrac * 100).toFixed(1)}% visible (need >=20%)`);
-            assert.ok(r.sunVisibleFrac >= 0.2 - 1e-6,
-                `sun only ${(r.sunVisibleFrac * 100).toFixed(1)}% visible (need >=20%)`);
+            // v21: the moon stays PROMINENT in every case — never zoomed out to
+            // a dot (v20 shrank Io to 0.005). Floor is 0.11; allow a hair below
+            // for moons whose max-zoom size is itself just under the floor.
+            assert.ok(r.moonRadiusNDC.y >= 0.105,
+                `moon not prominent: radiusNDC.y ${r.moonRadiusNDC.y.toFixed(3)} (camDist ${r.camDist.toFixed(1)})`);
 
             // Zoom within OrbitControls limits.
             assert.ok(r.camDist >= 1.0 - 1e-6 && r.camDist <= 750, `camDist ${r.camDist} out of [1,750]`);
@@ -67,12 +67,26 @@ test('Degenerate: planet & Sun nearly opposite directions from moon → still fr
     });
     assert.ok(Math.abs(r.moonNDC.x) < 0.05 && Math.abs(r.moonNDC.y) < 0.05, 'moon centred');
     assert.ok(Math.abs(r.viewDir.y) < 0.02, 'horizontal view');
-    assert.ok(r.planetVisibleFrac >= 0.2 - 1e-6 && r.sunVisibleFrac >= 0.2 - 1e-6,
-        `both visible: planet ${r.planetVisibleFrac.toFixed(2)} sun ${r.sunVisibleFrac.toFixed(2)}`);
+    assert.ok(r.moonRadiusNDC.y >= 0.105, 'moon prominent');
 });
 
 test('Close case (Earth Moon, unfolded) zooms in hard (camDist at/near min)', () => {
     const r = place(CASES.Moon, 1.11);
     // Planet+Sun are close in screen → should not need to zoom far out.
     assert.ok(r.camDist <= 8, `expected tight zoom for close moon, got camDist ${r.camDist}`);
+});
+
+test('Io unfolded: moon stays PROMINENT (the v20 regression — was a 0.005 dot at camDist 14)', () => {
+    const r = place(CASES.Io, 1.11);
+    assert.ok(r.moonRadiusNDC.y >= 0.10,
+        `Io moon must stay prominent, got radiusNDC.y ${r.moonRadiusNDC.y.toFixed(3)} (camDist ${r.camDist.toFixed(1)})`);
+});
+
+test('Earth Moon + Triton unfolded fit BOTH bodies at near-max zoom', () => {
+    for (const name of ['Moon', 'Triton']) {
+        const r = place(CASES[name], 1.11);
+        assert.ok(r.planetVisibleFrac >= 0.2 && r.sunVisibleFrac >= 0.2,
+            `${name}: expected both visible, planet ${r.planetVisibleFrac.toFixed(2)} sun ${r.sunVisibleFrac.toFixed(2)}`);
+        assert.ok(r.moonRadiusNDC.y >= 0.10, `${name}: moon should be prominent, got ${r.moonRadiusNDC.y.toFixed(3)}`);
+    }
 });

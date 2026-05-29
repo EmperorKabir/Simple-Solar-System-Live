@@ -36,6 +36,14 @@ const normXZ = (a) => { const l = Math.hypot(a.x, a.z) || 1; return v(a.x / l, 0
 const MIN_DIST = 1.0;
 const MAX_DIST = 750.0;
 const MIN_VISIBLE_FRAC = 0.20;
+// v21: the moon must stay prominent. We will zoom OUT to fit the planet/Sun
+// only while the moon's apparent radius stays >= this fraction of the vertical
+// half-frame. Past that the moon wins and the bodies sit at the edges / partly
+// off (e.g. Io's Sun is geometrically unreachable without shrinking Io to a
+// dot). Derived from the user's hand-tuned unfolded frames (moon radius
+// ~0.13-0.17 at max zoom; floor set below that so the cap only binds when
+// fitting bodies would otherwise make the moon tiny).
+const MOON_VISUAL_FLOOR = 0.11;
 // Below this bisector length the planet & Sun are ~opposite directions from the
 // moon (moon between them); fall back to spreading along the moon→planet axis.
 const DEGENERATE_EPS = 0.15;
@@ -121,28 +129,34 @@ export function computeMoonCameraPlacement({
             sFrac: discVisibleFrac(sj, sr),
         };
     };
-    const ok = (d) => {
-        const e = evalAt(d);
-        return e.pFrac >= MIN_VISIBLE_FRAC && e.sFrac >= MIN_VISIBLE_FRAC;
+    // Visibility predicates (monotonic: more visible as distance grows).
+    const okBoth = (d) => { const e = evalAt(d); return e.pFrac >= MIN_VISIBLE_FRAC && e.sFrac >= MIN_VISIBLE_FRAC; };
+    const okOne = (d) => { const e = evalAt(d); return e.pFrac >= MIN_VISIBLE_FRAC || e.sFrac >= MIN_VISIBLE_FRAC; };
+    // Smallest distance (biggest moon) satisfying pred; MIN if already true, MAX if never.
+    const smallestD = (pred) => {
+        if (pred(MIN_DIST)) return MIN_DIST;
+        if (!pred(MAX_DIST)) return MAX_DIST;
+        let lo = MIN_DIST, hi = MAX_DIST;
+        for (let i = 0; i < 48; i++) { const mid = (lo + hi) / 2; if (pred(mid)) hi = mid; else lo = mid; }
+        return hi;
     };
 
-    let chosen;
-    if (ok(MIN_DIST)) {
-        chosen = MIN_DIST;            // close case: max zoom already fits both
-    } else if (!ok(MAX_DIST)) {
-        chosen = MAX_DIST;            // best effort (geometry can't satisfy — rare)
-    } else {
-        let lo = MIN_DIST, hi = MAX_DIST;
-        for (let i = 0; i < 48; i++) {
-            const mid = (lo + hi) / 2;
-            if (ok(mid)) hi = mid; else lo = mid;
-        }
-        chosen = hi;
-    }
+    // v21 objective: zoom out to fit BOTH bodies >=20% ONLY while the moon
+    // stays prominent (>= the visual floor). Past that the moon WINS — the
+    // bodies sit at the edges / partly off (Io's Sun is geometrically
+    // unreachable; folded narrow FOV pushes both off). This matches the user's
+    // "zoom into the moon as much as possible" + "don't over-zoom when folded".
+    // okOne is retained for diagnostics / potential future tuning.
+    void okOne;
+    const dCap = moonSize / (MOON_VISUAL_FLOOR * Math.tan(halfV));
+    const dBoth = smallestD(okBoth);
+    let chosen = Math.min(dBoth, dCap);
+    chosen = Math.max(MIN_DIST, Math.min(chosen, MAX_DIST));
 
     const final = evalAt(chosen);
     const camPos = final.camPos;
     const mj = projNDC(moonWorld, camPos, viewDir, right, trueUp, halfH, halfV);
+    const moonRad = radiusNDC(moonSize, mj.depth, halfH, halfV);
 
     return {
         cameraPos: camPos,
@@ -151,6 +165,7 @@ export function computeMoonCameraPlacement({
         viewDir, up, right, trueUp,
         aspect, fovDeg, degenerate,
         moonNDC: { x: mj.x, y: mj.y },
+        moonRadiusNDC: moonRad,
         planetNDC: { x: final.pj.x, y: final.pj.y },
         sunNDC: { x: final.sj.x, y: final.sj.y },
         planetRadiusNDC: final.pr,
