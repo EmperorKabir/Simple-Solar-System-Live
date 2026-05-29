@@ -59,15 +59,14 @@ function reportMoon(events) {
     const corr = s.correlation_id;
     const frames = events.filter((e) => e.event_type === 'moon_select_frames' && e.parent_correlation_id === corr);
     const last = frames[frames.length - 1];
-    console.log(`\n• ${s.moon?.name} (host ${s.moon?.host})  case=${s.case_resolved}/${s.subcase_resolved}  aspect=${fmt(s.scene_aspect, 3)}`);
     const pp = s.predicted_projections || {};
-    console.log(`  predicted screen_x  moon=${fmt(pp.moon?.screen_x)} host=${fmt(pp.host?.screen_x)} sun=${fmt(pp.sun?.screen_x)}`);
+    console.log(`\n• ${s.moon?.name} (host ${s.moon?.host})  algo=${s.algo || 'old'} aspect=${fmt(s.scene_aspect, 3)} camDist=${fmt(s.cam_dist)} degenerate=${s.degenerate}`);
+    console.log(`  predicted NDC  moon=[${fmt(pp.moon?.ndc_x)},${fmt(pp.moon?.ndc_y)}] host=[${fmt(pp.host?.ndc_x)},${fmt(pp.host?.ndc_y)}](${fmt((pp.host?.visible_frac || 0) * 100, 0)}%) sun=[${fmt(pp.sun?.ndc_x)},${fmt(pp.sun?.ndc_y)}](${fmt((pp.sun?.visible_frac || 0) * 100, 0)}%)`);
     if (last) {
-      console.log(`  ACTUAL ndc_x (f${last.frame_idx_since_select}) moon=${fmt(last.proj_moon?.ndc_x)} host=${fmt(last.proj_host?.ndc_x)} sun=${fmt(last.proj_sun?.ndc_x)}`);
-      console.log(`  ACTUAL ndc_y          moon=${fmt(last.proj_moon?.ndc_y)} host=${fmt(last.proj_host?.ndc_y)} sun=${fmt(last.proj_sun?.ndc_y)}`);
+      console.log(`  ACTUAL ndc (f${last.frame_idx_since_select}) moon=[${fmt(last.proj_moon?.ndc_x)},${fmt(last.proj_moon?.ndc_y)}] host=[${fmt(last.proj_host?.ndc_x)},${fmt(last.proj_host?.ndc_y)}] sun=[${fmt(last.proj_sun?.ndc_x)},${fmt(last.proj_sun?.ndc_y)}]`);
     }
     const ac = s.acceptance_checks || {};
-    console.log(`  acceptance: moonCentred=${ac.moon_centred_within_5pct} planetVisible=${ac.planet_visible} sunVisible=${ac.sun_visible} oppositeHalves=${ac.planet_sun_opposite_halves}`);
+    console.log(`  acceptance: moonCentred=${ac.moon_centred_within_5pct} planet>=20%=${ac.planet_visible} sun>=20%=${ac.sun_visible} opposite=${ac.planet_sun_opposite_halves} ecliptic=${ac.view_along_ecliptic}`);
     if (s.warnings?.length) console.log(`  warnings: ${s.warnings.join(', ')}`);
     console.log(`  frames captured: ${frames.length}`);
   }

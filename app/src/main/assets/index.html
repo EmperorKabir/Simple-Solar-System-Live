@@ -2348,10 +2348,11 @@
                 camera.position.set(worldPos.x, worldPos.y + camDist * 0.15, worldPos.z + camDist);
                 controls.target.copy(worldPos);
             } else if (isMoon) {
-                // === MOON CAMERA v18 — 4-axis (above/below/in-plane) ===
-                // Algorithm extracted to ./js/MoonCamera.mjs (pure-function,
-                // unit-tested in Node). Geometry decides LEFT/RIGHT placement
-                // of planet & sun in the frame.
+                // === MOON CAMERA v20 — ecliptic-view + zoom-solve ===
+                // Algorithm in ./js/MoonCamera.mjs (pure-function, unit-tested
+                // in Node against real harvested geometries). View along the
+                // ecliptic, moon centred, both planet & Sun discs >=20% visible,
+                // aspect-correct. camera.up stays world (0,1,0).
                 // SLSS_DIAG_TEMPORARY — snapshot camera BEFORE the jump.
                 const _slssCamBefore = slssEnabled() ? {
                     position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
@@ -2375,7 +2376,9 @@
                     sunWorld:    { x: 0, y: 0, z: 0 },
                     moonSize:   isMoon.size,
                     planetSize: planetSize,
-                    sunSize:    sunVisualR
+                    sunSize:    sunVisualR,
+                    aspect:     camera.aspect,   // aspect-correct framing (v20)
+                    fovDeg:     70
                 });
 
                 camera.position.set(placement.cameraPos.x, placement.cameraPos.y, placement.cameraPos.z);
@@ -2390,23 +2393,23 @@
                         const _m2h = { x: _hw.x - _mw.x, y: _hw.y - _mw.y, z: _hw.z - _mw.z };
                         const _m2s = { x: -_mw.x, y: -_mw.y, z: -_mw.z };
                         const _hyp = (a) => Math.hypot(a.x, a.y, a.z);
-                        const _D = placement.diag || {};
                         const _pp = placement.cameraPos;
-                        const _camToPlanet = Math.hypot(_pp.x - _hw.x, _pp.y - _hw.y, _pp.z - _hw.z);
-                        const _moonCentred = Math.abs(placement.moonScreenX) < 0.05 && Math.abs(placement.moonScreenY) < 0.05;
-                        const _planetVisible = Math.abs(placement.planetScreenX) < 1 && Math.abs(placement.planetScreenY) < 1;
-                        const _sunVisible = Math.abs(placement.sunScreenX) < 1 && Math.abs(placement.sunScreenY) < 1;
-                        const _oppositeHalves = placement.planetScreenX !== 0 && placement.sunScreenX !== 0 &&
-                            Math.sign(placement.planetScreenX) !== Math.sign(placement.sunScreenX);
-                        const _moonInFront = placement.camDist <= _camToPlanet;
+                        // v20 acceptance (disc-based >=20% visible + centred + ecliptic).
+                        const _moonCentred = Math.abs(placement.moonNDC.x) < 0.05 && Math.abs(placement.moonNDC.y) < 0.05;
+                        const _planetVisible = placement.planetVisibleFrac >= 0.2;
+                        const _sunVisible = placement.sunVisibleFrac >= 0.2;
+                        const _oppositeHalves = placement.planetNDC.x !== 0 && placement.sunNDC.x !== 0 &&
+                            Math.sign(placement.planetNDC.x) !== Math.sign(placement.sunNDC.x);
+                        const _ecliptic = Math.abs(placement.viewDir.y) < 0.02;
                         const _warnings = [];
                         if (!_moonCentred) _warnings.push('moon_off_centre');
-                        if (Math.abs(placement.sunScreenX) > 1 || Math.abs(placement.sunScreenY) > 1) _warnings.push('sun_off_frame');
-                        if (Math.abs(placement.planetScreenX) > 1 || Math.abs(placement.planetScreenY) > 1) _warnings.push('planet_off_frame');
-                        if (!_oppositeHalves) _warnings.push('planet_sun_same_half');
+                        if (!_planetVisible) _warnings.push('planet_under_20pct');
+                        if (!_sunVisible) _warnings.push('sun_under_20pct');
+                        if (!_ecliptic) _warnings.push('view_not_ecliptic');
                         slssEvent('moon_select', {
                             correlation_id: _corr,
                             trigger: 'select',
+                            algo: 'v20',
                             moon: {
                                 name: targetPlanet.name, host: isMoon.host,
                                 size_scene: isMoon.size, config_period_days: isMoon.p,
@@ -2426,38 +2429,28 @@
                             dpr: window.devicePixelRatio || 1,
                             moon_to_host: { vec: _m2h, len: _hyp(_m2h) },
                             moon_to_sun: { vec: _m2s, len: _hyp(_m2s) },
-                            moon_to_host_xz_norm: _D.moon_to_host_xz_norm,
-                            moon_to_sun_xz_norm: _D.moon_to_sun_xz_norm,
-                            dotHS_xz: _D.dotHS_xz,
-                            bisector_len_xz: _D.bisector_len_xz,
-                            vertical_offset: _D.vertical_offset,
-                            vertical_threshold: _D.vertical_threshold,
-                            host_dist: _D.host_dist,
-                            moon_orbital_radius: _D.moon_orbital_radius,
-                            case_resolved: placement.case,
-                            subcase_resolved: _D.inPlaneCase,
+                            degenerate: placement.degenerate,
                             cam_dist: placement.camDist,
-                            vertical_lift: placement.verticalLift,
+                            view_dir: placement.viewDir,
                             camera_before: _slssCamBefore,
                             camera_after: {
                                 position: { x: _pp.x, y: _pp.y, z: _pp.z },
                                 target: { x: _mw.x, y: _mw.y, z: _mw.z },
                                 up: { x: camera.up.x, y: camera.up.y, z: camera.up.z },
                                 fov_deg: 70, aspect: camera.aspect,
-                                cam_dist_from_moon: placement.camDist,
-                                view_dir: _D.view_dir, right_axis: _D.right_axis, up_axis: _D.up_axis
+                                cam_dist_from_moon: placement.camDist
                             },
                             predicted_projections: {
-                                moon: { screen_x: placement.moonScreenX, screen_y: placement.moonScreenY },
-                                host: { screen_x: placement.planetScreenX, screen_y: placement.planetScreenY, screen_radius: placement.planetScreenRadius },
-                                sun: { screen_x: placement.sunScreenX, screen_y: placement.sunScreenY, screen_radius: placement.sunScreenRadius }
+                                moon: { ndc_x: placement.moonNDC.x, ndc_y: placement.moonNDC.y },
+                                host: { ndc_x: placement.planetNDC.x, ndc_y: placement.planetNDC.y, radius_ndc: placement.planetRadiusNDC, visible_frac: placement.planetVisibleFrac },
+                                sun: { ndc_x: placement.sunNDC.x, ndc_y: placement.sunNDC.y, radius_ndc: placement.sunRadiusNDC, visible_frac: placement.sunVisibleFrac }
                             },
                             acceptance_checks: {
                                 moon_centred_within_5pct: _moonCentred,
                                 planet_visible: _planetVisible,
                                 sun_visible: _sunVisible,
                                 planet_sun_opposite_halves: _oppositeHalves,
-                                moon_in_front_of_planet: _moonInFront
+                                view_along_ecliptic: _ecliptic
                             },
                             warnings: _warnings
                         });
