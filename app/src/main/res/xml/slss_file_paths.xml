@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SLSS_DIAG_TEMPORARY — FileProvider paths for the in-app diagnostic log
+     export (plan §7). Remove with the rest of the diagnostic system. -->
+<paths>
+    <files-path name="slss_export" path="slss_export/" />
+</paths>

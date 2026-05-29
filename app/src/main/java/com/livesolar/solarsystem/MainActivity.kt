@@ -100,7 +100,7 @@ class MainActivity : Activity() {
             // package (grep -r SLSS_DIAG_TEMPORARY).
             if (com.livesolar.solarsystem.diag.SlssLogger.enabled) {
                 addJavascriptInterface(
-                    com.livesolar.solarsystem.diag.SlssLoggerJsBridge("MainActivity"),
+                    com.livesolar.solarsystem.diag.SlssLoggerJsBridge("MainActivity", this@MainActivity),
                     "SlssLog"
                 )
             }

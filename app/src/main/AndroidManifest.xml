@@ -78,6 +78,18 @@
                 android:name="android.service.wallpaper"
                 android:resource="@xml/wallpaper" />
         </service>
+        <!-- SLSS_DIAG_TEMPORARY: FileProvider for the in-app diagnostic log
+             export/share (plan §7). Remove with the diagnostic system
+             (grep SLSS_DIAG_TEMPORARY). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.slssdiag.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/slss_file_paths" />
+        </provider>
     </application>
 
 </manifest>

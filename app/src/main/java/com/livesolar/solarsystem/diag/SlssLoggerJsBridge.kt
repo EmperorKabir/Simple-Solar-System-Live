@@ -6,6 +6,7 @@
 // (grep -r SLSS_DIAG_TEMPORARY).
 package com.livesolar.solarsystem.diag
 
+import android.content.Context
 import android.util.Log
 import android.webkit.JavascriptInterface
 import org.json.JSONObject
@@ -14,8 +15,13 @@ import org.json.JSONObject
  * @param owner Identifies which WebView host emitted the event (e.g.
  *   "MainActivity" or "WebViewBitmapRenderer") so widget/wallpaper render JS
  *   logs are separable from the main app's.
+ * @param context Activity/app context for the in-app export. Null for the
+ *   offscreen render WebView (export is a main-app action only).
  */
-internal class SlssLoggerJsBridge(private val owner: String) {
+internal class SlssLoggerJsBridge(
+    private val owner: String,
+    private val context: Context? = null
+) {
 
     @JavascriptInterface
     fun event(type: String, payloadJson: String) {
@@ -33,4 +39,11 @@ internal class SlssLoggerJsBridge(private val owner: String) {
     /** True so JS can cheaply confirm the native bridge is live. */
     @JavascriptInterface
     fun isEnabled(): Boolean = SlssLogger.enabled
+
+    /** Long-press warning icon → build + share the diagnostic log bundle. */
+    @JavascriptInterface
+    fun exportLogs() {
+        val ctx = context ?: return
+        SlssLoggerExport.exportAndShare(ctx)
+    }
 }

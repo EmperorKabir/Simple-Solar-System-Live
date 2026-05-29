@@ -2044,6 +2044,23 @@
             if (e.target === warningModal) warningModal.classList.remove('visible');
         });
 
+        // SLSS_DIAG_TEMPORARY — long-press (600ms) the warning icon to export +
+        // share all diagnostic logs (plan §7). Only wired in diagnostic builds.
+        if (slssEnabled() && window.SlssLog && window.SlssLog.exportLogs) {
+            let _slssPressTimer = null;
+            const _slssCancelPress = () => { if (_slssPressTimer) { clearTimeout(_slssPressTimer); _slssPressTimer = null; } };
+            warningIcon.addEventListener('pointerdown', () => {
+                _slssCancelPress();
+                _slssPressTimer = setTimeout(() => {
+                    _slssPressTimer = null;
+                    try { window.SlssLog.exportLogs(); } catch (e) { /* noop */ }
+                }, 600);
+            });
+            warningIcon.addEventListener('pointerup', _slssCancelPress);
+            warningIcon.addEventListener('pointerleave', _slssCancelPress);
+            warningIcon.addEventListener('pointercancel', _slssCancelPress);
+        }
+
         // ── Wallpaper picker modal ──
         const wallpaperIcon  = document.getElementById('wallpaper-icon');
         const wallpaperModal = document.getElementById('wallpaper-modal');
