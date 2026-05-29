@@ -144,6 +144,40 @@ object SlssLogger {
         }
     }
 
+    /**
+     * Ingest a pre-built payload (e.g. from the JS bridge). Wraps the common
+     * envelope around the caller's JSON object. Caller-supplied keys override
+     * envelope keys only if they collide (they shouldn't).
+     */
+    fun logRaw(eventType: String, payload: JSONObject, correlationId: String? = null) {
+        if (!enabled) return
+        try {
+            val now = System.currentTimeMillis()
+            val o = JSONObject()
+            o.put("ts_ms", now)
+            o.put("ts_mono_ns", SystemClock.elapsedRealtimeNanos())
+            o.put("ts_iso", isoFmt.get()!!.format(now))
+            o.put("event_type", eventType)
+            o.put("process", processShort)
+            o.put("pid", pid)
+            o.put("tid", Process.myTid())
+            o.put("thread_name", Thread.currentThread().name)
+            o.put("session_id", sessionId)
+            o.put("seq", seq.getAndIncrement())
+            o.put("build_commit", BuildConfig.BUILD_COMMIT)
+            o.put("build_variant", BuildConfig.BUILD_TYPE)
+            correlationId?.let { o.put("correlation_id", it) }
+            val keys = payload.keys()
+            while (keys.hasNext()) {
+                val k = keys.next()
+                o.put(k, payload.get(k))
+            }
+            enqueue(o)
+        } catch (e: Exception) {
+            Log.w(TAG, "logRaw($eventType) failed: ${e.message}")
+        }
+    }
+
     /** Drain the queue and flush all sinks. Call on onPause/onDestroy/onTrimMemory. */
     fun flush() {
         if (!enabled) return

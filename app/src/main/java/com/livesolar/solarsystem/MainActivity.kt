@@ -73,6 +73,16 @@ class MainActivity : Activity() {
 
             addJavascriptInterface(WallpaperPickerBridge(this@MainActivity), "WallpaperPicker")
 
+            // SLSS_DIAG_TEMPORARY — expose the diagnostic logging bridge to JS
+            // as window.SlssLog (diagnostic builds only). Remove with the diag/
+            // package (grep -r SLSS_DIAG_TEMPORARY).
+            if (com.livesolar.solarsystem.diag.SlssLogger.enabled) {
+                addJavascriptInterface(
+                    com.livesolar.solarsystem.diag.SlssLoggerJsBridge("MainActivity"),
+                    "SlssLog"
+                )
+            }
+
             loadUrl("https://appassets.androidplatform.net/assets/index.html")
         }
 

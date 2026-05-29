@@ -154,6 +154,28 @@ export function computeMoonCameraPlacement({
         sunScreenX:   sunProj.x,    sunScreenY:   sunProj.y,
         sunScreenRadius:    sunProj.distance > 0 ? Math.atan2(sunSize,    sunProj.distance) / HALF_FOV_RAD : 0,
         camDist,
-        verticalLift
+        verticalLift,
+        // SLSS_DIAG_TEMPORARY — read-only diagnostic enrichment. Does NOT affect
+        // cameraPos/cameraTargetPos; exposes the internal scalars + the resolved
+        // in-plane sub-case so the logger is the single source of truth (no
+        // duplicated branch logic in index.html). Remove with the diag system.
+        diag: {
+            inPlaneCase: (bisLen < 0.15 || dotHS > 0.8)
+                ? 'perpendicular'
+                : (dotHS > 0 ? 'neg_bisector' : 'pos_bisector'),
+            dotHS_xz: dotHS,
+            bisector_len_xz: bisLen,
+            moon_to_host_xz_norm: { x: mhX, z: mhZ },
+            moon_to_sun_xz_norm: { x: msX, z: msZ },
+            vertical_offset: verticalOffset,
+            vertical_threshold: verticalThreshold,
+            host_dist: hostDist,
+            moon_orbital_radius: moonOrbitalRadius,
+            target_angle_rad: targetAngle,
+            ang_radius_rad: angRadius,
+            right_axis: rightAxis,
+            up_axis: trueUp,
+            view_dir: viewDir
+        }
     };
 }

@@ -864,7 +864,17 @@
         import { computePlanetPosition, computePlanetPositionVSOP87, VSOP87B, computeMoonPosition, computeBodyRotation, computeSunRotation } from './js/OrbitalEngine.js';
         import { phobos as PHOBOS_ELEMENTS, deimos as DEIMOS_ELEMENTS } from './js/data/martianMoons.js';
         import { computeMoonCameraPlacement } from './js/MoonCamera.mjs';
+        // SLSS_DIAG_TEMPORARY — diagnostic logging bridge (no-op in non-diag builds).
+        import { slssEnabled, slssEvent, slssCorr } from './js/SlssLog.mjs';
         const MARS_MOON_ELEMENTS = { phobos: PHOBOS_ELEMENTS, deimos: DEIMOS_ELEMENTS };
+
+        // SLSS_DIAG_TEMPORARY — moon-camera diagnostic state.
+        // _slssMoonTrace holds the active 60-frame post-select trace (plan §3.2);
+        // null when no trace is in flight. Scratch vectors reused per frame to
+        // avoid per-frame allocation. Remove with the diagnostic system.
+        let _slssMoonTrace = null;
+        let _slssLastFrameMs = 0;
+        const _slssProjScratch = new THREE.Vector3();
 
         // ============================================================
         // 1. Core WebGL Engine Setup
@@ -2250,6 +2260,14 @@
                 // Algorithm extracted to ./js/MoonCamera.mjs (pure-function,
                 // unit-tested in Node). Geometry decides LEFT/RIGHT placement
                 // of planet & sun in the frame.
+                // SLSS_DIAG_TEMPORARY — snapshot camera BEFORE the jump.
+                const _slssCamBefore = slssEnabled() ? {
+                    position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                    target:   { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+                    up:       { x: camera.up.x, y: camera.up.y, z: camera.up.z },
+                    fov_deg:  camera.fov,
+                    aspect:   camera.aspect
+                } : null;
                 camera.fov = 70;
                 camera.updateProjectionMatrix();
 
@@ -2270,6 +2288,93 @@
 
                 camera.position.set(placement.cameraPos.x, placement.cameraPos.y, placement.cameraPos.z);
                 controls.target.copy(worldPos);
+                // SLSS_DIAG_TEMPORARY — moon_select diagnostic (plan §3.1).
+                // Read-only: records inputs, the algorithm's predicted
+                // projections + self-assessment, and arms the 60-frame trace.
+                if (slssEnabled()) {
+                    try {
+                        const _corr = slssCorr();
+                        const _mw = worldPos, _hw = hostWorldPos;
+                        const _m2h = { x: _hw.x - _mw.x, y: _hw.y - _mw.y, z: _hw.z - _mw.z };
+                        const _m2s = { x: -_mw.x, y: -_mw.y, z: -_mw.z };
+                        const _hyp = (a) => Math.hypot(a.x, a.y, a.z);
+                        const _D = placement.diag || {};
+                        const _pp = placement.cameraPos;
+                        const _camToPlanet = Math.hypot(_pp.x - _hw.x, _pp.y - _hw.y, _pp.z - _hw.z);
+                        const _moonCentred = Math.abs(placement.moonScreenX) < 0.05 && Math.abs(placement.moonScreenY) < 0.05;
+                        const _planetVisible = Math.abs(placement.planetScreenX) < 1 && Math.abs(placement.planetScreenY) < 1;
+                        const _sunVisible = Math.abs(placement.sunScreenX) < 1 && Math.abs(placement.sunScreenY) < 1;
+                        const _oppositeHalves = placement.planetScreenX !== 0 && placement.sunScreenX !== 0 &&
+                            Math.sign(placement.planetScreenX) !== Math.sign(placement.sunScreenX);
+                        const _moonInFront = placement.camDist <= _camToPlanet;
+                        const _warnings = [];
+                        if (!_moonCentred) _warnings.push('moon_off_centre');
+                        if (Math.abs(placement.sunScreenX) > 1 || Math.abs(placement.sunScreenY) > 1) _warnings.push('sun_off_frame');
+                        if (Math.abs(placement.planetScreenX) > 1 || Math.abs(placement.planetScreenY) > 1) _warnings.push('planet_off_frame');
+                        if (!_oppositeHalves) _warnings.push('planet_sun_same_half');
+                        slssEvent('moon_select', {
+                            correlation_id: _corr,
+                            trigger: 'select',
+                            moon: {
+                                name: targetPlanet.name, host: isMoon.host,
+                                size_scene: isMoon.size, config_period_days: isMoon.p,
+                                config_dist_param: isMoon.dist,
+                                current_world: { x: _mw.x, y: _mw.y, z: _mw.z },
+                                current_world_mag: _hyp(_mw)
+                            },
+                            host: {
+                                name: isMoon.host, size_scene: planetSize,
+                                current_world: { x: _hw.x, y: _hw.y, z: _hw.z }
+                            },
+                            sun_world: { x: 0, y: 0, z: 0 },
+                            sun_visual_radius: sunVisualR,
+                            scene_aspect: camera.aspect,
+                            viewport_w_css: window.innerWidth,
+                            viewport_h_css: window.innerHeight,
+                            dpr: window.devicePixelRatio || 1,
+                            moon_to_host: { vec: _m2h, len: _hyp(_m2h) },
+                            moon_to_sun: { vec: _m2s, len: _hyp(_m2s) },
+                            moon_to_host_xz_norm: _D.moon_to_host_xz_norm,
+                            moon_to_sun_xz_norm: _D.moon_to_sun_xz_norm,
+                            dotHS_xz: _D.dotHS_xz,
+                            bisector_len_xz: _D.bisector_len_xz,
+                            vertical_offset: _D.vertical_offset,
+                            vertical_threshold: _D.vertical_threshold,
+                            host_dist: _D.host_dist,
+                            moon_orbital_radius: _D.moon_orbital_radius,
+                            case_resolved: placement.case,
+                            subcase_resolved: _D.inPlaneCase,
+                            cam_dist: placement.camDist,
+                            vertical_lift: placement.verticalLift,
+                            camera_before: _slssCamBefore,
+                            camera_after: {
+                                position: { x: _pp.x, y: _pp.y, z: _pp.z },
+                                target: { x: _mw.x, y: _mw.y, z: _mw.z },
+                                up: { x: camera.up.x, y: camera.up.y, z: camera.up.z },
+                                fov_deg: 70, aspect: camera.aspect,
+                                cam_dist_from_moon: placement.camDist,
+                                view_dir: _D.view_dir, right_axis: _D.right_axis, up_axis: _D.up_axis
+                            },
+                            predicted_projections: {
+                                moon: { screen_x: placement.moonScreenX, screen_y: placement.moonScreenY },
+                                host: { screen_x: placement.planetScreenX, screen_y: placement.planetScreenY, screen_radius: placement.planetScreenRadius },
+                                sun: { screen_x: placement.sunScreenX, screen_y: placement.sunScreenY, screen_radius: placement.sunScreenRadius }
+                            },
+                            acceptance_checks: {
+                                moon_centred_within_5pct: _moonCentred,
+                                planet_visible: _planetVisible,
+                                sun_visible: _sunVisible,
+                                planet_sun_opposite_halves: _oppositeHalves,
+                                moon_in_front_of_planet: _moonInFront
+                            },
+                            warnings: _warnings
+                        });
+                        _slssMoonTrace = { corr: _corr, frame: 0, host: isMoon.host, moonName: targetPlanet.name };
+                        _slssLastFrameMs = 0;
+                    } catch (e) {
+                        slssEvent('error', { severity: 'warn', source: 'js', message: 'moon_select emit failed: ' + (e && e.message), stack: e && e.stack });
+                    }
+                }
                 // Leave camera.up at world (0,1,0) so OrbitControls keeps the
                 // scene right-side-up after lookAt. Setting a custom up vector
                 // here flips the apparent world orientation when the moon is
@@ -2700,7 +2805,50 @@
 
             controls.update();
             renderer.render(scene, camera);
-            
+
+            // SLSS_DIAG_TEMPORARY — moon_select_frames 60-frame trace (plan §3.2).
+            // Captures ACTUAL post-OrbitControls camera state + real NDC of
+            // moon/host/sun (validates MoonCamera's predicted projections).
+            if (_slssMoonTrace && slssEnabled() && viewMode === 'PLANET' && targetPlanet) {
+                try {
+                    const _now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+                    const _dt = _slssLastFrameMs ? (_now - _slssLastFrameMs) : 0;
+                    _slssLastFrameMs = _now;
+                    const _proj = (obj) => {
+                        if (!obj) return null;
+                        obj.getWorldPosition(_slssProjScratch);
+                        _slssProjScratch.project(camera);
+                        return { ndc_x: _slssProjScratch.x, ndc_y: _slssProjScratch.y, ndc_z: _slssProjScratch.z };
+                    };
+                    const _projMoon = _proj(targetPlanet);
+                    const _projHost = _proj(planets[_slssMoonTrace.host] || null);
+                    _slssProjScratch.set(0, 0, 0).project(camera);
+                    const _projSun = { ndc_x: _slssProjScratch.x, ndc_y: _slssProjScratch.y, ndc_z: _slssProjScratch.z };
+                    slssEvent('moon_select_frames', {
+                        parent_correlation_id: _slssMoonTrace.corr,
+                        frame_idx_since_select: _slssMoonTrace.frame,
+                        moon: _slssMoonTrace.moonName,
+                        camera_position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                        camera_target: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+                        camera_quaternion: { x: camera.quaternion.x, y: camera.quaternion.y, z: camera.quaternion.z, w: camera.quaternion.w },
+                        camera_up: { x: camera.up.x, y: camera.up.y, z: camera.up.z },
+                        orbit_controls_distance: (controls.getDistance ? controls.getDistance() : null),
+                        orbit_controls_polar_rad: (controls.getPolarAngle ? controls.getPolarAngle() : null),
+                        orbit_controls_azimuth_rad: (controls.getAzimuthalAngle ? controls.getAzimuthalAngle() : null),
+                        proj_moon: _projMoon,
+                        proj_host: _projHost,
+                        proj_sun: _projSun,
+                        frame_dt_ms: _dt,
+                        view_mode: viewMode,
+                        fov_deg: camera.fov
+                    });
+                    _slssMoonTrace.frame++;
+                    if (_slssMoonTrace.frame >= 60) _slssMoonTrace = null;
+                } catch (e) {
+                    _slssMoonTrace = null;
+                }
+            }
+
             // Throttled Label Occlusion (every 5 frames). Skipped in surface
             // mode — _capture handles its own dedupe once per render.
             if (SURFACE === 'main' && frameCount % 5 === 0) {
