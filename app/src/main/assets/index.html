@@ -1000,6 +1000,42 @@
         controls.minDistance = 1.0;
         controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
         controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+
+        // SLSS_DIAG_TEMPORARY — capture the user's hand-tuned framing each time
+        // they finish a drag while viewing a MOON. This is the repositioning
+        // target used to calibrate the moon-camera fix (the last settled view
+        // before the next selection is the user's chosen framing). Logs the
+        // actual NDC of moon/host/sun + orbit angles + zoom distance.
+        controls.addEventListener('end', () => {
+            if (!slssEnabled() || viewMode !== 'PLANET' || !targetPlanet) return;
+            const _mc = (typeof moonSystemConfig !== 'undefined') ? moonSystemConfig.find(m => m.name === targetPlanet.name) : null;
+            if (!_mc) return; // moons only
+            try {
+                const _projOf = (obj) => {
+                    if (!obj) return null;
+                    obj.getWorldPosition(_slssProjScratch);
+                    _slssProjScratch.project(camera);
+                    return { ndc_x: _slssProjScratch.x, ndc_y: _slssProjScratch.y, ndc_z: _slssProjScratch.z };
+                };
+                const _hostMesh = planets[_mc.host] || null;
+                _slssProjScratch.set(0, 0, 0).project(camera);
+                const _sunNdc = { ndc_x: _slssProjScratch.x, ndc_y: _slssProjScratch.y, ndc_z: _slssProjScratch.z };
+                slssEvent('moon_view_settled', {
+                    moon: targetPlanet.name,
+                    host: _mc.host,
+                    scene_aspect: camera.aspect,
+                    fov_deg: camera.fov,
+                    camera_position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                    camera_target: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+                    orbit_distance: (controls.getDistance ? controls.getDistance() : null),
+                    orbit_polar_rad: (controls.getPolarAngle ? controls.getPolarAngle() : null),
+                    orbit_azimuth_rad: (controls.getAzimuthalAngle ? controls.getAzimuthalAngle() : null),
+                    proj_moon: _projOf(targetPlanet),
+                    proj_host: _projOf(_hostMesh),
+                    proj_sun: _sunNdc
+                });
+            } catch (e) { /* noop */ }
+        });
         
         // ============================================================
         // 2. Lighting — Point light at Sun + ambient + hemisphere fill

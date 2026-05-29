@@ -73,6 +73,26 @@ function reportMoon(events) {
   }
 }
 
+function reportMoonSettled(events) {
+  const s = events.filter((e) => e.event_type === 'moon_view_settled');
+  if (!s.length) return;
+  console.log('\n=== MOON VIEW SETTLED (user hand-tuned framing targets) ===');
+  // Group by moon; show the LAST settled view per moon (the chosen target).
+  const byMoon = {};
+  for (const e of s) {
+    const key = `${e.moon}@${fmt(e.scene_aspect, 2)}`;
+    (byMoon[key] = byMoon[key] || []).push(e);
+  }
+  for (const key of Object.keys(byMoon)) {
+    const g = byMoon[key];
+    const last = g[g.length - 1];
+    const m = last.proj_moon || {}, h = last.proj_host || {}, su = last.proj_sun || {};
+    console.log(`\n• ${key}  (${g.length} adjustments, showing final)`);
+    console.log(`  zoom(orbit_distance)=${fmt(last.orbit_distance)} polar=${fmt(last.orbit_polar_rad)} azimuth=${fmt(last.orbit_azimuth_rad)}`);
+    console.log(`  final NDC: moon=[${fmt(m.ndc_x)},${fmt(m.ndc_y)}] host=[${fmt(h.ndc_x)},${fmt(h.ndc_y)}] sun=[${fmt(su.ndc_x)},${fmt(su.ndc_y)}]`);
+  }
+}
+
 function reportWidgetFraming(events) {
   const fr = events.filter((e) => e.event_type === 'widget_render' && e.stage === 'framing_diagnostics_js');
   if (!fr.length) return;
@@ -159,6 +179,7 @@ function main() {
     for (const e of errors.slice(0, 20)) console.log(`  [${e.severity}/${e.source}] ${e.message}`);
   }
   reportMoon(events);
+  reportMoonSettled(events);
   reportWidgetFraming(events);
   reportLockShift(events);
   reportPerf(events);
