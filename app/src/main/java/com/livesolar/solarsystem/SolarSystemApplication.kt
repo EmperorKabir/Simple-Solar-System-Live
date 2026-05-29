@@ -7,6 +7,7 @@ package com.livesolar.solarsystem
 import android.app.Application
 import android.os.Build
 import com.livesolar.solarsystem.diag.SlssLogger
+import com.livesolar.solarsystem.diag.SlssLoggerObservers
 import java.util.Locale
 import java.util.TimeZone
 
@@ -17,6 +18,8 @@ class SolarSystemApplication : Application() {
         // No-op in release builds (gated inside init by BuildConfig.SLSS_DIAG_ENABLED).
         SlssLogger.init(this)
         emitSessionStart()
+        // Install passive system-event observers (no-op if logger disabled).
+        SlssLoggerObservers.install(this)
     }
 
     /**
