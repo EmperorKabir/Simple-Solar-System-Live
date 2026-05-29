@@ -34,6 +34,13 @@ android {
 
         // SLSS_DIAG_TEMPORARY — build commit for diagnostic log envelope.
         buildConfigField("String", "BUILD_COMMIT", "\"$gitCommitSha\"")
+
+        // SLSS_DIAG_TEMPORARY — explicit master switch for the diagnostic
+        // logging system. Default OFF here so release inherits false; the
+        // debug + diagnostic build types flip it true below. Self-controlled
+        // so gating does NOT depend on AGP's ambiguous BuildConfig.DEBUG
+        // (true-for-debug-type vs true-for-debuggable) semantics.
+        buildConfigField("boolean", "SLSS_DIAG_ENABLED", "false")
     }
 
     testOptions {
@@ -61,6 +68,10 @@ android {
     }
 
     buildTypes {
+        // SLSS_DIAG_TEMPORARY — enable diagnostic logging in debug builds.
+        getByName("debug") {
+            buildConfigField("boolean", "SLSS_DIAG_ENABLED", "true")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -76,6 +87,9 @@ android {
             isDebuggable = true
             isMinifyEnabled = false
             isShrinkResources = false
+            // SLSS_DIAG_TEMPORARY — set explicitly (not just via initWith) so
+            // the flag is guaranteed true regardless of initWith field-copy order.
+            buildConfigField("boolean", "SLSS_DIAG_ENABLED", "true")
         }
     }
     compileOptions {

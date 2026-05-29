@@ -1,0 +1,68 @@
+// SLSS_DIAG_TEMPORARY — Application subclass that bootstraps the diagnostic
+// logger as early as possible in every process. Registered via
+// android:name=".SolarSystemApplication" in the manifest. Remove with the rest
+// of the diagnostic system (grep -r SLSS_DIAG_TEMPORARY).
+package com.livesolar.solarsystem
+
+import android.app.Application
+import android.os.Build
+import com.livesolar.solarsystem.diag.SlssLogger
+import java.util.Locale
+import java.util.TimeZone
+
+class SolarSystemApplication : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+        // No-op in release builds (gated inside init by BuildConfig.SLSS_DIAG_ENABLED).
+        SlssLogger.init(this)
+        emitSessionStart()
+    }
+
+    /**
+     * Per-process hello-world. Captures device + display + locale context once
+     * per process start so every later event can be reconciled against the
+     * hardware/config it ran on (plan §3 envelope + §5 extra dimensions).
+     */
+    private fun emitSessionStart() {
+        val dm = resources.displayMetrics
+        val config = resources.configuration
+        SlssLogger.logEvent(
+            "session_start",
+            mapOf(
+                "hello" to "world",
+                "process_name" to Application.getProcessName(),
+                "package" to packageName,
+                "device" to mapOf(
+                    "manufacturer" to Build.MANUFACTURER,
+                    "model" to Build.MODEL,
+                    "device" to Build.DEVICE,
+                    "product" to Build.PRODUCT,
+                    "hardware" to Build.HARDWARE,
+                    "fingerprint" to Build.FINGERPRINT,
+                    "sdk_int" to Build.VERSION.SDK_INT,
+                    "release" to Build.VERSION.RELEASE,
+                    "supported_abis" to Build.SUPPORTED_ABIS.toList()
+                ),
+                "display" to mapOf(
+                    "density" to dm.density,
+                    "density_dpi" to dm.densityDpi,
+                    "width_px" to dm.widthPixels,
+                    "height_px" to dm.heightPixels,
+                    "xdpi" to dm.xdpi,
+                    "ydpi" to dm.ydpi
+                ),
+                "config" to mapOf(
+                    "orientation" to config.orientation,
+                    "screen_width_dp" to config.screenWidthDp,
+                    "screen_height_dp" to config.screenHeightDp,
+                    "smallest_screen_width_dp" to config.smallestScreenWidthDp,
+                    "ui_mode" to config.uiMode,
+                    "font_scale" to config.fontScale
+                ),
+                "locale" to Locale.getDefault().toLanguageTag(),
+                "timezone" to TimeZone.getDefault().id
+            )
+        )
+    }
+}
