@@ -3236,6 +3236,16 @@
             renderer.setSize(w, h);
             labelRenderer.setSize(w, h);
             _applySurfaceOffset();
+            // v21: auto re-frame the MOON camera for the new aspect on
+            // fold/unfold (per user: separate optimal placement per mode is
+            // fine — no need to force one viewpoint to suit both). Moons only;
+            // planet camera is out of scope. flyToBody recomputes placement
+            // with the just-updated camera.aspect.
+            if (viewMode === 'PLANET' && targetPlanet &&
+                typeof moonSystemConfig !== 'undefined' &&
+                moonSystemConfig.find(m => m.name === targetPlanet.name)) {
+                flyToBody(targetPlanet);
+            }
         });
 
         animate();
