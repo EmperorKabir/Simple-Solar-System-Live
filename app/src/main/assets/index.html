@@ -2765,14 +2765,20 @@
                     requiredDist *= k;
                 }
             } else {
-                // Surface (widget/wallpaper): re-centre on the projected (NDC)
-                // bounding box of the rings + bodies so the outer ring (e.g.
-                // Pluto) is EQUIDISTANT from every border. The Sun sits at an
-                // orbit focus AND the inclined rings project lopsided under
-                // perspective (Sun-centred world box != Sun-centred NDC box), so a
-                // Sun-centred frame is off-centre — this is also the cause of the
-                // wallpaper's vertical shift. Sample world points ONCE, then
-                // re-project cheaply while shifting the camera target.
+                // Surface (widget/wallpaper): centre the projected (NDC) bounding
+                // box of the rings + bodies so the outer ring (e.g. Pluto) is
+                // EQUIDISTANT from every border. The Sun sits at an orbit focus AND
+                // the inclined rings project lopsided under perspective (Sun-centred
+                // world box != Sun-centred NDC box), so a Sun-centred frame is
+                // off-centre — also the cause of the wallpaper's vertical shift.
+                //
+                // Centre via an OFF-AXIS projection offset (setViewOffset), NOT a
+                // lateral target pan: a view offset is a CONSTANT NDC shift, so it
+                // centres exactly in ONE step at ANY camera tilt. A target pan's
+                // NDC effect is depth-dependent, so it under-corrects for tilted
+                // views (ring points sit at very different depths) — that was the
+                // tilted-view residual. For the untilted view both methods give the
+                // identical centred result, so the top-down framing is unchanged.
                 const _wp = [];
                 const _bp = new THREE.Vector3();
                 for (const name of visibleNames) {
@@ -2784,14 +2790,13 @@
                     const m = planets[name];
                     if (m) { m.getWorldPosition(_bp); _wp.push(_bp.x, _bp.y, _bp.z); }
                 }
-                const _ctr = new THREE.Vector3(0, 0, 0);
                 const _proj = new THREE.Vector3();
-                const _place = () => {
-                    camera.position.set(_ctr.x + camDirUnit.x * requiredDist, _ctr.y + camDirUnit.y * requiredDist, _ctr.z + camDirUnit.z * requiredDist);
-                    controls.target.copy(_ctr); camera.up.set(0, 1, 0); camera.lookAt(_ctr);
-                    camera.updateProjectionMatrix(); camera.updateMatrixWorld();
-                };
-                const _bbox = () => {
+                // Frame on the Sun (no offset) and measure the un-centred NDC box.
+                const _measure = () => {
+                    camera.clearViewOffset();
+                    camera.position.set(camDirUnit.x * requiredDist, camDirUnit.y * requiredDist, camDirUnit.z * requiredDist);
+                    controls.target.set(0, 0, 0); camera.up.set(0, 1, 0); camera.lookAt(0, 0, 0);
+                    camera.updateMatrixWorld(); camera.updateProjectionMatrix();
                     const pm = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
                     let a = Infinity, b = -Infinity, c = Infinity, d = -Infinity;
                     for (let i = 0; i < _wp.length; i += 3) {
@@ -2799,20 +2804,19 @@
                         if (_proj.x < a) a = _proj.x; if (_proj.x > b) b = _proj.x;
                         if (_proj.y < c) c = _proj.y; if (_proj.y > d) d = _proj.y;
                     }
-                    return { mnx: a, mxx: b, mny: c, mxy: d };
+                    return { ncx: (a + b) / 2, ncy: (c + d) / 2, half: Math.max((b - a) / 2, (d - c) / 2) };
                 };
-                // Two centring iterations (the perspective offset is small, so it
-                // converges fast): project, shift the target to the NDC box centre.
-                for (let iter = 0; iter < 2; iter++) {
-                    _place();
-                    const bb = _bbox();
-                    _ctr.addScaledVector(rightUnit, ((bb.mnx + bb.mxx) / 2) * requiredDist * Math.tan(hFOV / 2))
-                        .addScaledVector(trueUpUnit, ((bb.mny + bb.mxy) / 2) * requiredDist * Math.tan(vFOV / 2));
-                }
-                _place();
-                const bb = _bbox();
-                maxNDC = Math.max(Math.abs(bb.mnx), Math.abs(bb.mxx), Math.abs(bb.mny), Math.abs(bb.mxy));
-                if (maxNDC > 0.95) { requiredDist *= (maxNDC / 0.95) * 1.05; _place(); }
+                let m = _measure();
+                // Safety net before centring: the box half-extent is the post-centre
+                // max |NDC| (centring is a pure translation, so the width is fixed).
+                if (m.half > 0.95) { requiredDist *= (m.half / 0.95) * 1.05; m = _measure(); }
+                // Apply the centring offset. NDC.x shifts by -2*offsetX/fullW and
+                // NDC.y by +2*offsetY/fullH; fullW/fullH carry the aspect so the
+                // frustum is not distorted. Persists through updateProjectionMatrix.
+                const _fH = 1000, _fW = 1000 * camera.aspect;
+                camera.setViewOffset(_fW, _fH, m.ncx * _fW / 2, -m.ncy * _fH / 2, _fW, _fH);
+                camera.updateProjectionMatrix();
+                maxNDC = m.half;
             }
 
             // SLSS_DIAG_TEMPORARY — widget framing diagnostics (plan §4.2).
