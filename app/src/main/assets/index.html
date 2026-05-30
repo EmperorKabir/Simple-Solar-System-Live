@@ -2786,10 +2786,21 @@
                     );
                     const _pv = new THREE.Vector3();
                     const _ssX = {}, _ssY = {}, _ndcX = {}, _ndcY = {};
+                    // SLSS_DIAG_TEMPORARY — detailed per-planet orbital-ring geometry
+                    // for the widget cut-off / left-right asymmetry investigation.
+                    // Reuses the single 360-sample loop (no extra render cost).
+                    const _ring = {};
                     for (const name of visibleNames) {
                         const data = planetsData[name];
                         let minSx = Infinity, maxSx = -Infinity, minSy = Infinity, maxSy = -Infinity;
                         let minNx = Infinity, maxNx = -Infinity, minNy = Infinity, maxNy = -Infinity;
+                        // raw world XZ (Sun at origin) — top-down geometry, isolates
+                        // orbit eccentricity/inclination from the camera tilt.
+                        let minWx = Infinity, maxWx = -Infinity, minWz = Infinity, maxWz = -Infinity;
+                        let peri = Infinity, aph = -Infinity, periP = null, aphP = null;
+                        // orbit angle (deg) at each NDC extreme — identifies which
+                        // part of the orbit hits the frame edge.
+                        let aMinNx = 0, aMaxNx = 0, aMinNy = 0, aMaxNy = 0;
                         for (let i = 0; i < 360; i++) {
                             const days = (i / 360) * (data.period * 365.25);
                             const p = getOrbitPositionFast(data, days, true);
@@ -2798,14 +2809,42 @@
                             if (sx < minSx) minSx = sx; if (sx > maxSx) maxSx = sx;
                             if (sy < minSy) minSy = sy; if (sy > maxSy) maxSy = sy;
                             _pv.set(p.x, p.y, p.z).applyMatrix4(_pm);
-                            if (_pv.x < minNx) minNx = _pv.x; if (_pv.x > maxNx) maxNx = _pv.x;
-                            if (_pv.y < minNy) minNy = _pv.y; if (_pv.y > maxNy) maxNy = _pv.y;
+                            if (_pv.x < minNx) { minNx = _pv.x; aMinNx = i; }
+                            if (_pv.x > maxNx) { maxNx = _pv.x; aMaxNx = i; }
+                            if (_pv.y < minNy) { minNy = _pv.y; aMinNy = i; }
+                            if (_pv.y > maxNy) { maxNy = _pv.y; aMaxNy = i; }
+                            if (p.x < minWx) minWx = p.x; if (p.x > maxWx) maxWx = p.x;
+                            if (p.z < minWz) minWz = p.z; if (p.z > maxWz) maxWz = p.z;
+                            const rr = Math.hypot(p.x, p.y, p.z);
+                            if (rr < peri) { peri = rr; periP = { x: +p.x.toFixed(3), z: +p.z.toFixed(3), dist: +rr.toFixed(3), deg: i }; }
+                            if (rr > aph) { aph = rr; aphP = { x: +p.x.toFixed(3), z: +p.z.toFixed(3), dist: +rr.toFixed(3), deg: i }; }
                         }
                         _ssX[name] = { min: minSx, max: maxSx };
                         _ssY[name] = { min: minSy, max: maxSy };
                         _ndcX[name] = { min: minNx, max: maxNx };
                         _ndcY[name] = { min: minNy, max: maxNy };
+                        const maxAbs = Math.max(Math.abs(minNx), Math.abs(maxNx), Math.abs(minNy), Math.abs(maxNy));
+                        const wcx = (minWx + maxWx) / 2, wcz = (minWz + maxWz) / 2;
+                        _ring[name] = {
+                            ndc_center: { x: +((minNx + maxNx) / 2).toFixed(4), y: +((minNy + maxNy) / 2).toFixed(4) },
+                            ndc_asym: { x: +(Math.abs(minNx) - Math.abs(maxNx)).toFixed(4), y: +(Math.abs(minNy) - Math.abs(maxNy)).toFixed(4) },
+                            ndc_extreme_deg: { left: aMinNx, right: aMaxNx, top: aMaxNy, bottom: aMinNy },
+                            cutoff: { max_abs_ndc: +maxAbs.toFixed(4), overflow: +Math.max(0, maxAbs - 1).toFixed(4),
+                                left: minNx < -1, right: maxNx > 1, top: maxNy > 1, bottom: minNy < -1 },
+                            topdown_xz: { center: { x: +wcx.toFixed(3), z: +wcz.toFixed(3) },
+                                sun_offset_from_centre: +Math.hypot(wcx, wcz).toFixed(3),
+                                perihelion: periP, aphelion: aphP },
+                            orbital: { e: data.e, a: data.a, i: data.i, focus_offset_a_times_e: +(data.a * data.e).toFixed(3) }
+                        };
                     }
+                    // body NDC (where each planet sits NOW) + Sun NDC (origin).
+                    const _bodyNdc = {};
+                    for (const name of visibleNames) {
+                        const m = planets[name];
+                        if (m) { m.getWorldPosition(_pv); _pv.applyMatrix4(_pm); _bodyNdc[name] = { x: +_pv.x.toFixed(4), y: +_pv.y.toFixed(4) }; }
+                    }
+                    _pv.set(0, 0, 0).applyMatrix4(_pm);
+                    const _sunNdc = { x: +_pv.x.toFixed(4), y: +_pv.y.toFixed(4) };
                     slssEvent('widget_render', {
                         stage: 'framing_diagnostics_js',
                         correlation_id: _slssCorr,
@@ -2829,6 +2868,21 @@
                         per_planet_screen_y_signed: _ssY,
                         per_planet_ndc_x_signed: _ndcX,
                         per_planet_ndc_y_signed: _ndcY
+                    });
+                    // SLSS_DIAG_TEMPORARY — focused orbital-ring geometry report
+                    // (the widget cut-off / L-R asymmetry investigation). top_down
+                    // is true when the camera tilt is ~0 (no foreshortening, so the
+                    // NDC asymmetry == the true orbital eccentricity asymmetry).
+                    slssEvent('widget_render', {
+                        stage: 'ring_geometry',
+                        correlation_id: _slssCorr,
+                        surface: SURFACE,
+                        camera_tilt: CAMERA_TILT,
+                        top_down: CAMERA_TILT < 0.01,
+                        camera_aspect: camera.aspect,
+                        sun_ndc: _sunNdc,
+                        body_ndc: _bodyNdc,
+                        ring: _ring
                     });
                 } catch (e) {
                     slssEvent('error', { severity: 'warn', source: 'js', message: 'framing_diag failed: ' + (e && e.message) });
