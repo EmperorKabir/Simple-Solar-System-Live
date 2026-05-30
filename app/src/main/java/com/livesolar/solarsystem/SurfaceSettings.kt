@@ -31,13 +31,26 @@ class SurfaceSettings(
         get() = prefs.getBoolean("hidePluto", DEFAULT_HIDE_PLUTO)
         set(value) = prefs.edit().putBoolean("hidePluto", value).apply()
 
+    // Monotonic token folded into urlParams(). An explicit 'Set wallpaper'
+    // bumps it so the engine's currentParams != lastParams and it re-renders
+    // on its next visibility cycle EVEN IF no visible setting changed —
+    // otherwise re-applying an already-bound wallpaper is a silent no-op
+    // (the engine re-paints its cached frame). index.html ignores the param.
+    var renderGeneration: Long
+        get() = prefs.getLong("renderGen", 0L)
+        set(value) = prefs.edit().putLong("renderGen", value).apply()
+
+    fun bumpRenderGeneration() {
+        prefs.edit().putLong("renderGen", renderGeneration + 1).apply()
+    }
+
     /** URL params for index.html in widget/wallpaper mode. */
     fun urlParams(surface: String): String {
         val offset = (offsetY * 10).toInt() / 10f
         val tiltR  = (tilt    * 10).toInt() / 10f
         val labels = if (labelsEnabled) "on" else "off"
         val pluto  = if (hidePluto) "off" else "on"
-        return "?surface=$surface&offsetY=$offset&tilt=$tiltR&labels=$labels&pluto=$pluto"
+        return "?surface=$surface&offsetY=$offset&tilt=$tiltR&labels=$labels&pluto=$pluto&gen=$renderGeneration"
     }
 
     companion object {

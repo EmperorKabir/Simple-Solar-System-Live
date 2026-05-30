@@ -202,6 +202,17 @@ class MainActivity : Activity() {
                 "lock" -> SolarSystemLockWallpaperService::class.java
                 else -> return false
             }
+            // Explicit 'Set' is an unconditional re-apply request: bump the
+            // render generation so the engine re-renders on its next visibility
+            // cycle even when settings are unchanged (and even when we skip the
+            // system preview below because we're already bound). Without this,
+            // re-applying an already-bound wallpaper leaves the cached frame and
+            // appears to do nothing.
+            val (ns, def) = when (target) {
+                "home" -> SurfaceSettings.HOME_WALLPAPER_NAMESPACE to SurfaceSettings.DEFAULT_HOME_OFFSET_Y
+                else   -> SurfaceSettings.LOCK_WALLPAPER_NAMESPACE to SurfaceSettings.DEFAULT_LOCK_OFFSET_Y
+            }
+            SurfaceSettings(activity, ns, def).bumpRenderGeneration()
             val targetComponent = ComponentName(activity, cls)
             // If our service is already the active wallpaper for this surface,
             // skip Samsung's system preview entirely. Settings have already
