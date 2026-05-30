@@ -46,6 +46,13 @@ const TILT_RANGE = (60 * Math.PI) / 180; // max camera tilt to recentre off-ecli
 const W_Y = 1.5;       // vertical-centre both bodies (the key missing axis)
 const W_SPREAD = 0.15; // mild bias to a more central framing
 const W_ZOOM = 0.5;    // prefer max zoom (biggest moon)
+// Prefer a LEVEL (near-horizontal) view: the user's folded repositions are all
+// ~horizontal (polar ~90deg) — they would rather ZOOM OUT than have the camera
+// tilt steeply down to cram horizontally-separated bodies onto the narrow folded
+// screen. A steep "looking down" angle reads as wrong. Tilt is still used when a
+// moon is genuinely off-ecliptic (Triton): there the vertical-centring benefit
+// (W_Y) outweighs this penalty. Penalty on the camera pitch |viewDir.y|.
+const W_TILT = 1.5;
 // A close/dominant planet (Io's Jupiter: apparent radius ~1 even at max zoom)
 // is NOT framed symmetrically — the user rotates the frame toward the Sun so the
 // Sun sits near a small offset and the planet stays at the edge. (calibrate-moon)
@@ -212,13 +219,11 @@ export function computeMoonCameraPlacement({
         }
         if (!cands.length) return null;
         let r = null;
-        // Big planets are clamped to MAX zoom afterwards, so their orientation
-        // must be chosen at the TIGHTEST zoom (a far candidate framed well at its
-        // own distance is wrong once clamped to cd 1.0). Only the symmetric far-
-        // moon case gets the wide window (to reach the opposite-edge framing).
-        const win = bigPlanet ? 1.10 : ZOOM_WINDOW;
+        // The planet is never dropped now (no max-zoom clamp), so EVERY case may
+        // zoom out within the wide window to reach the level, opposite-edge
+        // framing the user prefers.
         for (const c of cands) {
-            if (c.d > dMin * win + 1e-9) continue;
+            if (c.d > dMin * ZOOM_WINDOW + 1e-9) continue;
             const e = evalAt(c.b, c.d);
             const flatY = Math.abs(e.pj.y) + Math.abs(e.sj.y);
             // Normal planet: symmetric (planet & Sun balanced left/right).
@@ -231,7 +236,7 @@ export function computeMoonCameraPlacement({
             } else {
                 framing = Math.abs(e.pj.x + e.sj.x) + W_SPREAD * Math.max(Math.abs(e.pj.x), Math.abs(e.sj.x));
             }
-            const cost = framing + W_Y * flatY + W_ZOOM * (c.d / dMin - 1);
+            const cost = framing + W_Y * flatY + W_ZOOM * (c.d / dMin - 1) + W_TILT * Math.abs(c.b.viewDir.y);
             if (r === null || cost < r.cost) r = { b: c.b, d: c.d, cost };
         }
         return r;
