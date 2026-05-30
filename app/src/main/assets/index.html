@@ -1525,15 +1525,14 @@
         // of a runtime canvas resize per texture in surface mode (which
         // previously decoded 128 MB of raw RGBA per oversized texture before
         // shrinking).
+        // Surface mode (widget/wallpaper): planets render at ~10-100px, so load
+        // 512px low-res variants of EVERY body (textures/lowres/). This cuts
+        // decoded GPU memory from ~800MB to ~20MB and per-texture decode from
+        // ~500ms (8K JPEG) to ~3ms — the root cause of the multi-second renders
+        // and multi-GB spikes during folds. The main app keeps full-res for
+        // pinch-zoom inspection. (tools/gen-lowres-textures.py builds the set.)
         if (SURFACE !== 'main') {
-            Object.assign(urls, {
-                Mercury: "textures/Mercury-4k.jpg",
-                Venus:   "textures/Venus-4k.jpg",
-                Earth:   "textures/Earth-4k.jpg",
-                Moon:    "textures/Moon-4k.jpg",
-                Mars:    "textures/Mars-4k.jpg",
-                Io:      "textures/Io-4k.jpg"
-            });
+            for (const k in urls) urls[k] = urls[k].replace('textures/', 'textures/lowres/');
         }
 
         // Proteus has no dedicated texture file — use a generic grey
