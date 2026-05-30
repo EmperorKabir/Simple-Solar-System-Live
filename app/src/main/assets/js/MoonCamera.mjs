@@ -34,8 +34,10 @@ const normXZ = (a) => { const l = Math.hypot(a.x, a.z) || 1; return v(a.x / l, 0
 const MIN_DIST = 1.0;          // OrbitControls minDistance
 const MAX_DIST = 750.0;        // OrbitControls maxDistance
 const MIN_VISIBLE_FRAC = 0.15; // disc must be >=20% in-frame to count as "visible"
-const N_PHI = 49;              // azimuth sweep resolution
-const PHI_RANGE = (85 * Math.PI) / 180; // +/- range around the bisector to search
+const N_PHI = 73;              // azimuth sweep resolution (full circle)
+const PHI_RANGE = Math.PI;     // search the FULL 360 deg so the symmetric
+                                // orientation (often ~perpendicular to the
+                                // bisector) is never missed
 // A body whose projected disc radius exceeds this (in NDC) is a "wall" — the
 // camera is pointing almost into it (a giant featureless surface), not framing
 // it as a recognisable body. Such solutions are rejected so e.g. Io folded
@@ -49,10 +51,6 @@ const MAX_BODY_RADIUS_NDC = 1.2;
 const PLANET_CLEAN_RADIUS = 0.6;
 // Mode B target: keep the moon at least this prominent (cap the zoom-out here).
 const MOON_PROMINENT_FLOOR = 0.09;
-// Prefer both-body framings where each body's centre is within +/-this in NDC
-// (comfortably inside the frame, not jammed at the extreme edge). The user's
-// "centred a bit more". Falls back to edge framing when geometry can't.
-const CENTER_TARGET = 0.8;
 
 function projNDC(world, camPos, viewDir, right, trueUp, halfH, halfV) {
     const rel = sub(world, camPos);
@@ -150,10 +148,6 @@ export function computeMoonCameraPlacement({
     // rule, which wrongly rejected the same-direction case — e.g. Earth's Moon
     // near new moon, where Earth & Sun share a direction and frame centrally).
     const bothPred = (e) => visible(e.pj, e.pr) && visible(e.sj, e.sr);
-    // Prefer framings where both body centres sit comfortably inside the frame
-    // (not jammed at the extreme edge) — the user's "centred a bit more".
-    const centralPred = (e) => bothPred(e) &&
-        Math.max(Math.abs(e.pj.x), Math.abs(e.sj.x)) <= CENTER_TARGET;
 
     // Both-bodies search for a given predicate: smallest distance (biggest moon)
     // satisfying it, then — among orientations within 5% of that distance — the
@@ -172,15 +166,20 @@ export function computeMoonCameraPlacement({
         for (const c of cands) {
             if (c.d > dMin * 1.05 + 1e-9) continue;
             const e = evalAt(c.b, c.d);
-            const sym = Math.abs(e.pj.x + e.sj.x);
-            if (r === null || sym < r.sym) r = { b: c.b, d: c.d, phi: c.phi, sym };
+            const sym = Math.abs(e.pj.x + e.sj.x);          // balanced around centre
+            const spread = Math.max(Math.abs(e.pj.x), Math.abs(e.sj.x)); // how far out
+            // Primary: symmetry. Secondary: prefer the more central of equally
+            // symmetric orientations (the user's "centred a bit more").
+            const cost = sym + 0.25 * spread;
+            if (r === null || cost < r.cost) r = { b: c.b, d: c.d, phi: c.phi, sym, cost };
         }
         return r;
     };
 
-    // Prefer a CENTRED both-framing (bodies inside ±CENTER_TARGET); if the
-    // geometry can't (far moons forced to the edges), accept bodies at the edge.
-    const both = searchBothWith(centralPred) || searchBothWith(bothPred);
+    // Max-zoom both-framing (smallest distance = biggest moon), most symmetric
+    // among the equally-tight orientations. The user zooms IN to max and accepts
+    // the bodies wherever they land — "centred" meant SYMMETRIC, not zoomed-out.
+    const both = searchBothWith(bothPred);
     // Distance at which the moon's apparent radius hits the "prominent" floor.
     const dCapMoon = moonSize / (MOON_PROMINENT_FLOOR * Math.tan(halfV));
 
