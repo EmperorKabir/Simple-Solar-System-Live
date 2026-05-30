@@ -35,11 +35,12 @@ const place = (g, aspect) => computeMoonCameraPlacement({
 
 for (const [name, g] of Object.entries(CASES)) {
     for (const [mode, aspect] of Object.entries(ASPECTS)) {
-        test(`${name} (${mode}): moon centred + ecliptic, Sun kept, moon not a dot`, () => {
+        test(`${name} (${mode}): moon centred, up=world, Sun kept`, () => {
             const r = place(g, aspect);
             assert.ok(Math.abs(r.moonNDC.x) < 0.05 && Math.abs(r.moonNDC.y) < 0.05,
                 `moon not centred: (${r.moonNDC.x.toFixed(3)}, ${r.moonNDC.y.toFixed(3)})`);
-            assert.ok(Math.abs(r.viewDir.y) < 0.02, `viewDir not horizontal: y=${r.viewDir.y.toFixed(3)}`);
+            // camera.up stays world up (the hard constraint); viewDir may tilt to
+            // recentre off-ecliptic bodies vertically.
             assert.ok(r.up.x === 0 && r.up.y === 1 && r.up.z === 0, `up must be world up`);
             assert.ok(r.sunVisibleFrac >= 0.15 - 1e-6,
                 `Sun must stay >=15% visible, got ${(r.sunVisibleFrac * 100).toFixed(1)}% (mode ${r.fallbackMode})`);

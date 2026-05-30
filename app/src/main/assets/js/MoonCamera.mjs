@@ -38,6 +38,14 @@ const N_PHI = 73;              // azimuth sweep resolution (full circle)
 const PHI_RANGE = Math.PI;     // search the FULL 360 deg so the symmetric
                                 // orientation (often ~perpendicular to the
                                 // bisector) is never missed
+const N_TILT = 21;             // vertical-tilt sweep resolution
+const TILT_RANGE = (60 * Math.PI) / 180; // max camera tilt to recentre off-ecliptic bodies
+// Cost weights CALIBRATED against 261 of the user's real repositioned targets
+// (tools/diag/calibrate-moon.mjs): mean framing error 0.486 vs 1.25 without
+// tilt. cost = |pX+sX| + W_Y*(|pY|+|sY|) + W_SPREAD*spreadX + W_ZOOM*(d/dMin-1).
+const W_Y = 1.5;       // vertical-centre both bodies (the key missing axis)
+const W_SPREAD = 0.15; // mild bias to a more central framing
+const W_ZOOM = 0.5;    // prefer max zoom (biggest moon)
 // A body whose projected disc radius exceeds this (in NDC) is a "wall" — the
 // camera is pointing almost into it (a giant featureless surface), not framing
 // it as a recognisable body. Such solutions are rejected so e.g. Io folded
@@ -109,9 +117,12 @@ export function computeMoonCameraPlacement({
     // priority body) so it stays in frame; the planet then falls behind.
     const phi0 = degenerate ? Math.atan2(sXZ.z, sXZ.x) : Math.atan2(bz, bx);
 
-    // Build an ecliptic-horizontal camera basis for a given view azimuth.
-    const basisFor = (phi) => {
-        const viewDir = v(Math.cos(phi), 0, Math.sin(phi));
+    // Camera basis for a view azimuth + vertical tilt. camera.up stays world
+    // (0,1,0) (OrbitControls convention) so the scene stays upright; tilt lets
+    // the camera look down/up at the moon to recentre off-ecliptic bodies.
+    const basisFor = (phi, tilt = 0) => {
+        const ct = Math.cos(tilt), st = Math.sin(tilt);
+        const viewDir = v(ct * Math.cos(phi), st, ct * Math.sin(phi));
         let right = cross(viewDir, v(0, 1, 0));
         if (len(right) < 1e-6) right = v(1, 0, 0);
         right = norm(right);
@@ -152,26 +163,32 @@ export function computeMoonCameraPlacement({
     // Both-bodies search for a given predicate: smallest distance (biggest moon)
     // satisfying it, then — among orientations within 5% of that distance — the
     // most SYMMETRIC (planet & Sun balanced: |planetNDC.x + sunNDC.x| minimal).
+    // 2D orientation search (azimuth × vertical tilt). For each orientation the
+    // tightest zoom keeping `pred`; among orientations within 10% of the
+    // tightest, the one minimising the CALIBRATED cost = horizontal asymmetry
+    // |pX+sX| + W_Y*(both vertically centred) + W_SPREAD*central + W_ZOOM*zoom.
     const searchBothWith = (pred) => {
         const cands = [];
         let dMin = Infinity;
         for (let i = 0; i < N_PHI; i++) {
             const phi = phi0 - PHI_RANGE + (2 * PHI_RANGE * i) / (N_PHI - 1);
-            const b = basisFor(phi);
-            const d = smallestD(b, pred);
-            if (isFinite(d)) { cands.push({ b, d, phi }); if (d < dMin) dMin = d; }
+            for (let j = 0; j < N_TILT; j++) {
+                const tilt = -TILT_RANGE + (2 * TILT_RANGE * j) / (N_TILT - 1);
+                const b = basisFor(phi, tilt);
+                const d = smallestD(b, pred);
+                if (isFinite(d)) { cands.push({ b, d }); if (d < dMin) dMin = d; }
+            }
         }
         if (!cands.length) return null;
         let r = null;
         for (const c of cands) {
-            if (c.d > dMin * 1.05 + 1e-9) continue;
+            if (c.d > dMin * 1.10 + 1e-9) continue;
             const e = evalAt(c.b, c.d);
-            const sym = Math.abs(e.pj.x + e.sj.x);          // balanced around centre
-            const spread = Math.max(Math.abs(e.pj.x), Math.abs(e.sj.x)); // how far out
-            // Primary: symmetry. Secondary: prefer the more central of equally
-            // symmetric orientations (the user's "centred a bit more").
-            const cost = sym + 0.25 * spread;
-            if (r === null || cost < r.cost) r = { b: c.b, d: c.d, phi: c.phi, sym, cost };
+            const asymX = Math.abs(e.pj.x + e.sj.x);
+            const flatY = Math.abs(e.pj.y) + Math.abs(e.sj.y);
+            const spreadX = Math.max(Math.abs(e.pj.x), Math.abs(e.sj.x));
+            const cost = asymX + W_Y * flatY + W_SPREAD * spreadX + W_ZOOM * (c.d / dMin - 1);
+            if (r === null || cost < r.cost) r = { b: c.b, d: c.d, cost };
         }
         return r;
     };
@@ -183,11 +200,14 @@ export function computeMoonCameraPlacement({
     // Distance at which the moon's apparent radius hits the "prominent" floor.
     const dCapMoon = moonSize / (MOON_PROMINENT_FLOOR * Math.tan(halfV));
 
-    // B: planet dropped (too close/crowding). Aim along the Sun direction so the
-    // Sun sits CENTRAL behind the centred moon, at max zoom (the user's "centred"
-    // preference; Io unfolded landed the Sun ~centre, not at the edge).
-    const phiSun = Math.atan2(sXZ.z, sXZ.x);
-    const modeB = () => ({ b: basisFor(phiSun), d: MIN_DIST, mode: 'B_moon' });
+    // B: planet dropped (too close/crowding). Aim the view at the Sun in 3D so
+    // it sits CENTRAL (vertically too) behind the centred moon, at max zoom.
+    const sunDir = norm(v(-moonWorld.x, -moonWorld.y, -moonWorld.z));
+    let mbRight = cross(sunDir, v(0, 1, 0));
+    if (len(mbRight) < 1e-6) mbRight = v(1, 0, 0);
+    mbRight = norm(mbRight);
+    const mbBasis = { viewDir: sunDir, right: mbRight, trueUp: norm(cross(mbRight, sunDir)) };
+    const modeB = () => ({ b: mbBasis, d: MIN_DIST, mode: 'B_moon' });
 
     let chosen, fallbackMode;
     if (framingMode === 'A_both') {
