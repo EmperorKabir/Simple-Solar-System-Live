@@ -6,6 +6,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.RectF
+import kotlin.math.max
 import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.Looper
@@ -164,16 +166,39 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
             // happens via onSurfaceChanged → renderAndPaint, just behind the
             // already-painted cached bitmap.
             try {
-                val cacheFile = java.io.File(applicationContext.filesDir, "wallpaper_${namespace()}.webp")
-                if (cacheFile.exists()) {
-                    lastBitmap = android.graphics.BitmapFactory.decodeFile(cacheFile.absolutePath)
+                // Newest per-dimension cache as a first-paint after a process
+                // restart. The exact-size match happens in onSurfaceChanged once
+                // the surface dims are known; this is only the pre-surface stand-in.
+                val dir = applicationContext.filesDir
+                val newest = dir.listFiles { f ->
+                    f.name.startsWith("wallpaper_${namespace()}_") && f.name.endsWith(".webp")
+                }?.maxByOrNull { it.lastModified() }
+                if (newest != null && newest.exists()) {
+                    lastBitmap = android.graphics.BitmapFactory.decodeFile(newest.absolutePath)
                 }
             } catch (_: Throwable) { /* best-effort; cache miss falls back to default */ }
         }
 
+        // Per-surface-dimension cache file. Keying by dims means a fold to a size
+        // we've rendered before can paint the CORRECT-framed bitmap instantly,
+        // instead of cover-scaling the previous fold's bitmap (the transient
+        // "way too zoomed in" until the ~3 s WebView render finishes).
+        private fun diskCacheFile(w: Int, h: Int) =
+            java.io.File(applicationContext.filesDir, "wallpaper_${namespace()}_${w}x${h}.webp")
+
         override fun onSurfaceChanged(holder: SurfaceHolder?, format: Int, w: Int, h: Int) {
             super.onSurfaceChanged(holder, format, w, h)
             widthPx = w; heightPx = h
+            // Instant correct-framing paint from the per-dimension cache (if this
+            // surface size was rendered before) so a fold shows the right framing
+            // immediately. The fresh render below then updates planet positions.
+            try {
+                val f = diskCacheFile(w, h)
+                if (f.exists()) {
+                    val cached = android.graphics.BitmapFactory.decodeFile(f.absolutePath)
+                    if (cached != null) { lastBitmap = cached; paintToSurface(cached) }
+                }
+            } catch (_: Throwable) { /* best-effort; fall through to render */ }
             renderAndPaint()
         }
 
@@ -220,6 +245,12 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         private fun renderAndPaint() {
             if (widthPx <= 0 || heightPx <= 0 || rendering) return
             rendering = true
+            // Capture the dims this render is FOR. If the surface changes size
+            // while the (async) WebView render is in flight, the completed
+            // bitmap is sized for the OLD surface — painting it 1:1 on the new
+            // surface is what threw the solar system off-corner. We compare
+            // against the live widthPx/heightPx on completion and re-render.
+            val rw = widthPx; val rh = heightPx
             val params = currentParams()
             val sKind = surfaceKind()
             val corr = SlssLogger.newCorrelationId()
@@ -243,7 +274,7 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                 SlssMetrics.snapshotMemoryAsync("pre_wallpaper_render")
             }
             slssLastRenderTs = System.currentTimeMillis()
-            WebViewBitmapRenderer.render(applicationContext, widthPx, heightPx, params, sKind, corr) { bm ->
+            WebViewBitmapRenderer.render(applicationContext, rw, rh, params, sKind, corr) { bm ->
                 rendering = false
                 if (SlssLogger.enabled) {
                     val c = SlssCentroidProbe.measure(bm)
@@ -276,7 +307,12 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                     // get retried on the next visibility cycle.
                     lastParams = params
                     paintToSurface(bm)
-                    cacheBitmapToDisk(bm)
+                    cacheBitmapToDisk(bm, rw, rh)
+                    // Surface resized mid-render (fold / reconnect display
+                    // churn): this bitmap is for the old dims. paintToSurface
+                    // cover-scaled it so it's centred (not off-corner), but a
+                    // crisp 1:1 render for the new dims is needed — re-render.
+                    if (widthPx != rw || heightPx != rh) renderAndPaint()
                 }
             }
         }
@@ -286,11 +322,10 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         // immediately on Engine.onCreate. WebP at quality 80 keeps the file
         // ~150-300 KB on a typical inner-display render. Fire-and-forget on
         // the engine's main handler — no caller blocks on this.
-        private fun cacheBitmapToDisk(bm: Bitmap) {
+        private fun cacheBitmapToDisk(bm: Bitmap, w: Int, h: Int) {
             handler.post {
                 try {
-                    val cacheFile = java.io.File(applicationContext.filesDir, "wallpaper_${namespace()}.webp")
-                    cacheFile.outputStream().use { os ->
+                    diskCacheFile(w, h).outputStream().use { os ->
                         @Suppress("DEPRECATION")
                         bm.compress(Bitmap.CompressFormat.WEBP, 80, os)
                     }
@@ -305,7 +340,24 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
             try {
                 canvas = holder.lockCanvas() ?: return
                 canvas.drawColor(Color.BLACK)
-                if (bm != null) canvas.drawBitmap(bm, 0f, 0f, null)
+                if (bm != null) {
+                    val sw = canvas.width.toFloat(); val sh = canvas.height.toFloat()
+                    val bw = bm.width.toFloat(); val bh = bm.height.toFloat()
+                    if (bw == sw && bh == sh) {
+                        // Exact match (the normal case): 1:1 blit, no scaling.
+                        canvas.drawBitmap(bm, 0f, 0f, null)
+                    } else {
+                        // Dimension mismatch (stale/cached bitmap, or surface
+                        // resized after render). COVER-scale: fill the surface
+                        // preserving aspect, centred, overflow cropped — keeps
+                        // the (centred) solar system on-screen instead of
+                        // blitting the bitmap's top-left corner off to the side.
+                        val scale = max(sw / bw, sh / bh)
+                        val dw = bw * scale; val dh = bh * scale
+                        val left = (sw - dw) / 2f; val top = (sh - dh) / 2f
+                        canvas.drawBitmap(bm, null, RectF(left, top, left + dw, top + dh), null)
+                    }
+                }
             } catch (_: Throwable) {
                 // best-effort; engine will retry on next visibility/refresh
             } finally {

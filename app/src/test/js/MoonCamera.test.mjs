@@ -50,11 +50,20 @@ for (const [name, g] of Object.entries(CASES)) {
     }
 }
 
-test('Io unfolded: shows BOTH (Jupiter kept, even as a big disc at the edge) + Sun', () => {
-    const r = place(CASES.Io, 1.11);
-    assert.ok(r.fallbackMode.includes('both'), `Io unfolded should show both, got ${r.fallbackMode}`);
-    assert.ok(r.planetVisibleFrac >= 0.15 && r.sunVisibleFrac >= 0.15,
-        `both expected: planet ${r.planetVisibleFrac.toFixed(2)} sun ${r.sunVisibleFrac.toFixed(2)}`);
+test('Io (big planet, both fold modes): MAX zoom — never zooms OUT to hold Jupiter', () => {
+    // The user keeps ONE orientation across fold modes and always zooms to max:
+    //   - unfolded, both fit at max zoom (Jupiter at the edge) -> both shown
+    //   - folded (or an awkward phase) the SAME orientation at max zoom slides
+    //     Jupiter off; the moon stays big. We NEVER zoom out past the moon-
+    //     prominence floor to keep Jupiter on-screen (the "I keep zooming back in
+    //     when I fold" complaint). So Jupiter being dropped is acceptable, but the
+    //     moon must stay prominent and the Sun must stay in frame.
+    for (const aspect of [1.11, 0.43]) {
+        const r = place(CASES.Io, aspect);
+        assert.ok(r.camDist <= 2.0, `Io(${aspect}) must stay zoomed in, got camDist ${r.camDist.toFixed(2)}`);
+        assert.ok(r.moonRadiusNDC.y >= 0.08, `Io(${aspect}) moon must stay prominent, radius ${r.moonRadiusNDC.y.toFixed(3)}`);
+        assert.ok(r.sunVisibleFrac >= 0.15, `Io(${aspect}) Sun must stay visible, got ${r.sunVisibleFrac.toFixed(2)}`);
+    }
 });
 
 test('Far outer moons show BOTH bodies (clean planet), symmetric, both fold modes', () => {

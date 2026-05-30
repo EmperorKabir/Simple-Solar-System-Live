@@ -57,6 +57,13 @@ const BIG_PLANET_WALL = 1.2;     // (relaxing beyond the normal cap regressed Io
 // it as a recognisable body. Such solutions are rejected so e.g. Io folded
 // doesn't count Jupiter-as-a-wall as "both visible".
 const MAX_BODY_RADIUS_NDC = 1.2;
+// How far PAST the tightest both-visible distance we admit candidates. A tight
+// window (1.10) kept the moon biggest but, for collinear far systems on the
+// narrow folded screen (Pluto's moons — Hydra/Nix), the OPPOSITE-edge framing
+// only exists a bit further out, so the search was stuck with a same-side fit.
+// 1.45 admits it; W_ZOOM still keeps the pick as tight as the well-framed
+// options allow, so well-behaved moons are unaffected.
+const ZOOM_WINDOW = 1.45;
 // C_auto: show BOTH bodies (zooming out as needed) when the parent planet sits
 // as a clean disc (radius <= this). A close, crowding planet (e.g. Io→Jupiter,
 // radius ~1.2) instead triggers mode B (drop the planet, keep the moon big).
@@ -142,7 +149,16 @@ export function computeMoonCameraPlacement({
         const sj = projNDC(sunWorld, camPos, b.viewDir, b.right, b.trueUp, halfH, halfV);
         const pr = radiusNDC(planetSize, pj.depth, halfH, halfV);
         const sr = radiusNDC(sunSize, sj.depth, halfH, halfV);
-        return { camPos, pj, sj, pr, sr, pFrac: discVisibleFrac(pj, pr), sFrac: discVisibleFrac(sj, sr) };
+        // The moon is ALWAYS centred (camera targets it) so its screen centre is
+        // (0,0) and its depth is exactly d. The planet OCCLUDES the moon when the
+        // planet is nearer the camera than the moon AND its projected disc covers
+        // the screen centre. This happens for a moon very close to its planet
+        // (Pluto's Styx/Nix) when the search picks an azimuth that puts the planet
+        // BETWEEN the camera and the moon — the moon then renders hidden behind
+        // the planet's disc. Such orientations must be rejected.
+        const occludesMoon = pj.depth > 1e-6 && pj.depth < d - 1e-6 &&
+            Math.abs(pj.x) < pr.x && Math.abs(pj.y) < pr.y;
+        return { camPos, pj, sj, pr, sr, occludesMoon, pFrac: discVisibleFrac(pj, pr), sFrac: discVisibleFrac(sj, sr) };
     };
 
     // Smallest distance (biggest moon) for this orientation satisfying pred;
@@ -177,6 +193,7 @@ export function computeMoonCameraPlacement({
     // BOTH = planet & Sun both >=20% visible + not a wall. A dominant planet may
     // be a larger disc at the edge (so the Sun-leaned framing is reachable).
     const bothPred = (e) => {
+        if (e.occludesMoon) return false; // planet hides the moon (Styx behind Pluto)
         const pWall = bigPlanet ? BIG_PLANET_WALL : MAX_BODY_RADIUS_NDC;
         const pVis = discVisibleFrac(e.pj, e.pr) >= MIN_VISIBLE_FRAC && e.pr.x <= pWall && e.pr.y <= pWall;
         return pVis && visible(e.sj, e.sr);
@@ -203,8 +220,13 @@ export function computeMoonCameraPlacement({
         }
         if (!cands.length) return null;
         let r = null;
+        // Big planets are clamped to MAX zoom afterwards, so their orientation
+        // must be chosen at the TIGHTEST zoom (a far candidate framed well at its
+        // own distance is wrong once clamped to cd 1.0). Only the symmetric far-
+        // moon case gets the wide window (to reach the opposite-edge framing).
+        const win = bigPlanet ? 1.10 : ZOOM_WINDOW;
         for (const c of cands) {
-            if (c.d > dMin * 1.10 + 1e-9) continue;
+            if (c.d > dMin * win + 1e-9) continue;
             const e = evalAt(c.b, c.d);
             const flatY = Math.abs(e.pj.y) + Math.abs(e.sj.y);
             // Normal planet: symmetric (planet & Sun balanced left/right).
@@ -223,12 +245,18 @@ export function computeMoonCameraPlacement({
         return r;
     };
 
-    // Max-zoom both-framing (smallest distance = biggest moon), most symmetric
-    // among the equally-tight orientations. The user zooms IN to max and accepts
-    // the bodies wherever they land — "centred" meant SYMMETRIC, not zoomed-out.
     const both = searchBothWith(bothPred);
-    // Distance at which the moon's apparent radius hits the "prominent" floor.
+    // Distance at which the moon's apparent radius hits the "prominent" floor —
+    // the most we will zoom OUT before the moon is too small.
     const dCapMoon = moonSize / (MOON_PROMINENT_FLOOR * Math.tan(halfV));
+    // Big planet (Io's Jupiter): keep the both-framing ORIENTATION, but if holding
+    // the planet on-screen needs zooming OUT past the moon-prominence floor (the
+    // folded narrow screen — Jupiter only fits at cd~3.6+), DON'T. Snap to MAX
+    // zoom on the SAME orientation: the moon stays big and Jupiter slides off,
+    // exactly as the user does by hand. (Unfolded both fit near max zoom, so this
+    // never triggers there — no regression.) This is the "I keep having to zoom
+    // back in when I fold it" fix.
+    if (both && bigPlanet && both.d > dCapMoon) both.d = MIN_DIST;
 
     // B: planet dropped (too close/crowding). Aim the view at the Sun in 3D so
     // it sits CENTRAL (vertically too) behind the centred moon, at max zoom.
