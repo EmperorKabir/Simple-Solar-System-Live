@@ -1001,6 +1001,14 @@
         controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
         controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
 
+        // Selected-label override: the label of a tapped/selected body ALWAYS
+        // shows (winning over the occlusion + overlap hide rules) until the user
+        // next interacts with the camera (pointer-down fires controls 'start'),
+        // after which the normal label logic resumes. Fixes e.g. Hydra's label
+        // being hidden by overlap right after selecting it.
+        let forcedLabelName = null;
+        controls.addEventListener('start', () => { forcedLabelName = null; });
+
         // SLSS_DIAG_TEMPORARY — capture the user's hand-tuned framing each time
         // they finish a drag while viewing a MOON. This is the repositioning
         // target used to calibrate the moon-camera fix (the last settled view
@@ -2322,6 +2330,9 @@
         function flyToBody(clickedPlanet) {
             targetPlanet = clickedPlanet;
             viewMode = "PLANET";
+            // Force this body's label visible until the user pans/zooms (see the
+            // controls 'start' handler that clears it).
+            forcedLabelName = (clickedPlanet && clickedPlanet.name) ? clickedPlanet.name : null;
             statusTxt.innerText = targetPlanet.name;
             
             // Sync dropdown to selected body
@@ -3077,7 +3088,14 @@
                 for (let i = 0; i < labelsList.length; i++) {
                     const lblDiv = labelsList[i];
                     const objName = lblDiv.dataset.bodyName;
-                    
+
+                    // Selected body's label always wins — skip all hide logic.
+                    if (objName && objName === forcedLabelName) {
+                        lblDiv.classList.remove('hidden-label');
+                        lblDiv.classList.remove('label-overlapped');
+                        continue;
+                    }
+
                     let targetMesh = null;
                     if (objName === "Sun") targetMesh = sun;
                     else if (planets[objName]) targetMesh = planets[objName];
@@ -3230,7 +3248,22 @@
                         element: lblDiv
                     });
                 }
-                const hidden = computeHiddenByOverlap(labelInfo);
+                // Iterate the pairwise rule until NO labels overlap. One pass
+                // hides only the smallest per cluster, so a 3+ pile-up (e.g.
+                // background Jupiter moons while another moon is selected) leaves
+                // the middle ones overlapping. Repeating clears every overlap
+                // while keeping the largest of each cluster. (Main-app call site
+                // only — the shared LabelOverlap fn + the widget paths are
+                // untouched.)
+                const hidden = new Set();
+                let _remaining = labelInfo;
+                for (let _pass = 0; _pass < 8 && _remaining.length > 1; _pass++) {
+                    const _h = computeHiddenByOverlap(_remaining);
+                    if (_h.size === 0) break;
+                    for (const id of _h) hidden.add(id);
+                    _remaining = _remaining.filter(li => !hidden.has(li.id));
+                }
+                if (forcedLabelName) hidden.delete(forcedLabelName); // selected label never overlap-hidden
                 for (const li of labelInfo) {
                     li.element.classList.toggle('label-overlapped', hidden.has(li.id));
                 }
