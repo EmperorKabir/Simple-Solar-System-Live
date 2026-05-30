@@ -954,7 +954,24 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         document.body.appendChild(renderer.domElement);
-        
+
+        // Resilience: recover from a lost WebGL context rather than going blank.
+        // A context can be lost by a GPU reset, memory pressure, or the browser
+        // evicting the OLDEST context when too many are active across the process
+        // (which is what blanked the picker previews). Calling preventDefault()
+        // on the lost event is REQUIRED for the browser to later fire
+        // 'webglcontextrestored'; THREE re-initialises GL state on restore, so we
+        // re-frame and redraw. console.warn is captured by the diagnostic log.
+        renderer.domElement.addEventListener('webglcontextlost', function (ev) {
+            ev.preventDefault();
+            console.warn('SLSS_DIAG webglcontextlost');
+        }, false);
+        renderer.domElement.addEventListener('webglcontextrestored', function () {
+            console.warn('SLSS_DIAG webglcontextrestored');
+            try { if (typeof calcResetView === 'function') calcResetView(); } catch (e) {}
+            try { renderer.render(scene, camera); } catch (e) {}
+        }, false);
+
         const labelRenderer = new CSS2DRenderer();
         labelRenderer.setSize(window.innerWidth, _renderHeight());
         labelRenderer.domElement.style.position = 'absolute';

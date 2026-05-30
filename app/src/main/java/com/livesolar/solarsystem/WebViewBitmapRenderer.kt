@@ -124,7 +124,24 @@ object WebViewBitmapRenderer {
             onResult(null); return
         }
 
+        // Held so cleanup() can destroy it. The offscreen WebView MUST be
+        // destroyed or its WebGL context leaks into Chromium's process-global
+        // pool (~16 max). After enough renders the pool overflows and Chromium
+        // evicts the OLDEST live context — frequently the in-app preview's —
+        // blanking it ("Too many active WebGL contexts. Oldest context will be
+        // lost." → "Context Lost."). dismiss()/release()/close() alone do NOT
+        // free the WebView's GL context; only WebView.destroy() does.
+        var renderWebView: WebView? = null
         val cleanup: () -> Unit = {
+            try {
+                renderWebView?.let { w ->
+                    try { w.stopLoading() } catch (_: Throwable) {}
+                    (w.parent as? ViewGroup)?.removeView(w)
+                    w.loadUrl("about:blank")
+                    w.destroy()
+                }
+            } catch (_: Throwable) {}
+            renderWebView = null
             try { presentation.dismiss() } catch (_: Throwable) {}
             try { virtualDisplay.release() } catch (_: Throwable) {}
             try { imageReader.close() } catch (_: Throwable) {}
@@ -178,6 +195,7 @@ object WebViewBitmapRenderer {
         }
 
         val wv = WebView(app)
+        renderWebView = wv
         wv.layoutParams = ViewGroup.LayoutParams(widthPx, heightPx)
         wv.settings.javaScriptEnabled = true
         wv.settings.domStorageEnabled = true
