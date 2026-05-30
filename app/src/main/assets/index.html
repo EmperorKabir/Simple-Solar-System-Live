@@ -2725,7 +2725,10 @@
             // surfaceMargin: extra slack around the orbit ring to leave room
             // for planet bodies + labels which protrude past the ring at the
             // current planet positions. 1.15 gives ~13% margin all around.
-            const surfaceMargin = (SURFACE === 'main') ? 1.10 : 1.15;
+            // Widget tightened 1.15 -> 1.10 (user: a little bigger) — fills to
+            // ~0.91-0.94 of the frame, still under the 0.95 safety net. Wallpaper
+            // keeps 1.15 (more slack behind home/lock icons); main keeps 1.10.
+            const surfaceMargin = (SURFACE === 'wallpaper') ? 1.15 : 1.10;
             const vFOV = (Math.PI / 180.0) * camera.fov;
             const hFOV = 2 * Math.atan(Math.tan(vFOV / 2) * camera.aspect);
             // Required distance per axis: dist >= screenExtent / tan(halfFov).
