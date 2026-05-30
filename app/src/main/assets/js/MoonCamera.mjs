@@ -46,6 +46,12 @@ const TILT_RANGE = (60 * Math.PI) / 180; // max camera tilt to recentre off-ecli
 const W_Y = 1.5;       // vertical-centre both bodies (the key missing axis)
 const W_SPREAD = 0.15; // mild bias to a more central framing
 const W_ZOOM = 0.5;    // prefer max zoom (biggest moon)
+// A close/dominant planet (Io's Jupiter: apparent radius ~1 even at max zoom)
+// is NOT framed symmetrically — the user rotates the frame toward the Sun so the
+// Sun sits near a small offset and the planet stays at the edge. (calibrate-moon)
+const BIG_PLANET_RADIUS = 0.5;   // min apparent radius (at max zoom) to count as dominant
+const SUN_LEAN_TARGET = 0.25;    // Sun NDC offset (opposite the planet) for big planets
+const BIG_PLANET_WALL = 1.2;     // (relaxing beyond the normal cap regressed Io)
 // A body whose projected disc radius exceeds this (in NDC) is a "wall" — the
 // camera is pointing almost into it (a giant featureless surface), not framing
 // it as a recognisable body. Such solutions are rejected so e.g. Io folded
@@ -158,7 +164,23 @@ export function computeMoonCameraPlacement({
     // the central-target + symmetric tie-break below (NOT a hard opposite-sides
     // rule, which wrongly rejected the same-direction case — e.g. Earth's Moon
     // near new moon, where Earth & Sun share a direction and frame centrally).
-    const bothPred = (e) => visible(e.pj, e.pr) && visible(e.sj, e.sr);
+    // Is the parent planet close/dominant (a big disc even at max zoom)? If so,
+    // frame toward the Sun rather than symmetrically (Io's Jupiter).
+    let planetRadMin = Infinity;
+    for (let i = 0; i < N_PHI; i++) {
+        const phi = phi0 - PHI_RANGE + (2 * PHI_RANGE * i) / (N_PHI - 1);
+        const e = evalAt(basisFor(phi, 0), MIN_DIST);
+        if (e.pj.depth > 0) planetRadMin = Math.min(planetRadMin, Math.max(e.pr.x, e.pr.y));
+    }
+    const bigPlanet = planetRadMin > BIG_PLANET_RADIUS;
+
+    // BOTH = planet & Sun both >=20% visible + not a wall. A dominant planet may
+    // be a larger disc at the edge (so the Sun-leaned framing is reachable).
+    const bothPred = (e) => {
+        const pWall = bigPlanet ? BIG_PLANET_WALL : MAX_BODY_RADIUS_NDC;
+        const pVis = discVisibleFrac(e.pj, e.pr) >= MIN_VISIBLE_FRAC && e.pr.x <= pWall && e.pr.y <= pWall;
+        return pVis && visible(e.sj, e.sr);
+    };
 
     // Both-bodies search for a given predicate: smallest distance (biggest moon)
     // satisfying it, then — among orientations within 5% of that distance — the
@@ -184,10 +206,18 @@ export function computeMoonCameraPlacement({
         for (const c of cands) {
             if (c.d > dMin * 1.10 + 1e-9) continue;
             const e = evalAt(c.b, c.d);
-            const asymX = Math.abs(e.pj.x + e.sj.x);
             const flatY = Math.abs(e.pj.y) + Math.abs(e.sj.y);
-            const spreadX = Math.max(Math.abs(e.pj.x), Math.abs(e.sj.x));
-            const cost = asymX + W_Y * flatY + W_SPREAD * spreadX + W_ZOOM * (c.d / dMin - 1);
+            // Normal planet: symmetric (planet & Sun balanced left/right).
+            // Big planet: rotate toward the Sun (Sun at a small offset opposite
+            // the planet; planet stays at the edge).
+            let framing;
+            if (bigPlanet) {
+                const sunTgt = -Math.sign(e.pj.x || 1) * SUN_LEAN_TARGET;
+                framing = Math.abs(e.sj.x - sunTgt);
+            } else {
+                framing = Math.abs(e.pj.x + e.sj.x) + W_SPREAD * Math.max(Math.abs(e.pj.x), Math.abs(e.sj.x));
+            }
+            const cost = framing + W_Y * flatY + W_ZOOM * (c.d / dMin - 1);
             if (r === null || cost < r.cost) r = { b: c.b, d: c.d, cost };
         }
         return r;
