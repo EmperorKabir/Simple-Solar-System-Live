@@ -245,18 +245,17 @@ export function computeMoonCameraPlacement({
         return r;
     };
 
+    // ALWAYS show both the parent planet AND the Sun, at the tightest zoom that
+    // fits both — folded and unfolded alike. The user's repositions across the
+    // whole moon set (Europa/Ganymede/the Saturn, Uranus & Neptune moons) all
+    // zoom OUT on the narrow folded screen to keep the planet in frame; they do
+    // NOT want the planet dropped. So there is no max-zoom "drop the planet"
+    // clamp — searchBothWith already returns the least-zoomed-out framing that
+    // keeps both visible, which is exactly the compromise they make by hand.
     const both = searchBothWith(bothPred);
-    // Distance at which the moon's apparent radius hits the "prominent" floor —
-    // the most we will zoom OUT before the moon is too small.
+    // Distance at which the moon's apparent radius hits the "prominent" floor
+    // (used by the B_moon fallback's "both still fit while prominent" check).
     const dCapMoon = moonSize / (MOON_PROMINENT_FLOOR * Math.tan(halfV));
-    // Big planet (Io's Jupiter): if holding the planet on-screen needs zooming
-    // OUT past the moon-prominence floor, drop to MAX zoom (moon stays big, the
-    // planet slides off) — but ONLY on a NARROW (folded) screen. That is the "I
-    // keep zooming back in when I fold it" case. On a wider (unfolded) screen the
-    // user prefers the planet kept even if the moon is a little smaller — e.g.
-    // Europa must still show Jupiter. Folded cover ~0.43; unfolded inner ~0.9-1.1.
-    const FOLDED_ASPECT = 0.7;
-    if (both && bigPlanet && both.d > dCapMoon && aspect < FOLDED_ASPECT) both.d = MIN_DIST;
 
     // B: planet dropped (too close/crowding). Aim the view at the Sun in 3D so
     // it sits CENTRAL (vertically too) behind the centred moon, at max zoom.

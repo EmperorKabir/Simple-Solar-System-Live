@@ -50,19 +50,17 @@ for (const [name, g] of Object.entries(CASES)) {
     }
 }
 
-test('Io big planet: folded MAX-zooms (drop Jupiter); unfolded shows BOTH', () => {
-    // FOLDED (narrow): never zoom OUT to hold Jupiter — max zoom, moon stays big,
-    // Jupiter slides off (the "I keep zooming back in when I fold" complaint).
-    const folded = place(CASES.Io, 0.43);
-    assert.ok(folded.camDist <= 2.0, `Io folded must max-zoom, got camDist ${folded.camDist.toFixed(2)}`);
-    assert.ok(folded.moonRadiusNDC.y >= 0.08, `Io folded moon must stay prominent, ${folded.moonRadiusNDC.y.toFixed(3)}`);
-    assert.ok(folded.sunVisibleFrac >= 0.15, `Io folded Sun must stay visible, ${folded.sunVisibleFrac.toFixed(2)}`);
-    // UNFOLDED (wide): the user wants the planet kept (at the edge) even if it
-    // means zooming out a little — e.g. Europa must still show Jupiter.
-    const unf = place(CASES.Io, 1.11);
-    assert.ok(unf.planetVisibleFrac >= 0.15 && unf.sunVisibleFrac >= 0.15,
-        `Io unfolded should show both, got planet ${unf.planetVisibleFrac.toFixed(2)} sun ${unf.sunVisibleFrac.toFixed(2)}`);
-    assert.ok(unf.up.x === 0 && unf.up.y === 1 && unf.up.z === 0, 'up must be world up');
+test('Io big planet: shows BOTH (planet + Sun) in BOTH fold modes', () => {
+    // The parent planet is ALWAYS kept in frame. On the narrow folded screen the
+    // camera zooms OUT to fit it (never drops it to max-zoom) — verified across
+    // the whole moon set on-device: every moon's hand-tuned folded framing keeps
+    // the planet at the edge, Sun opposite.
+    for (const aspect of [1.11, 0.43]) {
+        const r = place(CASES.Io, aspect);
+        assert.ok(r.planetVisibleFrac >= 0.15 && r.sunVisibleFrac >= 0.15,
+            `Io(${aspect}) should show both, planet ${r.planetVisibleFrac.toFixed(2)} sun ${r.sunVisibleFrac.toFixed(2)}`);
+        assert.ok(r.up.x === 0 && r.up.y === 1 && r.up.z === 0, 'up must be world up');
+    }
 });
 
 test('Far outer moons show BOTH bodies (clean planet), symmetric, both fold modes', () => {
