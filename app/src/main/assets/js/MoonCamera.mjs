@@ -265,14 +265,45 @@ export function computeMoonCameraPlacement({
         return r;
     };
 
-    // ALWAYS show both the parent planet AND the Sun, at the tightest zoom that
-    // fits both — folded and unfolded alike. The user's repositions across the
-    // whole moon set (Europa/Ganymede/the Saturn, Uranus & Neptune moons) all
-    // zoom OUT on the narrow folded screen to keep the planet in frame; they do
-    // NOT want the planet dropped. So there is no max-zoom "drop the planet"
-    // clamp — searchBothWith already returns the least-zoomed-out framing that
-    // keeps both visible, which is exactly the compromise they make by hand.
-    const both = searchBothWith(bothPred);
+    // Best framing at a FIXED distance: planet & Sun on OPPOSITE sides, both in
+    // front, planet not covering the moon. NO disc-size requirement — the user
+    // frames a dominant planet's moon big with the bodies pushed to opposite
+    // EDGES (Europa: Jupiter +1.69 / Sun -1.11 at zoom 3.68), not as full discs.
+    const searchAtDist = (d) => {
+        let r = null;
+        for (let i = 0; i < N_PHI; i++) {
+            const phi = phi0 - PHI_RANGE + (2 * PHI_RANGE * i) / (N_PHI - 1);
+            for (let j = 0; j < N_TILT; j++) {
+                const tilt = -TILT_RANGE + (2 * TILT_RANGE * j) / (N_TILT - 1);
+                const b = basisFor(phi, tilt);
+                const e = evalAt(b, d);
+                if (e.occludesMoon || e.pj.depth <= 0.5 || e.sj.depth <= 0.5) continue;
+                if (discVisibleFrac(e.sj, e.sr) < 0.05) continue; // Sun must keep a sliver on screen
+                if (!(isFinite(e.pj.x) && isFinite(e.sj.x) && Math.sign(e.pj.x) !== Math.sign(e.sj.x))) continue;
+                const flatY = Math.abs(e.pj.y) + Math.abs(e.sj.y);
+                // Keep BOTH bodies as close to the frame as possible (at the
+                // opposite edges — minimise how far each overshoots past +/-1),
+                // a mild bias to keeping the Sun (priority body) visible, level.
+                const offP = Math.max(0, Math.abs(e.pj.x) - 1);
+                const offS = Math.max(0, Math.abs(e.sj.x) - 1);
+                const cost = offP + offS + 0.4 * (1 - Math.min(1, discVisibleFrac(e.sj, e.sr)))
+                    + W_Y * flatY + W_TILT * Math.abs(b.viewDir.y);
+                if (r === null || cost < r.cost) r = { b, d, cost };
+            }
+        }
+        return r;
+    };
+    // Dominant planet (the Galileans): frame at a CONSISTENT moon size (~4.5%
+    // radius — the user's repositions put Io and Europa both at cd ~3.6-3.7),
+    // with the bodies at opposite edges. Driven by the live geometry, so it
+    // tracks drift; non-dominant moons keep the disc/crescent rules below.
+    let both;
+    if (bigPlanet && !FOLDED) {
+        const dTarget = Math.min(MAX_DIST, Math.max(MIN_DIST, moonSize / (0.045 * Math.tan(halfV))));
+        both = searchAtDist(dTarget) || searchBothWith(bothPred);
+    } else {
+        both = searchBothWith(bothPred);
+    }
 
     // B: planet dropped (too close/crowding). Aim the view at the Sun in 3D so
     // it sits CENTRAL (vertically too) behind the centred moon, at max zoom.
