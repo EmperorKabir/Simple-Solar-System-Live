@@ -2571,9 +2571,9 @@
                 mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
                 raycaster.setFromCamera(mouse, camera);
                 const intersects = raycaster.intersectObjects(planetMeshes, true);
+                let moonHit = null;
+                let planetHit = null;
                 if (intersects.length > 0) {
-                    let moonHit = null;
-                    let planetHit = null;
                     for (let intx of intersects) {
                         let current = intx.object;
                         let bodyName = null;
@@ -2616,8 +2616,59 @@
                     }
                     clickedPlanet = moonHit ? moonHit : planetHit;
                 }
+                // SLSS_DIAG_TEMPORARY — tap pick calibration (hitbox/finger plan).
+                // Covers HITS and MISSES (intersects=[]). Captures viewport+dpr,
+                // camera distance, the full intersect list (resolved body + hitbox
+                // flag + distance), the moon/planet override inputs, and EVERY
+                // visible body's projected screen px + estimated pixel radius — the
+                // exact data needed to set a thumb-size selection threshold and to
+                // tell a clean ray-miss from a failed body-name resolution.
+                if (slssEnabled()) {
+                    try {
+                        const _iw = window.innerWidth, _ih = window.innerHeight;
+                        const _camOrig = camera.position.length();
+                        const _halfV = THREE.MathUtils.degToRad(camera.fov) / 2;
+                        const _wp = new THREE.Vector3();
+                        const _proj = (wp, r) => {
+                            const v = wp.clone().project(camera);
+                            const dist = camera.position.distanceTo(wp);
+                            return {
+                                sx: +((v.x * 0.5 + 0.5) * _iw).toFixed(1),
+                                sy: +((-v.y * 0.5 + 0.5) * _ih).toFixed(1),
+                                behind: v.z > 1,
+                                pxr: dist > 1e-6 ? +((r / dist) * (_ih / 2) / Math.tan(_halfV)).toFixed(1) : 0
+                            };
+                        };
+                        const _bodies = [];
+                        sun.getWorldPosition(_wp); _bodies.push(Object.assign({ b: 'Sun', k: 'sun', host: null }, _proj(_wp, sunVisualRadius)));
+                        for (const pn in planets) { planets[pn].getWorldPosition(_wp); _bodies.push(Object.assign({ b: pn, k: 'planet', host: null }, _proj(_wp, planetsData[pn] ? planetsData[pn].size : 1))); }
+                        for (const am of activeMoons) { am.mesh.getWorldPosition(_wp); _bodies.push(Object.assign({ b: am.config.name, k: 'moon', host: am.config.host }, _proj(_wp, am.config.size))); }
+                        const _ix = intersects.slice(0, 14).map(it => {
+                            let c = it.object, bn = null;
+                            while (c) { if (c.userData && c.userData.bodyName) { bn = c.userData.bodyName; break; } if (planets[c.name] || sun.name === c.name) { bn = c.name; break; } c = c.parent; }
+                            return { b: bn, obj: it.object.name || '', hit: (it.object.name || '').indexOf('_hit_') === 0, d: +it.distance.toFixed(2) };
+                        });
+                        const _t = Math.max(0, Math.min(1, (_camOrig - 8) / 52));
+                        let _cdp = null;
+                        if (planetHit) { const _pw = new THREE.Vector3(); planetHit.getWorldPosition(_pw); _cdp = +camera.position.distanceTo(_pw).toFixed(2); }
+                        slssEvent('tap_pick_diag', {
+                            tap_x: event.clientX, tap_y: event.clientY,
+                            vp_w: _iw, vp_h: _ih, dpr: window.devicePixelRatio,
+                            cam_origin_dist: +_camOrig.toFixed(2), fov: camera.fov, aspect: +camera.aspect.toFixed(3),
+                            hit_scale: +(1 + _t * 1.5).toFixed(3),
+                            moon_hit: moonHit ? moonHit.name : null,
+                            planet_hit: planetHit ? planetHit.name : null,
+                            cam_dist_planet: _cdp,
+                            override_thresh: planetHit ? (planetsData[planetHit.name] ? planetsData[planetHit.name].size : 1) * 20 : null,
+                            chosen: clickedPlanet ? clickedPlanet.name : null,
+                            n_intersects: intersects.length,
+                            intersects: _ix,
+                            bodies: _bodies
+                        });
+                    } catch (e) { slssEvent('error', { severity: 'warn', source: 'js', message: 'tap_pick_diag failed: ' + (e && e.message) }); }
+                }
             }
-            
+
             // SLSS_DIAG_TEMPORARY — touch_input around tap-to-select (plan §3.14).
             if (slssEnabled()) {
                 try {
