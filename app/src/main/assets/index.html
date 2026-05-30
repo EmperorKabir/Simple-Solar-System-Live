@@ -2062,35 +2062,6 @@
             if (e.target === infoModal) infoModal.classList.remove('visible');
         });
 
-        // SLSS_DIAG_TEMPORARY — moon-framing mode toggle (diagnostic builds).
-        // Cycles A_both / B_moon / C_auto so the user can compare the three
-        // over-constrained-case behaviours in isolation on the same moon.
-        if (typeof slssEnabled === 'function' && slssEnabled()) {
-            window.__slssMoonMode = window.__slssMoonMode || 'C_auto';
-            const _modes = ['A_both', 'B_moon', 'C_auto'];
-            const _btn = document.createElement('button');
-            _btn.type = 'button';
-            _btn.style.cssText = 'position:fixed;right:8px;z-index:9999;' +
-                'top:calc(var(--safe-top, 0px) + 8px);' +
-                'background:rgba(20,20,30,0.85);color:#9fd;border:1px solid #9fd;' +
-                'border-radius:8px;padding:6px 10px;font:600 13px sans-serif;';
-            const _label = () => { _btn.textContent = 'MOON: ' + window.__slssMoonMode.replace('_', ' '); };
-            _label();
-            _btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const i = _modes.indexOf(window.__slssMoonMode);
-                window.__slssMoonMode = _modes[(i + 1) % _modes.length];
-                _label();
-                // Re-frame the current moon immediately so the change is visible.
-                if (viewMode === 'PLANET' && targetPlanet &&
-                    typeof moonSystemConfig !== 'undefined' &&
-                    moonSystemConfig.find(m => m.name === targetPlanet.name)) {
-                    flyToBody(targetPlanet);
-                }
-            });
-            document.body.appendChild(_btn);
-        }
-
         // ── Warning modal: tap icon to open, tap backdrop or OK to close ──
         const warningIcon  = document.getElementById('warning-icon');
         const warningModal = document.getElementById('warning-modal');
@@ -2323,6 +2294,8 @@
                 plutoEnabled = !plutoEnabled;
                 setPlutoVisibility(plutoEnabled);
                 plutoToggle.innerText = plutoEnabled ? "Hide Pluto" : "Show Pluto";
+                // Re-filter the nav dropdown so Pluto + its moons appear/vanish
+                buildNavDropdown();
                 // If the camera was sitting at the reset-view framing, re-fit so
                 // the visible-system fills the screen at the new size. Any other
                 // pan / zoom / selected-body state is left untouched.
@@ -2406,8 +2379,7 @@
                     planetSize: planetSize,
                     sunSize:    sunVisualR,
                     aspect:     camera.aspect,   // aspect-correct framing (v20)
-                    fovDeg:     70,
-                    framingMode: (typeof window !== 'undefined' && window.__slssMoonMode) || 'C_auto'
+                    fovDeg:     70
                 });
 
                 camera.position.set(placement.cameraPos.x, placement.cameraPos.y, placement.cameraPos.z);
@@ -2439,7 +2411,7 @@
                             correlation_id: _corr,
                             trigger: 'select',
                             algo: 'v22c',
-                            framing_mode: (window.__slssMoonMode || 'C_auto'),
+                            framing_mode: 'C_auto',
                             fallback_mode: placement.fallbackMode,
                             moon: {
                                 name: targetPlanet.name, host: isMoon.host,
@@ -2638,12 +2610,16 @@
         });
 
         // Navigation dropdown
+        // Re-populates options only; honours Hide Pluto (excludes Pluto + its
+        // moons when plutoEnabled is false). Safe to call repeatedly.
         const buildNavDropdown = () => {
             const dropdown = document.getElementById("nav-dropdown");
             let ht = `<option value="none" disabled selected>Jump to Body...</option>`;
             ht += `<option value="Sun">Sun</option>`;
             const pKeys = Object.keys(planetsData).sort((a,b) => planetsData[a].order - planetsData[b].order);
             for(const p of pKeys) {
+                // Skip Pluto + its moons while hidden
+                if (p === 'Pluto' && !plutoEnabled) continue;
                 ht += `<option value="${p}">${p}</option>`;
                 const hMoons = moonSystemConfig.filter(m => m.host === p).sort((a,b) => a.dist - b.dist);
                 for(const m of hMoons) {
@@ -2651,16 +2627,17 @@
                 }
             }
             dropdown.innerHTML = ht;
-            dropdown.addEventListener('change', (e) => {
-                const tName = e.target.value;
-                let cObj = null;
-                if (tName === "Sun") cObj = sun;
-                else if (planets[tName]) cObj = planets[tName];
-                else cObj = activeMoons.find(m => m.config.name === tName)?.mesh;
-                if (cObj) flyToBody(cObj);
-                e.target.blur();
-            });
         };
+        // Attach the change handler once (option re-builds must not re-bind it)
+        document.getElementById("nav-dropdown").addEventListener('change', (e) => {
+            const tName = e.target.value;
+            let cObj = null;
+            if (tName === "Sun") cObj = sun;
+            else if (planets[tName]) cObj = planets[tName];
+            else cObj = activeMoons.find(m => m.config.name === tName)?.mesh;
+            if (cObj) flyToBody(cObj);
+            e.target.blur();
+        });
         buildNavDropdown();
 
         // Shared function for calculating the correct galaxy zoom level

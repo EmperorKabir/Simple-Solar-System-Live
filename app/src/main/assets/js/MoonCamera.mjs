@@ -70,8 +70,6 @@ const ZOOM_WINDOW = 1.45;
 // Confirmed on-device: Io folded planet radius 1.20 -> B; Titan/Titania/Triton/
 // Iapetus folded 0.15-0.37 -> show both.
 const PLANET_CLEAN_RADIUS = 0.6;
-// Mode B target: keep the moon at least this prominent (cap the zoom-out here).
-const MOON_PROMINENT_FLOOR = 0.09;
 
 function projNDC(world, camPos, viewDir, right, trueUp, halfH, halfV) {
     const rel = sub(world, camPos);
@@ -107,12 +105,6 @@ export function computeMoonCameraPlacement({
     moonWorld, planetWorld, sunWorld,
     moonSize, planetSize, sunSize,
     aspect = 1, fovDeg = 70,
-    // Framing mode for the over-constrained case (can't have a big moon AND
-    // both bodies). Toggleable on-device to compare:
-    //   'A_both'  — show both even if the moon goes tiny (zoom out as needed)
-    //   'B_moon'  — keep the moon big + Sun, drop the planet
-    //   'C_auto'  — both if they fit with a reasonably-sized moon, else B
-    framingMode = 'C_auto',
 }) {
     const halfV = (fovDeg * Math.PI) / 360;
     const halfH = Math.atan(Math.tan(halfV) * aspect);
@@ -253,9 +245,6 @@ export function computeMoonCameraPlacement({
     // clamp — searchBothWith already returns the least-zoomed-out framing that
     // keeps both visible, which is exactly the compromise they make by hand.
     const both = searchBothWith(bothPred);
-    // Distance at which the moon's apparent radius hits the "prominent" floor
-    // (used by the B_moon fallback's "both still fit while prominent" check).
-    const dCapMoon = moonSize / (MOON_PROMINENT_FLOOR * Math.tan(halfV));
 
     // B: planet dropped (too close/crowding). Aim the view at the Sun in 3D so
     // it sits CENTRAL (vertically too) behind the centred moon, at max zoom.
@@ -267,22 +256,13 @@ export function computeMoonCameraPlacement({
     const modeB = () => ({ b: mbBasis, d: MIN_DIST, mode: 'B_moon' });
 
     let chosen, fallbackMode;
-    if (framingMode === 'A_both') {
-        if (both) { chosen = both; fallbackMode = 'A_both'; }
-        else { const m = modeB(); chosen = m; fallbackMode = 'A_to_B'; }
-    } else if (framingMode === 'B_moon') {
-        const m = modeB(); chosen = m; fallbackMode = m.mode;
-        // If both happen to fit while the moon is still prominent, prefer that.
-        if (both && both.d <= dCapMoon) { chosen = both; fallbackMode = 'B_both'; }
-    } else {
-        // C_auto: ALWAYS show both bodies when a valid both-framing exists (the
-        // user wants the planet kept even as a big disc at the edge — e.g. Io's
-        // Jupiter). Only fall back to Sun + moon when both is geometrically
-        // impossible (no orientation fits both without the planet being a wall —
-        // e.g. Io folded). The 2D both-search is calibrated to the user's targets.
-        if (both) { chosen = both; fallbackMode = 'C_both'; }
-        else { const m = modeB(); chosen = m; fallbackMode = m.mode; }
-    }
+    // ALWAYS show both bodies when a valid both-framing exists (the user wants
+    // the planet kept even as a big disc at the edge — e.g. Io's Jupiter). Only
+    // fall back to Sun + moon when both is geometrically impossible (no
+    // orientation fits both without the planet being a wall — e.g. Io folded).
+    // The 2D both-search is calibrated to the user's targets.
+    if (both) { chosen = both; fallbackMode = 'C_both'; }
+    else { const m = modeB(); chosen = m; fallbackMode = m.mode; }
     chosen.d = Math.max(MIN_DIST, Math.min(chosen.d, MAX_DIST));
 
     const d = Math.max(MIN_DIST, Math.min(chosen.d, MAX_DIST));
