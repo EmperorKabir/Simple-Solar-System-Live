@@ -191,11 +191,34 @@ export function computeMoonCameraPlacement({
 
     // BOTH = planet & Sun both >=20% visible + not a wall. A dominant planet may
     // be a larger disc at the edge (so the Sun-leaned framing is reachable).
+    // Folded narrow screen: zoom in as far as a real CRESCENT of the planet still
+    // shows at the edge WHILE the planet and Sun stay on OPPOSITE sides. This one
+    // geometric rule produces both behaviours the user wants, purely from the live
+    // geometry (so it tracks orbital drift): where a tight crescent is already
+    // opposite-sided (Io) it stays tight; where a tight crescent would be same-
+    // sided (Tethys) it zooms out until they separate — the "disc at the edge"
+    // framing. A big close planet has low disc-AREA fraction but high SCREEN
+    // coverage when only its edge crescents in; a small/distant one the reverse —
+    // so accept either. The depth + radius caps reject a GRAZING planet (tiny
+    // depth -> huge apparent radius faking high coverage).
+    const FOLDED = aspect < 0.7;
+    const screenCov = (ndc, rad) => {
+        if (!isFinite(ndc.x) || !isFinite(ndc.y)) return 0;
+        const w = Math.max(0, Math.min(ndc.x + rad.x, 1) - Math.max(ndc.x - rad.x, -1));
+        const h = Math.max(0, Math.min(ndc.y + rad.y, 1) - Math.max(ndc.y - rad.y, -1));
+        return 0.785 * w * h / 4;
+    };
     const bothPred = (e) => {
-        if (e.occludesMoon) return false; // planet hides the moon (Styx behind Pluto)
+        if (e.occludesMoon) return false;       // planet hides the moon (Styx behind Pluto)
+        if (!visible(e.sj, e.sr)) return false; // Sun must stay a bit visible (priority body)
+        if (FOLDED) {
+            const crescent = e.pj.depth > 0.5 && e.pr.x <= 4 && e.pr.y <= 4 &&
+                (discVisibleFrac(e.pj, e.pr) >= 0.05 || screenCov(e.pj, e.pr) >= 0.03);
+            const opposite = isFinite(e.pj.x) && Math.sign(e.pj.x) !== Math.sign(e.sj.x);
+            return crescent && opposite;
+        }
         const pWall = bigPlanet ? BIG_PLANET_WALL : MAX_BODY_RADIUS_NDC;
-        const pVis = discVisibleFrac(e.pj, e.pr) >= MIN_VISIBLE_FRAC && e.pr.x <= pWall && e.pr.y <= pWall;
-        return pVis && visible(e.sj, e.sr);
+        return discVisibleFrac(e.pj, e.pr) >= MIN_VISIBLE_FRAC && e.pr.x <= pWall && e.pr.y <= pWall;
     };
 
     // Both-bodies search for a given predicate: smallest distance (biggest moon)
@@ -230,7 +253,7 @@ export function computeMoonCameraPlacement({
             // Big planet: rotate toward the Sun (Sun at a small offset opposite
             // the planet; planet stays at the edge).
             let framing;
-            if (bigPlanet) {
+            if (bigPlanet && !FOLDED) {
                 const sunTgt = -Math.sign(e.pj.x || 1) * SUN_LEAN_TARGET;
                 framing = Math.abs(e.sj.x - sunTgt);
             } else {

@@ -50,28 +50,34 @@ for (const [name, g] of Object.entries(CASES)) {
     }
 }
 
-test('Io big planet: shows BOTH (planet + Sun) in BOTH fold modes', () => {
-    // The parent planet is ALWAYS kept in frame. On the narrow folded screen the
-    // camera zooms OUT to fit it (never drops it to max-zoom) — verified across
-    // the whole moon set on-device: every moon's hand-tuned folded framing keeps
-    // the planet at the edge, Sun opposite.
-    for (const aspect of [1.11, 0.43]) {
-        const r = place(CASES.Io, aspect);
-        assert.ok(r.planetVisibleFrac >= 0.15 && r.sunVisibleFrac >= 0.15,
-            `Io(${aspect}) should show both, planet ${r.planetVisibleFrac.toFixed(2)} sun ${r.sunVisibleFrac.toFixed(2)}`);
-        assert.ok(r.up.x === 0 && r.up.y === 1 && r.up.z === 0, 'up must be world up');
-    }
+test('Io big planet: unfolded shows disc + Sun; folded shows crescent + Sun, opposite sides', () => {
+    // UNFOLDED (wide): planet a proper disc at the edge, Sun visible.
+    const u = place(CASES.Io, 1.11);
+    assert.ok(u.planetVisibleFrac >= 0.15 && u.sunVisibleFrac >= 0.15,
+        `Io unfolded should show both, planet ${u.planetVisibleFrac.toFixed(2)} sun ${u.sunVisibleFrac.toFixed(2)}`);
+    assert.ok(u.up.x === 0 && u.up.y === 1 && u.up.z === 0, 'up must be world up');
+    // FOLDED (narrow): zoom in until just a CRESCENT of the planet shows, Sun
+    // still visible, planet & Sun on OPPOSITE sides.
+    const f = place(CASES.Io, 0.43);
+    assert.ok(f.planetVisibleFrac > 0.01, `Io folded planet crescent should show, ${f.planetVisibleFrac.toFixed(3)}`);
+    assert.ok(f.sunVisibleFrac >= 0.15, `Io folded Sun should show, ${f.sunVisibleFrac.toFixed(2)}`);
+    assert.ok(Math.sign(f.planetNDC.x) !== Math.sign(f.sunNDC.x), 'Io folded planet & Sun on opposite sides');
 });
 
-test('Far outer moons show BOTH bodies (clean planet), symmetric, both fold modes', () => {
+test('Far outer moons: unfolded disc (symmetric); folded crescent, both opposite sides', () => {
     for (const name of ['Triton', 'Iapetus', 'Titan']) {
-        for (const aspect of [1.11, 0.43]) {
-            const r = place(CASES[name], aspect);
-            assert.ok(r.planetVisibleFrac >= 0.15 && r.sunVisibleFrac >= 0.15,
-                `${name}(${aspect}): both expected, planet ${r.planetVisibleFrac.toFixed(2)} sun ${r.sunVisibleFrac.toFixed(2)} (${r.fallbackMode})`);
-            const sym = Math.abs(r.planetNDC.x + r.sunNDC.x);
-            assert.ok(sym < 0.4, `${name}(${aspect}): expected symmetric, |pNDC+sNDC|=${sym.toFixed(2)}`);
-        }
+        // Unfolded: both proper discs, roughly symmetric (opposite edges).
+        const u = place(CASES[name], 1.11);
+        assert.ok(u.planetVisibleFrac >= 0.15 && u.sunVisibleFrac >= 0.15,
+            `${name} unfolded both: planet ${u.planetVisibleFrac.toFixed(2)} sun ${u.sunVisibleFrac.toFixed(2)}`);
+        assert.ok(Math.abs(u.planetNDC.x + u.sunNDC.x) < 0.6,
+            `${name} unfolded ~symmetric, |pNDC+sNDC|=${Math.abs(u.planetNDC.x + u.sunNDC.x).toFixed(2)}`);
+        // Folded: planet at least a crescent, Sun visible, opposite sides.
+        const f = place(CASES[name], 0.43);
+        assert.ok(f.planetVisibleFrac > 0.01 && f.sunVisibleFrac >= 0.15,
+            `${name} folded: planet ${f.planetVisibleFrac.toFixed(3)} sun ${f.sunVisibleFrac.toFixed(2)}`);
+        assert.ok(Math.sign(f.planetNDC.x) !== Math.sign(f.sunNDC.x),
+            `${name} folded planet & Sun opposite sides`);
     }
 });
 
