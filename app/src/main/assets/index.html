@@ -2735,40 +2735,81 @@
             const requiredDistY = (maxScreenY * surfaceMargin) / Math.tan(vFOV / 2);
             let requiredDist = Math.max(requiredDistX, requiredDistY);
 
-            camera.position.set(
-                camDirUnit.x * requiredDist,
-                camDirUnit.y * requiredDist,
-                camDirUnit.z * requiredDist
-            );
-            controls.target.set(0, 0, 0);
-            camera.up.set(0, 1, 0);
-            camera.lookAt(0, 0, 0);
-
-            // F-A4 safety net: re-project visible rings into NDC; if any
-            // exceeds ±0.95, pull the camera further out by the violation
-            // ratio + 5% headroom. Catches edge cases where the analytical
-            // bbox underestimates the actual projected extent.
-            camera.updateProjectionMatrix();
-            camera.updateMatrixWorld();
-            const _projMat = new THREE.Matrix4().multiplyMatrices(
-                camera.projectionMatrix, camera.matrixWorldInverse
-            );
-            const _proj = new THREE.Vector3();
             let maxNDC = 0;
-            for (const name of visibleNames) {
-                const data = planetsData[name];
-                for (let i = 0; i < 360; i++) {
-                    const days = (i / 360) * (data.period * 365.25);
-                    const p = getOrbitPositionFast(data, days, true);
-                    _proj.set(p.x, p.y, p.z).applyMatrix4(_projMat);
-                    const ndc = Math.max(Math.abs(_proj.x), Math.abs(_proj.y));
-                    if (ndc > maxNDC) maxNDC = ndc;
+            if (SURFACE === 'main') {
+                // Main app reset (UNCHANGED): centre on the Sun, fit the larger
+                // absolute extent, with the safety-net pull-back.
+                camera.position.set(camDirUnit.x * requiredDist, camDirUnit.y * requiredDist, camDirUnit.z * requiredDist);
+                controls.target.set(0, 0, 0);
+                camera.up.set(0, 1, 0);
+                camera.lookAt(0, 0, 0);
+                camera.updateProjectionMatrix();
+                camera.updateMatrixWorld();
+                const _projMat = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+                const _proj = new THREE.Vector3();
+                for (const name of visibleNames) {
+                    const data = planetsData[name];
+                    for (let i = 0; i < 360; i++) {
+                        const p = getOrbitPositionFast(data, (i / 360) * (data.period * 365.25), true);
+                        _proj.set(p.x, p.y, p.z).applyMatrix4(_projMat);
+                        const ndc = Math.max(Math.abs(_proj.x), Math.abs(_proj.y));
+                        if (ndc > maxNDC) maxNDC = ndc;
+                    }
                 }
-            }
-            if (maxNDC > 0.95) {
-                const k = (maxNDC / 0.95) * 1.05;
-                camera.position.multiplyScalar(k);
-                requiredDist *= k;
+                if (maxNDC > 0.95) {
+                    const k = (maxNDC / 0.95) * 1.05;
+                    camera.position.multiplyScalar(k);
+                    requiredDist *= k;
+                }
+            } else {
+                // Surface (widget/wallpaper): re-centre on the projected (NDC)
+                // bounding box of the rings + bodies so the outer ring (e.g.
+                // Pluto) is EQUIDISTANT from every border. The Sun sits at an
+                // orbit focus AND the inclined rings project lopsided under
+                // perspective (Sun-centred world box != Sun-centred NDC box), so a
+                // Sun-centred frame is off-centre — this is also the cause of the
+                // wallpaper's vertical shift. Sample world points ONCE, then
+                // re-project cheaply while shifting the camera target.
+                const _wp = [];
+                const _bp = new THREE.Vector3();
+                for (const name of visibleNames) {
+                    const data = planetsData[name];
+                    for (let i = 0; i < 360; i++) {
+                        const p = getOrbitPositionFast(data, (i / 360) * (data.period * 365.25), true);
+                        _wp.push(p.x, p.y, p.z);
+                    }
+                    const m = planets[name];
+                    if (m) { m.getWorldPosition(_bp); _wp.push(_bp.x, _bp.y, _bp.z); }
+                }
+                const _ctr = new THREE.Vector3(0, 0, 0);
+                const _proj = new THREE.Vector3();
+                const _place = () => {
+                    camera.position.set(_ctr.x + camDirUnit.x * requiredDist, _ctr.y + camDirUnit.y * requiredDist, _ctr.z + camDirUnit.z * requiredDist);
+                    controls.target.copy(_ctr); camera.up.set(0, 1, 0); camera.lookAt(_ctr);
+                    camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+                };
+                const _bbox = () => {
+                    const pm = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+                    let a = Infinity, b = -Infinity, c = Infinity, d = -Infinity;
+                    for (let i = 0; i < _wp.length; i += 3) {
+                        _proj.set(_wp[i], _wp[i + 1], _wp[i + 2]).applyMatrix4(pm);
+                        if (_proj.x < a) a = _proj.x; if (_proj.x > b) b = _proj.x;
+                        if (_proj.y < c) c = _proj.y; if (_proj.y > d) d = _proj.y;
+                    }
+                    return { mnx: a, mxx: b, mny: c, mxy: d };
+                };
+                // Two centring iterations (the perspective offset is small, so it
+                // converges fast): project, shift the target to the NDC box centre.
+                for (let iter = 0; iter < 2; iter++) {
+                    _place();
+                    const bb = _bbox();
+                    _ctr.addScaledVector(rightUnit, ((bb.mnx + bb.mxx) / 2) * requiredDist * Math.tan(hFOV / 2))
+                        .addScaledVector(trueUpUnit, ((bb.mny + bb.mxy) / 2) * requiredDist * Math.tan(vFOV / 2));
+                }
+                _place();
+                const bb = _bbox();
+                maxNDC = Math.max(Math.abs(bb.mnx), Math.abs(bb.mxx), Math.abs(bb.mny), Math.abs(bb.mxy));
+                if (maxNDC > 0.95) { requiredDist *= (maxNDC / 0.95) * 1.05; _place(); }
             }
 
             // SLSS_DIAG_TEMPORARY — widget framing diagnostics (plan §4.2).
