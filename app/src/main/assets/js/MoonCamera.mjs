@@ -218,18 +218,13 @@ export function computeMoonCameraPlacement({
         // If both happen to fit while the moon is still prominent, prefer that.
         if (both && both.d <= dCapMoon) { chosen = both; fallbackMode = 'B_both'; }
     } else {
-        // C_auto: show both (zoom out as needed) when the parent planet is a
-        // CLEAN disc; drop a close, crowding planet (mode B) instead.
-        let planetClean = false;
-        if (both) {
-            const e = evalAt(both.b, both.d);
-            planetClean = e.pr.x <= PLANET_CLEAN_RADIUS && e.pr.y <= PLANET_CLEAN_RADIUS;
-        }
-        if (both && planetClean) {
-            chosen = both; fallbackMode = 'C_both';
-        } else {
-            const m = modeB(); chosen = m; fallbackMode = both ? 'C_to_B' : m.mode;
-        }
+        // C_auto: ALWAYS show both bodies when a valid both-framing exists (the
+        // user wants the planet kept even as a big disc at the edge — e.g. Io's
+        // Jupiter). Only fall back to Sun + moon when both is geometrically
+        // impossible (no orientation fits both without the planet being a wall —
+        // e.g. Io folded). The 2D both-search is calibrated to the user's targets.
+        if (both) { chosen = both; fallbackMode = 'C_both'; }
+        else { const m = modeB(); chosen = m; fallbackMode = m.mode; }
     }
     chosen.d = Math.max(MIN_DIST, Math.min(chosen.d, MAX_DIST));
 

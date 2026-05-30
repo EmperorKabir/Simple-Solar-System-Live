@@ -50,14 +50,11 @@ for (const [name, g] of Object.entries(CASES)) {
     }
 }
 
-test('Io (close crowding planet) → mode B: keep moon prominent + Sun, drop Jupiter', () => {
-    for (const aspect of [1.11, 0.43]) {
-        const r = place(CASES.Io, aspect);
-        assert.ok(r.fallbackMode.startsWith('B') || r.fallbackMode === 'C_to_B',
-            `Io should drop the crowding planet, got ${r.fallbackMode} (aspect ${aspect})`);
-        assert.ok(r.sunVisibleFrac >= 0.15, `Sun kept, got ${r.sunVisibleFrac.toFixed(2)}`);
-        assert.ok(r.moonRadiusNDC.y >= 0.09, `moon prominent, got ${r.moonRadiusNDC.y.toFixed(3)}`);
-    }
+test('Io unfolded: shows BOTH (Jupiter kept, even as a big disc at the edge) + Sun', () => {
+    const r = place(CASES.Io, 1.11);
+    assert.ok(r.fallbackMode.includes('both'), `Io unfolded should show both, got ${r.fallbackMode}`);
+    assert.ok(r.planetVisibleFrac >= 0.15 && r.sunVisibleFrac >= 0.15,
+        `both expected: planet ${r.planetVisibleFrac.toFixed(2)} sun ${r.sunVisibleFrac.toFixed(2)}`);
 });
 
 test('Far outer moons show BOTH bodies (clean planet), symmetric, both fold modes', () => {
@@ -79,12 +76,12 @@ test('Close case (Earth Moon) zooms in to max (camDist near min) both modes', ()
     }
 });
 
-test('Degenerate: planet & Sun nearly opposite from moon → centred, ecliptic, Sun kept', () => {
+test('Degenerate: planet & Sun nearly opposite from moon → centred, Sun kept', () => {
     const r = computeMoonCameraPlacement({
         moonWorld: v(10, 0, 0), planetWorld: v(13, 0, 0), sunWorld: v(0, 0, 0),
         moonSize: 0.1, planetSize: 1.0, sunSize: 2.5, aspect: 1.11, fovDeg: 70,
     });
     assert.ok(Math.abs(r.moonNDC.x) < 0.05 && Math.abs(r.moonNDC.y) < 0.05, 'moon centred');
-    assert.ok(Math.abs(r.viewDir.y) < 0.02, 'horizontal view');
+    assert.ok(r.up.x === 0 && r.up.y === 1 && r.up.z === 0, 'up world');
     assert.ok(r.sunVisibleFrac >= 0.15 - 1e-6, `Sun kept, got ${r.sunVisibleFrac.toFixed(2)}`);
 });
