@@ -53,7 +53,21 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         private var lastBitmap: Bitmap? = null
         private var lastParams: String? = null
         private var rendering = false
+        // Dims of the last SUCCESSFUL render — so we only re-render on becoming
+        // visible when the surface actually changed size while hidden.
+        private var lastRenderW = 0
+        private var lastRenderH = 0
         private val refreshIntervalMs = 10L * 60 * 1000
+        // Coalesce a burst of onSurfaceChanged events (a fold/rotation fires
+        // several within ~300ms) into ONE render. Each render is a heavy
+        // (2-12s, >1GB) off-screen WebView pass; firing one per intermediate
+        // size stole CPU/memory from the foreground app and caused the lag.
+        private val renderDebounceMs = 400L
+        private val renderRunnable = Runnable { renderAndPaint() }
+        private fun scheduleRender() {
+            handler.removeCallbacks(renderRunnable)
+            handler.postDelayed(renderRunnable, renderDebounceMs)
+        }
 
         private val refreshRunnable = object : Runnable {
             override fun run() {
@@ -199,17 +213,22 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                     if (cached != null) { lastBitmap = cached; paintToSurface(cached) }
                 }
             } catch (_: Throwable) { /* best-effort; fall through to render */ }
-            renderAndPaint()
+            // Only spend a heavy render when actually visible; while hidden the
+            // cache paint above keeps the surface correct and onVisibilityChanged
+            // renders fresh when shown. Debounced so a fold/rotation burst of
+            // size changes collapses into a single render.
+            if (visible) scheduleRender()
         }
 
         override fun onVisibilityChanged(v: Boolean) {
             super.onVisibilityChanged(v)
             visible = v
             if (v) {
-                // If user changed offset/labels while the wallpaper was hidden,
-                // re-render rather than re-painting the stale cached bitmap.
+                // Render fresh if params changed (offset/labels) OR the surface
+                // resized while hidden (a fold/rotation we deferred). Otherwise
+                // re-paint the cached bitmap — no wasted render.
                 val current = currentParams()
-                if (current != lastParams) {
+                if (current != lastParams || widthPx != lastRenderW || heightPx != lastRenderH) {
                     renderAndPaint()
                 } else {
                     paintToSurface(lastBitmap)
@@ -218,16 +237,19 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                 handler.postDelayed(refreshRunnable, refreshIntervalMs)
             } else {
                 handler.removeCallbacks(refreshRunnable)
+                handler.removeCallbacks(renderRunnable)
             }
         }
 
         override fun onSurfaceDestroyed(holder: SurfaceHolder?) {
             super.onSurfaceDestroyed(holder)
             handler.removeCallbacks(refreshRunnable)
+            handler.removeCallbacks(renderRunnable)
         }
 
         override fun onDestroy() {
             handler.removeCallbacks(refreshRunnable)
+            handler.removeCallbacks(renderRunnable)
             handler.removeCallbacks(foldRefreshRunnable)
             if (ownsFoldRefresh()) {
                 try { displayManager.unregisterDisplayListener(displayListener) } catch (_: Throwable) {}
@@ -306,6 +328,7 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                     // bitmap. Setting after success ensures stale renders
                     // get retried on the next visibility cycle.
                     lastParams = params
+                    lastRenderW = rw; lastRenderH = rh
                     paintToSurface(bm)
                     cacheBitmapToDisk(bm, rw, rh)
                     // Surface resized mid-render (fold / reconnect display
