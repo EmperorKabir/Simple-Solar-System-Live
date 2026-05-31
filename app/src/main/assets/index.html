@@ -2593,7 +2593,8 @@
         }
         function pickBodyAtScreen(tapX, tapY) {
             const Rt = PICK_RADIUS_CSS;          // snap tolerance (~7mm thumb)
-            const Rsep = Rt * 0.5;               // moon-separation threshold (~half a thumb)
+            const MOON_GATE_PX = 6;              // parent disc radius above which its moons become individually selectable (the zoom-in signal; galaxy-view planets are 3.6-5.7px specks)
+            const MOON_DISC_MARGIN_PX = 8;       // and the moon must clear the parent's disc edge by ~a fingertip
             camera.updateMatrixWorld(true);   // force: project() must not use a stale inverse after a camera move
             let best = null, bestGap = Infinity, bestDepth = Infinity;
             const cand = [];
@@ -2623,15 +2624,19 @@
                 const ms = _projectBody(am.mesh, am.config.size);
                 if (ms.behind) continue;
                 const ps = _projectBody(parent, planetsData[am.config.host] ? planetsData[am.config.host].size : 1);
-                // Separable when the moon's CENTRE is clear of its parent by more
-                // than half a thumb AND it sits outside the parent's disc. Centre-
-                // gap (not edge-gap) so a big zoomed-in parent disc can't swallow a
-                // clearly-separated moon (Ganymede: 40-49px gaps were collapsing).
-                // Below the threshold the moon hugs the parent, so a tap near it
-                // selects the parent (Charon: ~13px gap at galaxy zoom).
+                // A moon is individually selectable only when you've zoomed INTO
+                // its planet (the parent projects to a real disc, not a galaxy-view
+                // speck) AND the moon clears the parent's disc edge by a fingertip.
+                // The disc-size GATE is the zoom signal: it stops a wide-orbit moon
+                // (Oberon projects 36px from a 4px Uranus speck at full zoom-out)
+                // stealing the planet's tap, while still letting moons separate once
+                // you zoom in (Europa/Ganymede). Below either bar the moon folds
+                // into the parent, so a tap near it selects the planet (Charon).
                 const cgap = Math.hypot(ms.x - ps.x, ms.y - ps.y);
-                if (cgap > Math.max(Rsep, ps.pxR + ms.pxR)) consider(am.mesh, am.config.name, ms);
-                else consider(parent, am.config.host, ms);             // collapsed -> tap near moon = parent
+                if (ps.pxR > MOON_GATE_PX && cgap > ps.pxR + ms.pxR + MOON_DISC_MARGIN_PX)
+                    consider(am.mesh, am.config.name, ms);
+                else
+                    consider(parent, am.config.host, ms);              // collapsed -> tap near moon = parent
             }
             cand.sort((a, b) => a.gap - b.gap);
             return { mesh: best, name: best ? (best.name || null) : null, radius: +Rt.toFixed(1), candidates: cand.slice(0, 8) };
