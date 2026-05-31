@@ -52,6 +52,39 @@
             transition: background 0.3s;
         }
         .btn-glass:active { background: rgba(255, 255, 255, 0.4); }
+        /* Custom "Jump to Body" menu (replaces the native <select> so it can open
+           at the same scroll position it was last closed at — a native select always
+           re-scrolls its popup to the chosen option). Fonts use the same px sizing
+           as the rest of the HUD; the device-width viewport + WebView text-zoom make
+           that scale with screen density and the accessibility font setting, so it
+           matches the phone's scaling. (General dynamic-font review is a separate task.) */
+        #nav-panel {
+            display: none;
+            position: fixed;
+            z-index: 60;
+            max-height: 50vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+            padding: 4px 0;
+            min-width: 150px;
+        }
+        #nav-panel.open { display: block; }
+        .nav-item {
+            padding: 9px 16px;
+            font-size: 13px;
+            color: white;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-item:active { background: rgba(255, 255, 255, 0.18); }
+        .nav-item.moon { padding-left: 34px; font-size: 12px; opacity: 0.85; }
         
         #header-layer {
             position: absolute;
@@ -835,13 +868,15 @@
         <div style="display:flex; flex-direction:column; gap:5px; margin-top:5px;">
             <button id="pluto-toggle" class="btn-glass" style="max-width: 140px; text-align: center;">Hide Pluto</button>
             <button id="reset-btn" class="btn-glass" style="max-width: 140px; text-align: center;">Reset View</button>
-            <select id="nav-dropdown" class="btn-glass" style="max-width: 140px; font-family: sans-serif; font-size: 13px; color: white; background: rgba(0,0,0,0.6); outline: none;">
-                <option value="none" disabled selected>Jump to Body...</option>
-            </select>
+            <button id="nav-trigger" class="btn-glass" style="max-width: 140px; font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 6px;" aria-haspopup="listbox" aria-expanded="false">
+                <span>Jump to Body...</span><span aria-hidden="true" style="opacity:0.7;">&#9662;</span>
+            </button>
         </div>
     </div>
     
 
+
+    <div id="nav-panel" role="listbox" aria-label="Jump to Body"></div>
 
     <script type="module">
         import * as THREE from 'three';
@@ -2356,16 +2391,9 @@
             forcedLabelName = (clickedPlanet && clickedPlanet.name) ? clickedPlanet.name : null;
             statusTxt.innerText = targetPlanet.name;
             
-            // Keep the nav dropdown pinned to its "Jump to Body..." placeholder
-            // instead of selecting the chosen body. A native <select> auto-scrolls
-            // its popup to the selected <option> on reopen, so syncing it to the
-            // body made the list jump to that item every time it was reopened.
-            // Pinned to index 0 it always opens from the top; the current body is
-            // already shown in the status text and the 3D view. (Also means
-            // re-picking the SAME body re-fires the change event, since the value
-            // returns to "none" each time.)
-            document.getElementById("nav-dropdown").selectedIndex = 0;
-            
+            // (The custom "Jump to Body" menu manages its own state — it is not
+            // synced to the selected body and remembers its own scroll position.)
+
             const worldPos = new THREE.Vector3();
             targetPlanet.getWorldPosition(worldPos);
             lastTargetPos.copy(worldPos);
@@ -2650,6 +2678,7 @@
         }
 
         window.addEventListener('pointerup', (event) => {
+            if (navDismissTap) { navDismissTap = false; return; }  // this tap just dismissed the nav menu — don't also select a body
             const deltaX = Math.abs(event.clientX - pointerDownX);
             const deltaY = Math.abs(event.clientY - pointerDownY);
             if (deltaX > 5 || deltaY > 5) return;
@@ -2718,32 +2747,68 @@
         // Navigation dropdown
         // Re-populates options only; honours Hide Pluto (excludes Pluto + its
         // moons when plutoEnabled is false). Safe to call repeatedly.
+        const navTrigger = document.getElementById("nav-trigger");
+        const navPanel = document.getElementById("nav-panel");
+        let navScrollTop = 0;            // remembered scroll position — the whole point of the custom menu
+        let navDismissTap = false;       // swallow the pointerup that dismissed the panel so it doesn't also pick a body
         const buildNavDropdown = () => {
-            const dropdown = document.getElementById("nav-dropdown");
-            let ht = `<option value="none" disabled selected>Jump to Body...</option>`;
-            ht += `<option value="Sun">Sun</option>`;
+            let ht = `<div class="nav-item" data-body="Sun">Sun</div>`;
             const pKeys = Object.keys(planetsData).sort((a,b) => planetsData[a].order - planetsData[b].order);
             for(const p of pKeys) {
                 // Skip Pluto + its moons while hidden
                 if (p === 'Pluto' && !plutoEnabled) continue;
-                ht += `<option value="${p}">${p}</option>`;
+                ht += `<div class="nav-item" data-body="${p}">${p}</div>`;
                 const hMoons = moonSystemConfig.filter(m => m.host === p).sort((a,b) => a.dist - b.dist);
                 for(const m of hMoons) {
-                    ht += `<option value="${m.name}">&nbsp;&nbsp;&nbsp;${m.name}</option>`;
+                    ht += `<div class="nav-item moon" data-body="${m.name}">${m.name}</div>`;
                 }
             }
-            dropdown.innerHTML = ht;
+            navPanel.innerHTML = ht;
         };
-        // Attach the change handler once (option re-builds must not re-bind it)
-        document.getElementById("nav-dropdown").addEventListener('change', (e) => {
-            const tName = e.target.value;
-            let cObj = null;
-            if (tName === "Sun") cObj = sun;
-            else if (planets[tName]) cObj = planets[tName];
-            else cObj = activeMoons.find(m => m.config.name === tName)?.mesh;
-            if (cObj) flyToBody(cObj);
-            e.target.blur();
+        // Open/close. The panel REMEMBERS its scroll position between opens (a native
+        // <select> can't): save scrollTop on close, restore on open — so it never
+        // jumps to the selection or back to the top, it opens where you left it.
+        const openNavPanel = () => {
+            buildNavDropdown();                       // rebuild (honours Hide Pluto) then restore scroll
+            const r = navTrigger.getBoundingClientRect();
+            navPanel.style.top = (r.bottom + 4) + 'px';
+            navPanel.style.left = r.left + 'px';
+            navPanel.classList.add('open');
+            navTrigger.setAttribute('aria-expanded', 'true');
+            navPanel.scrollTop = navScrollTop;        // <-- open exactly where it was last left
+        };
+        const closeNavPanel = () => {
+            if (!navPanel.classList.contains('open')) return;
+            navScrollTop = navPanel.scrollTop;        // <-- remember for next open
+            navPanel.classList.remove('open');
+            navTrigger.setAttribute('aria-expanded', 'false');
+        };
+        navTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (navPanel.classList.contains('open')) closeNavPanel();
+            else openNavPanel();
         });
+        navPanel.addEventListener('click', (e) => {
+            const item = e.target.closest('.nav-item');
+            if (!item) return;
+            const name = item.dataset.body;
+            let cObj = null;
+            if (name === "Sun") cObj = sun;
+            else if (planets[name]) cObj = planets[name];
+            else cObj = activeMoons.find(m => m.config.name === name)?.mesh;
+            closeNavPanel();
+            if (cObj) flyToBody(cObj);
+        });
+        // Tap outside the open panel/trigger closes it (capture phase so it runs
+        // before the canvas tap-to-select); swallow that tap's pointerup so it does
+        // not also select a body underneath.
+        document.addEventListener('pointerdown', (e) => {
+            if (navPanel.classList.contains('open') && !navPanel.contains(e.target) && !navTrigger.contains(e.target)) {
+                closeNavPanel();
+                navDismissTap = true;
+            }
+        }, true);
+        window.addEventListener('resize', closeNavPanel);
         buildNavDropdown();
 
         // Shared function for calculating the correct galaxy zoom level
@@ -3057,15 +3122,12 @@
         calcResetView();
         statusTxt.innerText = "Solar System";
         document.getElementById("hud-telemetry").style.display = "none";
-        document.getElementById("nav-dropdown").selectedIndex = 0;
 
         document.getElementById("reset-btn").addEventListener("click", (e) => {
             e.stopPropagation();
             calcResetView();
             statusTxt.innerText = "Solar System";
             document.getElementById("hud-telemetry").style.display = "none";
-            // Reset dropdown to default
-            document.getElementById("nav-dropdown").selectedIndex = 0;
         });
 
         // ============================================================
