@@ -95,9 +95,13 @@
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 2px;
-            pointer-events: auto;
-            cursor: pointer;
-            margin-top: -20px; 
+            /* Labels are NOT tap targets: a tap on a label DIV used to select that
+               body directly, bypassing the screen-space picker + its zoom gate, so
+               tapping near Jupiter/Saturn hit a moon's label (Ganymede/Tethys) and
+               selected the moon. pointer-events:none routes every tap through the
+               one gated picker; the label still selects its body via the 44px snap. */
+            pointer-events: none;
+            margin-top: -20px;
             transition: opacity 0.5s;
             text-shadow: 0 2px 4px rgba(0,0,0,1.0);
         }
