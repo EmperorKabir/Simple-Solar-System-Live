@@ -2597,7 +2597,7 @@
         }
         function pickBodyAtScreen(tapX, tapY) {
             const Rt = PICK_RADIUS_CSS;          // snap tolerance (~7mm thumb)
-            const MOON_GATE_PX = 6;              // parent disc radius above which its moons become individually selectable (the zoom-in signal; galaxy-view planets are 3.6-5.7px specks)
+            const MOON_GATE_PX = 8;              // parent disc radius above which its moons become individually selectable (the zoom-in signal). Galaxy-view planets are 3.6-5.7px specks; 8 also excludes the barely-zoomed-in zone (~6px) where a close moon like Proteus/Triton would otherwise unlock and steal a planet tap.
             camera.updateMatrixWorld(true);   // force: project() must not use a stale inverse after a camera move
             let best = null, bestGap = Infinity, bestDepth = Infinity;
             const cand = [];
