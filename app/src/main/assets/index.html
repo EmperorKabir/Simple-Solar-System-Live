@@ -2569,6 +2569,7 @@
         // alone); otherwise a tap near it selects the PARENT. Works at every zoom:
         // moons separate out as you zoom in. Fixes dead taps (Uranus, a clean
         // ray-miss) AND moon-steal (Charon, a sub-pixel moon nearer the tap).
+        let _overviewDist = 0;                               // reset/overview camera distance (set by calcResetView) — the zoom reference for moon selection
         const PICK_THUMB_MM = 7;                              // user-chosen thumb target
         const PICK_RADIUS_CSS = PICK_THUMB_MM * 160 / 25.4;  // mm -> dp/CSS px (~44)
         const _pickTmp = new THREE.Vector3();
@@ -2597,8 +2598,11 @@
         }
         function pickBodyAtScreen(tapX, tapY) {
             const Rt = PICK_RADIUS_CSS;          // snap tolerance (~7mm thumb)
-            const MOON_GATE_PX = 8;              // parent disc radius above which its moons become individually selectable (the zoom-in signal). Galaxy-view planets are 3.6-5.7px specks; 8 also excludes the barely-zoomed-in zone (~6px) where a close moon like Proteus/Triton would otherwise unlock and steal a planet tap.
+            const MOON_ZOOM_FRAC = 0.7;          // moons unlock once camD drops below this fraction of the overview distance (the zoom-in signal — kills galaxy-view moon steals like Oberon)
+            const MOON_SEP_PX = 15;              // ...and only moons whose centre is > this many px from the parent (a far moon like Triton/Earth's Moon, not a close one like Proteus) — distinguishes them at the same zoom
             camera.updateMatrixWorld(true);   // force: project() must not use a stale inverse after a camera move
+            const _camD = camera.position.length();
+            const _zoomedIn = _overviewDist > 0 && _camD < MOON_ZOOM_FRAC * _overviewDist;
             let best = null, bestGap = Infinity, bestDepth = Infinity;
             const cand = [];
             const consider = (mesh, name, sp) => {
@@ -2627,21 +2631,22 @@
                 const ms = _projectBody(am.mesh, am.config.size);
                 if (ms.behind) continue;
                 const ps = _projectBody(parent, planetsData[am.config.host] ? planetsData[am.config.host].size : 1);
-                // A moon is individually selectable only when you've zoomed INTO its
-                // planet (the parent projects to a real disc > MOON_GATE_PX, not a
-                // galaxy-view speck). That gate alone stops wide-orbit moons (Oberon,
-                // 36px from a 4px Uranus speck at zoom-out) stealing the planet's tap.
-                // Once zoomed in the moon is a normal candidate and nearest-to-tap
-                // decides — so close-in moons that orbit right at the (exaggerated)
-                // disc edge, like Io, stay tappable, where a disc-clearance margin
-                // wrongly collapsed them. Below the gate a tap near the moon selects
-                // the parent. Occlusion (moon transiting the disc) is handled by the
-                // front-body tie-break in consider().
-                if (ps.pxR > MOON_GATE_PX) consider(am.mesh, am.config.name, ms);
+                // Selectable only when (1) you've zoomed in from the overview
+                // (_zoomedIn — kills galaxy-view steals like Oberon at camD 569) AND
+                // (2) the moon's centre is more than a finger (MOON_SEP_PX) from its
+                // parent — so a FAR moon (Triton cgap 33, Earth's Moon 18) separates
+                // while a CLOSE one (Proteus 12) folds into the planet at the SAME
+                // zoom. camD (not parent disc size) is the zoom signal, because a
+                // small planet zoomed in (Earth 5.3px) looks the same size as a big
+                // one at overview (Jupiter 5.7px). Below either bar a tap near the
+                // moon selects the parent; a moon transiting the disc is handled by
+                // the front-body tie-break in consider().
+                const cgap = Math.hypot(ms.x - ps.x, ms.y - ps.y);
+                if (_zoomedIn && cgap > MOON_SEP_PX) consider(am.mesh, am.config.name, ms);
                 else consider(parent, am.config.host, ms);
             }
             cand.sort((a, b) => a.gap - b.gap);
-            return { mesh: best, name: best ? (best.name || null) : null, radius: +Rt.toFixed(1), candidates: cand.slice(0, 8) };
+            return { mesh: best, name: best ? (best.name || null) : null, radius: +Rt.toFixed(1), candidates: cand.slice(0, 8), zoomedIn: _zoomedIn, overviewDist: +_overviewDist.toFixed(0) };
         }
 
         window.addEventListener('pointerup', (event) => {
@@ -2681,6 +2686,8 @@
                             vp_w: _iw, vp_h: _ih, dpr: window.devicePixelRatio,
                             cam_origin_dist: +camera.position.length().toFixed(2), fov: camera.fov, aspect: +camera.aspect.toFixed(3),
                             pick_radius_css: _pick.radius,
+                            zoomed_in: _pick.zoomedIn,
+                            overview_dist: _pick.overviewDist,
                             chosen: _pick.name,
                             candidates: _pick.candidates,
                             bodies: _bodies
@@ -2852,6 +2859,7 @@
                     camera.position.multiplyScalar(k);
                     requiredDist *= k;
                 }
+                _overviewDist = camera.position.length();   // overview distance — the zoom reference for moon-tap selection
             } else {
                 // Surface (widget/wallpaper): centre the projected (NDC) bounding
                 // box of the rings + bodies so the outer ring (e.g. Pluto) is
