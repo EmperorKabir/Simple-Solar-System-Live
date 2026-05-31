@@ -2631,18 +2631,18 @@
                 const ms = _projectBody(am.mesh, am.config.size);
                 if (ms.behind) continue;
                 const ps = _projectBody(parent, planetsData[am.config.host] ? planetsData[am.config.host].size : 1);
-                // Selectable only when (1) you've zoomed in from the overview
-                // (_zoomedIn — kills galaxy-view steals like Oberon at camD 569) AND
-                // (2) the moon's centre is more than a finger (MOON_SEP_PX) from its
-                // parent — so a FAR moon (Triton cgap 33, Earth's Moon 18) separates
-                // while a CLOSE one (Proteus 12) folds into the planet at the SAME
-                // zoom. camD (not parent disc size) is the zoom signal, because a
-                // small planet zoomed in (Earth 5.3px) looks the same size as a big
-                // one at overview (Jupiter 5.7px). Below either bar a tap near the
-                // moon selects the parent; a moon transiting the disc is handled by
-                // the front-body tie-break in consider().
+                // A moon is its own target when its CENTRE is more than a finger
+                // (MOON_SEP_PX) from its parent on screen: a clearly-separated moon
+                // (Triton cgap 33, Earth's Moon 18, Io/Europa/Ganymede when zoomed
+                // in) separates, while a close one that hugs its planet (Charon 13,
+                // Proteus 12) folds in, so a tap near it selects the parent. NO zoom
+                // gate: an outer planet (Neptune orbits ~90 units out) barely changes
+                // camera distance when you zoom in, so a camD gate wrongly blocked
+                // Triton even when clearly separated; and a deliberate planet tap
+                // hits the planet's own dot regardless (labels are non-interactive).
+                // A moon transiting the disc is handled by the front-body tie-break.
                 const cgap = Math.hypot(ms.x - ps.x, ms.y - ps.y);
-                if (_zoomedIn && cgap > MOON_SEP_PX) consider(am.mesh, am.config.name, ms);
+                if (cgap > MOON_SEP_PX) consider(am.mesh, am.config.name, ms);
                 else consider(parent, am.config.host, ms);
             }
             cand.sort((a, b) => a.gap - b.gap);
