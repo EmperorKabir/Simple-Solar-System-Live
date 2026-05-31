@@ -2554,6 +2554,89 @@
             hud.style.display = "block";
         }
 
+        // === Screen-space, thumb-aware body picking ===========================
+        // Replaces single-ray picking, which missed sub-5px targets at zoomed-out
+        // / folded view (tap_pick_diag harvest: bodies project to 0.1-5px discs, a
+        // thumb lands 3-20px off, so the infinitesimal ray almost never connects).
+        // Every selectable body is projected to screen px; the tap selects the
+        // nearest body whose dot is within max(thumb-radius, the body's own pixel
+        // radius) of the touch. A moon is its own target ONLY when the visible gap
+        // between it and its parent exceeds a thumb (so a thumb could land on it
+        // alone); otherwise a tap near it selects the PARENT. Works at every zoom:
+        // moons separate out as you zoom in. Fixes dead taps (Uranus, a clean
+        // ray-miss) AND moon-steal (Charon, a sub-pixel moon nearer the tap).
+        const PICK_THUMB_MM = 7;                              // user-chosen thumb target
+        const PICK_RADIUS_CSS = PICK_THUMB_MM * 160 / 25.4;  // mm -> dp/CSS px (~44)
+        const _pickTmp = new THREE.Vector3();
+        const _pickFwd = new THREE.Vector3();
+        const _pickToPt = new THREE.Vector3();
+        function _bodyVisible(obj) { let o = obj; while (o) { if (o.visible === false) return false; o = o.parent; } return true; }
+        function _projectBody(mesh, worldR) {
+            mesh.getWorldPosition(_pickTmp);
+            const dist = camera.position.distanceTo(_pickTmp);
+            // Behind-camera test via the VIEW DIRECTION, not project()'s z: a point
+            // behind the camera divides by a negative w and can land at a plausible
+            // screen x,y with z<-1 or z>1, so the z sign alone is unreliable.
+            camera.getWorldDirection(_pickFwd);
+            const behind = _pickToPt.copy(_pickTmp).sub(camera.position).dot(_pickFwd) <= 0;
+            _pickTmp.project(camera);                        // in place (dist already captured) — no per-tap clone
+            const halfV = THREE.MathUtils.degToRad(camera.fov) / 2;
+            return {
+                x: (_pickTmp.x * 0.5 + 0.5) * window.innerWidth,
+                y: (-_pickTmp.y * 0.5 + 0.5) * window.innerHeight,
+                behind,
+                dist,
+                // px radius of a world-radius sphere: the view is 2*tan(halfV)*dist
+                // tall in world units, mapped to innerHeight px.
+                pxR: dist > 1e-6 ? (worldR / dist) * (window.innerHeight / 2) / Math.tan(halfV) : 0,
+            };
+        }
+        function pickBodyAtScreen(tapX, tapY) {
+            const Rt = PICK_RADIUS_CSS;          // snap tolerance (~7mm thumb)
+            const Rsep = Rt * 0.5;               // moon-separation threshold (~half a thumb)
+            camera.updateMatrixWorld(true);   // force: project() must not use a stale inverse after a camera move
+            let best = null, bestGap = Infinity, bestDepth = Infinity;
+            const cand = [];
+            const consider = (mesh, name, sp) => {
+                if (!sp || sp.behind) return;
+                const gap = Math.hypot(tapX - sp.x, tapY - sp.y);
+                const hitR = Math.max(Rt, sp.pxR);           // large bodies hittable across their disc
+                cand.push({ b: name, gap: +gap.toFixed(1), hitR: +hitR.toFixed(1) });
+                if (gap <= hitR) {
+                    // nearest dot wins; on a near-tie the body in FRONT (smaller
+                    // camera distance) wins, so an occluding planet beats a moon
+                    // sitting behind it.
+                    if (gap < bestGap - 0.5 || (Math.abs(gap - bestGap) <= 0.5 && sp.dist < bestDepth)) {
+                        best = mesh; bestGap = gap; bestDepth = sp.dist;
+                    }
+                }
+            };
+            if (_bodyVisible(sun)) consider(sun, 'Sun', _projectBody(sun, sunVisualRadius));
+            for (const pn in planets) {
+                if (!_bodyVisible(planets[pn])) continue;
+                consider(planets[pn], pn, _projectBody(planets[pn], planetsData[pn] ? planetsData[pn].size : 1));
+            }
+            for (const am of activeMoons) {
+                if (!_bodyVisible(am.mesh)) continue;
+                const parent = planets[am.config.host];
+                if (!parent) continue;
+                const ms = _projectBody(am.mesh, am.config.size);
+                if (ms.behind) continue;
+                const ps = _projectBody(parent, planetsData[am.config.host] ? planetsData[am.config.host].size : 1);
+                // Separable when the moon's CENTRE is clear of its parent by more
+                // than half a thumb AND it sits outside the parent's disc. Centre-
+                // gap (not edge-gap) so a big zoomed-in parent disc can't swallow a
+                // clearly-separated moon (Ganymede: 40-49px gaps were collapsing).
+                // Below the threshold the moon hugs the parent, so a tap near it
+                // selects the parent (Charon: ~13px gap at galaxy zoom).
+                const cgap = Math.hypot(ms.x - ps.x, ms.y - ps.y);
+                if (cgap > Math.max(Rsep, ps.pxR + ms.pxR)) consider(am.mesh, am.config.name, ms);
+                else consider(parent, am.config.host, ms);             // collapsed -> tap near moon = parent
+            }
+            cand.sort((a, b) => a.gap - b.gap);
+            return { mesh: best, name: best ? (best.name || null) : null, radius: +Rt.toFixed(1), candidates: cand.slice(0, 8) };
+        }
+
         window.addEventListener('pointerup', (event) => {
             const deltaX = Math.abs(event.clientX - pointerDownX);
             const deltaY = Math.abs(event.clientY - pointerDownY);
@@ -2567,102 +2650,32 @@
                 else if (planets[bName]) clickedPlanet = planets[bName];
                 else clickedPlanet = activeMoons.find(m => m.config.name === bName)?.mesh;
             } else if (event.target.tagName === 'CANVAS') {
-                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-                raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects(planetMeshes, true);
-                let moonHit = null;
-                let planetHit = null;
-                if (intersects.length > 0) {
-                    for (let intx of intersects) {
-                        let current = intx.object;
-                        let bodyName = null;
-                        while(current) {
-                            // Check for hitbox userData first (hitboxes have _hit_ prefix in name)
-                            if (current.userData && current.userData.bodyName) {
-                                bodyName = current.userData.bodyName;
-                                break;
-                            }
-                            if (planets[current.name] || sun.name === current.name || activeMoons.find(m => m.config.name === current.name)) {
-                                bodyName = current.name;
-                                break;
-                            }
-                            current = current.parent;
-                        }
-                        if (bodyName) {
-                            if (activeMoons.find(m => m.config.name === bodyName)) {
-                                if (!moonHit) moonHit = activeMoons.find(m => m.config.name === bodyName).mesh;
-                            } else if (!planetHit) {
-                                if (bodyName === "Sun") planetHit = sun;
-                                else planetHit = planets[bodyName];
-                            }
-                        }
-                    }
-                    // Distance-based priority: in galaxy view (camera far from any planet),
-                    // prefer planets over moons to prevent moon hitboxes stealing clicks
-                    if (moonHit && planetHit) {
-                        const moonConfig = moonSystemConfig.find(m => m.name === moonHit.name);
-                        if (moonConfig && moonConfig.host === planetHit.name) {
-                            // Moon belongs to this planet — check if camera is far away
-                            const planetWorld = new THREE.Vector3();
-                            planetHit.getWorldPosition(planetWorld);
-                            const camDistToPlanet = camera.position.distanceTo(planetWorld);
-                            const bodySize = planetsData[planetHit.name]?.size || 1.0;
-                            // If camera is more than 20x body size away, prefer the planet
-                            if (camDistToPlanet > bodySize * 20.0) {
-                                moonHit = null;
-                            }
-                        }
-                    }
-                    clickedPlanet = moonHit ? moonHit : planetHit;
-                }
-                // SLSS_DIAG_TEMPORARY — tap pick calibration (hitbox/finger plan).
-                // Covers HITS and MISSES (intersects=[]). Captures viewport+dpr,
-                // camera distance, the full intersect list (resolved body + hitbox
-                // flag + distance), the moon/planet override inputs, and EVERY
-                // visible body's projected screen px + estimated pixel radius — the
-                // exact data needed to set a thumb-size selection threshold and to
-                // tell a clean ray-miss from a failed body-name resolution.
+                const _pick = pickBodyAtScreen(event.clientX, event.clientY);
+                clickedPlanet = _pick.mesh;
+                // SLSS_DIAG_TEMPORARY — verify the screen-space pick resolves the
+                // same taps the single ray missed. Logs the chosen body, the thumb
+                // radius, the ranked candidates, and every body's projected px.
                 if (slssEnabled()) {
                     try {
                         const _iw = window.innerWidth, _ih = window.innerHeight;
-                        const _camOrig = camera.position.length();
                         const _halfV = THREE.MathUtils.degToRad(camera.fov) / 2;
                         const _wp = new THREE.Vector3();
                         const _proj = (wp, r) => {
                             const v = wp.clone().project(camera);
                             const dist = camera.position.distanceTo(wp);
-                            return {
-                                sx: +((v.x * 0.5 + 0.5) * _iw).toFixed(1),
-                                sy: +((-v.y * 0.5 + 0.5) * _ih).toFixed(1),
-                                behind: v.z > 1,
-                                pxr: dist > 1e-6 ? +((r / dist) * (_ih / 2) / Math.tan(_halfV)).toFixed(1) : 0
-                            };
+                            return { sx: +((v.x * 0.5 + 0.5) * _iw).toFixed(1), sy: +((-v.y * 0.5 + 0.5) * _ih).toFixed(1), behind: v.z > 1, pxr: dist > 1e-6 ? +((r / dist) * (_ih / 2) / Math.tan(_halfV)).toFixed(1) : 0 };
                         };
                         const _bodies = [];
                         sun.getWorldPosition(_wp); _bodies.push(Object.assign({ b: 'Sun', k: 'sun', host: null }, _proj(_wp, sunVisualRadius)));
                         for (const pn in planets) { planets[pn].getWorldPosition(_wp); _bodies.push(Object.assign({ b: pn, k: 'planet', host: null }, _proj(_wp, planetsData[pn] ? planetsData[pn].size : 1))); }
                         for (const am of activeMoons) { am.mesh.getWorldPosition(_wp); _bodies.push(Object.assign({ b: am.config.name, k: 'moon', host: am.config.host }, _proj(_wp, am.config.size))); }
-                        const _ix = intersects.slice(0, 14).map(it => {
-                            let c = it.object, bn = null;
-                            while (c) { if (c.userData && c.userData.bodyName) { bn = c.userData.bodyName; break; } if (planets[c.name] || sun.name === c.name) { bn = c.name; break; } c = c.parent; }
-                            return { b: bn, obj: it.object.name || '', hit: (it.object.name || '').indexOf('_hit_') === 0, d: +it.distance.toFixed(2) };
-                        });
-                        const _t = Math.max(0, Math.min(1, (_camOrig - 8) / 52));
-                        let _cdp = null;
-                        if (planetHit) { const _pw = new THREE.Vector3(); planetHit.getWorldPosition(_pw); _cdp = +camera.position.distanceTo(_pw).toFixed(2); }
                         slssEvent('tap_pick_diag', {
                             tap_x: event.clientX, tap_y: event.clientY,
                             vp_w: _iw, vp_h: _ih, dpr: window.devicePixelRatio,
-                            cam_origin_dist: +_camOrig.toFixed(2), fov: camera.fov, aspect: +camera.aspect.toFixed(3),
-                            hit_scale: +(1 + _t * 1.5).toFixed(3),
-                            moon_hit: moonHit ? moonHit.name : null,
-                            planet_hit: planetHit ? planetHit.name : null,
-                            cam_dist_planet: _cdp,
-                            override_thresh: planetHit ? (planetsData[planetHit.name] ? planetsData[planetHit.name].size : 1) * 20 : null,
-                            chosen: clickedPlanet ? clickedPlanet.name : null,
-                            n_intersects: intersects.length,
-                            intersects: _ix,
+                            cam_origin_dist: +camera.position.length().toFixed(2), fov: camera.fov, aspect: +camera.aspect.toFixed(3),
+                            pick_radius_css: _pick.radius,
+                            chosen: _pick.name,
+                            candidates: _pick.candidates,
                             bodies: _bodies
                         });
                     } catch (e) { slssEvent('error', { severity: 'warn', source: 'js', message: 'tap_pick_diag failed: ' + (e && e.message) }); }
@@ -3109,45 +3122,12 @@
             }
 
 
-            // Dynamic hitbox scaling — scale hitbox mesh based on camera distance.
-            // At galaxy view (far), hitboxes are larger (2.5×) for easy tapping.
-            // At planet close-up (near), hitboxes shrink to 1.0× to prevent overlap.
-            // Throttled to every 3 frames for performance. Skipped in widget /
-            // wallpaper surfaces — no taps possible there.
-            if (SURFACE === 'main' && frameCount % 3 === 0) {
-                const camOriginDist = camera.position.length(); // distance from origin
-                // Interpolation: at distance > 60, scale = 2.5; at distance < 8, scale = 1.0
-                const farDist = 60.0;
-                const nearDist = 8.0;
-                const farScale = 2.5;
-                const nearScale = 1.0;
-                const t = Math.max(0, Math.min(1, (camOriginDist - nearDist) / (farDist - nearDist)));
-                const hitScale = nearScale + t * (farScale - nearScale);
-                
-                for (const mesh of planetMeshes) {
-                    // Traverse children to find hitbox meshes
-                    mesh.traverse((child) => {
-                        if (child.userData && child.userData.baseHitRadius) {
-                            let scale = hitScale;
-                            // Cap planet hitboxes to not exceed nearest moon orbit
-                            if (child.userData.isPlanetHit) {
-                                const pName = child.userData.bodyName;
-                                const moons = moonSystemConfig.filter(m => m.host === pName);
-                                if (moons.length > 0) {
-                                    const nearestMoonDist = Math.min(...moons.map(m => m.dist));
-                                    const maxRadius = nearestMoonDist * 0.8;
-                                    const scaledRadius = child.userData.baseHitRadius * scale;
-                                    if (scaledRadius > maxRadius) {
-                                        scale = maxRadius / child.userData.baseHitRadius;
-                                    }
-                                }
-                            }
-                            child.scale.set(scale, scale, scale);
-                        }
-                    });
-                }
-            }
-            
+            // (Removed: per-frame dynamic hitbox scaling. Picking is now
+            // screen-space, thumb-aware (see pickBodyAtScreen) and no longer uses
+            // the invisible _hit_ hitbox meshes, so scaling them every 3 frames was
+            // dead work. The hitbox meshes remain (harmless, invisible) — the label
+            // occlusion raycaster already skips them by name.)
+
             // Camera follow
             if (viewMode === "PLANET" && targetPlanet) {
                 targetPlanet.getWorldPosition(_followWorldPos);
