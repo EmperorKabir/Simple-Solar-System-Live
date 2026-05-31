@@ -2356,15 +2356,15 @@
             forcedLabelName = (clickedPlanet && clickedPlanet.name) ? clickedPlanet.name : null;
             statusTxt.innerText = targetPlanet.name;
             
-            // Sync dropdown to selected body
-            const dropdown = document.getElementById("nav-dropdown");
-            const opts = dropdown.options;
-            for (let i = 0; i < opts.length; i++) {
-                if (opts[i].value === targetPlanet.name) {
-                    dropdown.selectedIndex = i;
-                    break;
-                }
-            }
+            // Keep the nav dropdown pinned to its "Jump to Body..." placeholder
+            // instead of selecting the chosen body. A native <select> auto-scrolls
+            // its popup to the selected <option> on reopen, so syncing it to the
+            // body made the list jump to that item every time it was reopened.
+            // Pinned to index 0 it always opens from the top; the current body is
+            // already shown in the status text and the 3D view. (Also means
+            // re-picking the SAME body re-fires the change event, since the value
+            // returns to "none" each time.)
+            document.getElementById("nav-dropdown").selectedIndex = 0;
             
             const worldPos = new THREE.Vector3();
             targetPlanet.getWorldPosition(worldPos);
