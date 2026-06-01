@@ -2,4 +2,20 @@
 <resources>
     <string name="app_name">Live Solar System</string>
     <string name="watch_face_name">Live Solar System</string>
+    <string name="cfg_alt_graphics">Alternative graphics</string>
+    <string name="cfg_show_labels">Show planet labels</string>
+    <string name="cfg_show_pluto">Show Pluto</string>
+    <string name="cfg_tilt">Tilt system</string>
+    <string name="cfg_show_time">Show time</string>
+    <string name="cfg_clock24">24-hour time</string>
+    <string name="cfg_show_ampm">Show AM/PM</string>
+    <string name="cfg_show_seconds">Show seconds</string>
+    <string name="cfg_show_date">Show date</string>
+    <string name="cfg_day_first">Day before month</string>
+    <string name="cfg_weekday">Weekday</string>
+    <string name="opt_weekday_none">No weekday</string>
+    <string name="opt_weekday_short">Short (Tue)</string>
+    <string name="opt_weekday_long">Long (Tuesday)</string>
+    <string name="cfg_show_year">Show year</string>
+    <string name="cfg_show_ordinal">Ordinal day (1st, 2nd)</string>
 </resources>

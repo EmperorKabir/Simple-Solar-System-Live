@@ -108,6 +108,12 @@ export const GUIDE_SECTIONS = [
             '</ul>'
     },
     {
+        title: 'Wear OS Companion App',
+        body: '<ul>' +
+            '<li>If you have a compatible Wear OS device, a companion app may be installed there offering similar functionality as the phone widget.</li>' +
+            '</ul>'
+    },
+    {
         title: 'Restrictions and Disclaimer',
         body: '<ul>' +
             '<li>No minor moons or other solar system features are visible (e.g. asteroid belt, minor moons, Kuiper belt, other dwarf planets etc).</li>' +

@@ -1,6 +1,11 @@
+// Watch Face Format (WFF) module: RESOURCE-ONLY (no Kotlin/Java).
+// The watch face is declared entirely in res/raw/watchface.xml and rendered by
+// the on-device WFF runtime (com.google.wear.watchface.runtime). No code, no
+// androidx.wear.watchface dependency — those AndroidX/Canvas faces cannot be
+// activated on Wear OS 5/6 (confirmed: wear-os-samples #1199). WFF is the
+// supported + Play-required format.
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
 }
 
 android {
@@ -8,19 +13,19 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        // SAME applicationId as the phone app so the watch build ships under the
-        // same Play listing (Multi-APK delivery -> auto-install on the watch).
+        // SAME applicationId as the phone app -> same Play listing -> auto-install
+        // on the paired watch (multi-APK delivery).
         applicationId = "com.livesolar.solarsystem"
-        minSdk = 30          // Wear OS 3+
+        // WFF requires Wear OS 4+ (API 33). Below this the runtime is absent.
+        minSdk = 33
         targetSdk = 35
-        // OWN versionCode band, globally unique vs the phone (phone = 6). Watch
-        // codes must never collide with phone codes across the listing.
+        // OWN versionCode band, globally unique vs the phone (phone = 6).
         versionCode = 7
         versionName = "1.0.5"
     }
 
-    // Reuse the phone app's release keystore (same signing key is REQUIRED for the
-    // watch build under the same listing). Read the same gradle.properties keys.
+    // Reuse the phone app's release keystore (same signing key REQUIRED under the
+    // same listing).
     val releaseKeystorePath = (project.findProperty("RELEASE_STORE_FILE") as String?) ?: ""
     val releaseKeystoreExists = releaseKeystorePath.isNotEmpty() && file(releaseKeystorePath).exists()
     signingConfigs {
@@ -37,25 +42,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             if (releaseKeystoreExists) signingConfig = signingConfigs.getByName("release")
         }
     }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-}
-
-java {
-    toolchain { languageVersion.set(JavaLanguageVersion.of(21)) }
-}
-
-dependencies {
-    implementation("androidx.core:core-ktx:1.15.0")
-    // Modern Wear OS watch-face runtime (CanvasRenderer, UserStyle, WatchFaceService).
-    implementation("androidx.wear.watchface:watchface:1.2.1")
-    // Editor (the customise-screen settings UI) — wired in a later step.
-    implementation("androidx.wear.watchface:watchface-editor:1.2.1")
 }

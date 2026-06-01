@@ -1,42 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- REQUIRED, direct child of <manifest>: marks this as a Wear OS app. -->
-    <uses-feature android:name="android.hardware.type.watch" />
+    <!-- REQUIRED, direct child of <manifest>: marks this as a Wear OS app and is
+         what makes Play treat the artifact as a watch app. -->
+    <uses-feature android:name="android.hardware.type.watch" android:required="true" />
     <!-- Round is the target face, but DO NOT require it (required="true" excludes
          every round watch on Play -> 0 supported devices). -->
     <uses-feature android:name="android.hardware.screen.round" android:required="false" />
 
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-
+    <!-- WFF is RESOURCE-ONLY: no Kotlin/Java, no service, no activity. The watch
+         face lives in res/raw/watchface.xml and is rendered by the system WFF
+         runtime. hasCode MUST be false. -->
     <application
+        android:hasCode="false"
         android:icon="@drawable/ic_solar"
-        android:label="@string/app_name"
+        android:label="@string/watch_face_name"
         android:allowBackup="false"
-        android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault">
+        android:supportsRtl="true">
 
-        <!-- Usable without a paired phone; still ships under the same listing. -->
-        <meta-data
-            android:name="com.google.android.wearable.standalone"
-            android:value="true" />
-
-        <service
-            android:name=".SolarWatchFaceService"
-            android:exported="true"
-            android:label="@string/watch_face_name"
-            android:directBootAware="false"
-            android:permission="android.permission.BIND_WALLPAPER">
-            <intent-filter>
-                <action android:name="android.service.wallpaper.WallpaperService" />
-                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
-            </intent-filter>
-            <meta-data
-                android:name="com.google.android.wearable.watchface.preview"
-                android:resource="@drawable/watch_preview" />
-            <meta-data
-                android:name="android.service.wallpaper"
-                android:resource="@xml/watch_face" />
-        </service>
+        <!-- Watch Face Format runtime version. v1 = Wear OS 4+ (API 33+). The face
+             uses only v1 elements, so v1 maximises device compatibility. Must be a
+             child of <application>, not <manifest>. -->
+        <property
+            android:name="com.google.wear.watchface.format.version"
+            android:value="1" />
     </application>
 </manifest>
