@@ -2627,7 +2627,8 @@
         function pickBodyAtScreen(tapX, tapY) {
             const Rt = PICK_RADIUS_CSS;          // snap tolerance (~7mm thumb)
             const MOON_ZOOM_FRAC = 0.7;          // moons unlock once camD drops below this fraction of the overview distance (the zoom-in signal — kills galaxy-view moon steals like Oberon)
-            const MOON_SEP_PX = 15;              // ...and only moons whose centre is > this many px from the parent (a far moon like Triton/Earth's Moon, not a close one like Proteus) — distinguishes them at the same zoom
+            const MOON_SEP_PX = 15;              // a moon must be > this many px from the parent centre to be its own target (far moon like Triton/Earth's Moon, not a close one like Proteus)
+            const MOON_PRIORITY_FACTOR = 0.6;    // ...AND the tap must be clearly nearer the moon than the planet (moonGap < 0.6*parentGap), so a tap aimed at the planet that incidentally lands nearer a close moon (Uranus's Umbriel/Titania) still selects the PLANET
             camera.updateMatrixWorld(true);   // force: project() must not use a stale inverse after a camera move
             const _camD = camera.position.length();
             const _zoomedIn = _overviewDist > 0 && _camD < MOON_ZOOM_FRAC * _overviewDist;
@@ -2670,8 +2671,19 @@
                 // hits the planet's own dot regardless (labels are non-interactive).
                 // A moon transiting the disc is handled by the front-body tie-break.
                 const cgap = Math.hypot(ms.x - ps.x, ms.y - ps.y);
-                if (cgap > MOON_SEP_PX) consider(am.mesh, am.config.name, ms);
-                else consider(parent, am.config.host, ms);
+                if (cgap > MOON_SEP_PX) {
+                    // Separated enough to be its own target — but only let it win if
+                    // the tap is CLEARLY nearer the moon than the planet. A tap aimed
+                    // at the planet that just lands nearer a close moon (Uranus's
+                    // Umbriel/Titania, 16-40px out) selects the PLANET; a deliberate
+                    // tap right on a separated moon (Triton, Earth's Moon, Io...) wins.
+                    const moonGap = Math.hypot(tapX - ms.x, tapY - ms.y);
+                    const parentGap = Math.hypot(tapX - ps.x, tapY - ps.y);
+                    if (moonGap < parentGap * MOON_PRIORITY_FACTOR) consider(am.mesh, am.config.name, ms);
+                    else consider(parent, am.config.host, ms);
+                } else {
+                    consider(parent, am.config.host, ms);
+                }
             }
             cand.sort((a, b) => a.gap - b.gap);
             return { mesh: best, name: best ? (best.name || null) : null, radius: +Rt.toFixed(1), candidates: cand.slice(0, 8), zoomedIn: _zoomedIn, overviewDist: +_overviewDist.toFixed(0) };
