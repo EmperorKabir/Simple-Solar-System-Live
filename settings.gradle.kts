@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "SolarSystemWidgetApp"
 include(":app")
+include(":wear")
