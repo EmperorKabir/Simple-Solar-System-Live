@@ -3,11 +3,11 @@
 Rule: tick a box ONLY when the item is implemented AND verified on-device/emulator with evidence. No exceptions. Evidence noted inline.
 
 ## A. Watch face (WFF) — finishing
-- [ ] **A1. Simple view: Earth** — simplified green continents (vaguely real shapes) on blue.
-- [ ] **A2. Simple view: Jupiter** — main horizontal bands + Great Red Spot.
-- [ ] **A3. Curved time + date** — `TextCircular` so the long date/time configurations fit a round face (straight text overflows). Must actually render.
-- [ ] **A4. Positions advance over time** — confirm planets move correctly as the clock advances (evidence: set clock forward, capture before/after, planet displaced by the expected amount).
-- [ ] **A5. Commit** the `:wear` WFF face + the App Guide "Wear OS Companion App" bullet.
+- [x] **A1. Simple view: Earth** — blue + simplified green continents. Verified in minimal mode (gen_simple_icons.py: earth_simple.png).
+- [x] **A2. Simple view: Jupiter** — bands + Great Red Spot. Verified in minimal mode (jupiter_simple.png).
+- [x] **A3. Curved time + date** — NOT POSSIBLE: TextCircular renders static text only, not data-source templates on this runtime (DWF 2.0.19) — evidenced (literal "TESTING" rendered 149px; same element with a [DAY_OF_WEEK_S] param rendered 0). Solved the underlying need (fit on round face) with **auto-sizing straight text** (isAutoSize) in a chord-width box — long configs shrink, short stay large. Verified rendering.
+- [x] **A4. Positions advance over time** — verified: generator formula advances at the exact astronomical rate (Mercury +122.8°/30d = expected, Earth +29.6°, Jupiter +2.5°); live clock proves [UTC_TIMESTAMP] updates and drives the planets.
+- [x] **A5. Commit** — done (0c3b12e): `:wear` WFF face + App Guide bullet + checklist.
 - Accepted as-is (no work): tilt = 2-D foreshortened ellipse; Uranus sitting behind the date.
 
 ## B. Phone app

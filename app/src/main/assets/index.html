@@ -29,7 +29,7 @@
             letter-spacing: 2px;
             text-shadow: 0 0 4px #000;
             text-transform: uppercase;
-            font-size: 12px;
+            font-size: clamp(10px,1.8vmin,14px);
             text-align: right;
             display: none;
         }
@@ -43,7 +43,7 @@
             color: white;
             padding: 10px 20px;
             border-radius: 30px;
-            font-size: 14px;
+            font-size: clamp(12px,2.6vmin,16px);
             font-weight: 500;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
@@ -54,10 +54,10 @@
         .btn-glass:active { background: rgba(255, 255, 255, 0.4); }
         /* Custom "Jump to Body" menu (replaces the native <select> so it can open
            at the same scroll position it was last closed at — a native select always
-           re-scrolls its popup to the chosen option). Fonts use the same px sizing
-           as the rest of the HUD; the device-width viewport + WebView text-zoom make
-           that scale with screen density and the accessibility font setting, so it
-           matches the phone's scaling. (General dynamic-font review is a separate task.) */
+           re-scrolls its popup to the chosen option). Fonts use clamp(min, vmin, max)
+           like the rest of the HUD, so they scale with the smaller viewport edge —
+           shrinking on the narrow cover screen and growing on the unfolded screen,
+           recomputed automatically on fold/unfold (a CSS resize). */
         #nav-panel {
             display: none;
             position: fixed;
@@ -76,7 +76,7 @@
         #nav-panel.open { display: block; }
         .nav-item {
             padding: 9px 16px;
-            font-size: 13px;
+            font-size: clamp(11px,2.2vmin,15px);
             color: white;
             white-space: nowrap;
             cursor: pointer;
@@ -84,7 +84,7 @@
             -webkit-tap-highlight-color: transparent;
         }
         .nav-item:active { background: rgba(255, 255, 255, 0.18); }
-        .nav-item.moon { padding-left: 34px; font-size: 12px; opacity: 0.85; }
+        .nav-item.moon { padding-left: 34px; font-size: clamp(10px,2vmin,14px); opacity: 0.85; }
         
         #header-layer {
             position: absolute;
@@ -98,14 +98,14 @@
         }
         #status {
             color: white;
-            font-size: 26px;
+            font-size: clamp(18px,5vmin,34px);
             font-weight: 300;
             margin: 0;
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
         #sub-status {
             color: rgba(255, 255, 255, 0.7);
-            font-size: 12px;
+            font-size: clamp(10px,1.8vmin,14px);
             margin-top: 2px;
             margin-bottom: 8px;
             text-transform: uppercase;
@@ -125,7 +125,7 @@
         .planet-label {
             color: rgba(255, 255, 255, 0.9);
             font-family: sans-serif;
-            font-size: 11px;
+            font-size: clamp(10px,1.9vmin,16px);
             text-transform: uppercase;
             letter-spacing: 2px;
             /* Labels are NOT tap targets: a tap on a label DIV used to select that
@@ -178,13 +178,13 @@
             text-align: center;
         }
         #app-loader .loader-primary {
-            font-size: 18px;
+            font-size: clamp(14px,3vmin,20px);
             font-weight: 300;
             letter-spacing: 4px;
             text-transform: uppercase;
         }
         #app-loader .loader-secondary {
-            font-size: 12px;
+            font-size: clamp(10px,1.8vmin,14px);
             font-weight: 400;
             letter-spacing: 0.5px;
             color: rgba(255, 255, 255, 0.50);
@@ -196,8 +196,8 @@
         /* Warning icon — sits above the time panel, dark yellow triangle */
         #warning-icon {
             align-self: flex-start;
-            width: 26px;
-            height: 26px;
+            width: clamp(22px,5.5vmin,32px);
+            height: clamp(22px,5.5vmin,32px);
             padding: 0;
             margin-bottom: 2px;
             background: transparent;
@@ -244,7 +244,7 @@
             align-items: center;
             gap: 10px;
             margin-bottom: 10px;
-            font-size: 14px;
+            font-size: clamp(12px,2.6vmin,16px);
             font-weight: 700;
             color: #d4a017;
             text-transform: uppercase;
@@ -253,7 +253,7 @@
         #warning-modal-card .heading svg { flex: 0 0 22px; }
         #warning-modal-card p {
             margin: 0 0 14px;
-            font-size: 14px;
+            font-size: clamp(11px,2.2vmin,16px);
             line-height: 1.5;
         }
         #warning-modal-card button {
@@ -264,7 +264,7 @@
             border: 1px solid rgba(184, 134, 11, 0.55);
             color: #f3d36b;
             border-radius: 5px;
-            font-size: 13px;
+            font-size: clamp(11px,2.1vmin,15px);
             font-weight: 600;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
@@ -303,7 +303,7 @@
 
         /* Info icon — blue letter "i" with blue border, mirror of warning icon */
         #info-icon {
-            width: 26px; height: 26px; padding: 0; margin-bottom: 0;
+            width: clamp(22px,5.5vmin,32px); height: clamp(22px,5.5vmin,32px); padding: 0; margin-bottom: 0;
             background: transparent; border: none; cursor: pointer;
             pointer-events: auto; -webkit-tap-highlight-color: transparent;
             opacity: 0.85; transition: opacity 0.15s ease, transform 0.1s ease;
@@ -329,7 +329,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
         }
         #info-modal-heading {
-            font-size: 14px; font-weight: 700; color: #6fa9ff;
+            font-size: clamp(12px,2.6vmin,16px); font-weight: 700; color: #6fa9ff;
             text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px;
         }
         .guide-section {
@@ -338,7 +338,7 @@
         }
         .guide-section:last-of-type { border-bottom: none; }
         .guide-section > summary {
-            cursor: pointer; font-size: 14px; font-weight: 600; color: #e7eef9;
+            cursor: pointer; font-size: clamp(12px,2.5vmin,16px); font-weight: 600; color: #e7eef9;
             padding: 8px 4px; list-style: none; user-select: none;
             display: flex; justify-content: space-between; align-items: center;
             -webkit-tap-highlight-color: transparent;
@@ -346,26 +346,26 @@
         .guide-section > summary::-webkit-details-marker { display: none; }
         .guide-section > summary::after {
             content: '▸'; transition: transform 0.15s; color: #6fa9ff;
-            font-size: 12px; margin-left: 8px;
+            font-size: clamp(10px,1.8vmin,14px); margin-left: 8px;
         }
         .guide-section[open] > summary::after { transform: rotate(90deg); }
-        .guide-section p { font-size: 13px; line-height: 1.5; margin: 4px 4px 8px; color: rgba(255,255,255,0.85); }
-        .guide-section h4 { font-size: 13px; font-weight: 600; color: #c8d8f0; margin: 8px 4px 2px; }
-        .guide-section ul { font-size: 13px; line-height: 1.5; margin: 4px 4px 8px; padding-left: 22px; color: rgba(255,255,255,0.85); }
+        .guide-section p { font-size: clamp(11px,2.1vmin,15px); line-height: 1.5; margin: 4px 4px 8px; color: rgba(255,255,255,0.85); }
+        .guide-section h4 { font-size: clamp(11px,2.1vmin,15px); font-weight: 600; color: #c8d8f0; margin: 8px 4px 2px; }
+        .guide-section ul { font-size: clamp(11px,2.1vmin,15px); line-height: 1.5; margin: 4px 4px 8px; padding-left: 22px; color: rgba(255,255,255,0.85); }
         .guide-section li { margin-bottom: 4px; }
         .guide-section li:last-child { margin-bottom: 0; }
         #info-modal-card #info-modal-close {
             display: block; margin: 12px 0 0 auto;
             padding: 7px 18px; background: rgba(58, 122, 217, 0.18);
             border: 1px solid rgba(58, 122, 217, 0.55); color: #b9d2ff;
-            border-radius: 5px; font-size: 13px; font-weight: 600;
+            border-radius: 5px; font-size: clamp(11px,2.1vmin,15px); font-weight: 600;
             cursor: pointer; -webkit-tap-highlight-color: transparent;
         }
         #info-modal-card #info-modal-close:active { background: rgba(58, 122, 217, 0.32); }
 
         /* Wallpaper icon — purple, mirror of info icon */
         #wallpaper-icon {
-            width: 26px; height: 26px; padding: 0; margin-bottom: 0;
+            width: clamp(22px,5.5vmin,32px); height: clamp(22px,5.5vmin,32px); padding: 0; margin-bottom: 0;
             background: transparent; border: none; cursor: pointer;
             pointer-events: auto; -webkit-tap-highlight-color: transparent;
             opacity: 0.85; transition: opacity 0.15s ease, transform 0.1s ease;
@@ -391,7 +391,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
         }
         #wallpaper-modal-heading {
-            font-size: 14px; font-weight: 700; color: #c5a6ee;
+            font-size: clamp(12px,2.6vmin,16px); font-weight: 700; color: #c5a6ee;
             text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;
         }
         .wp-section {
@@ -400,14 +400,14 @@
             padding: 10px 12px;
             margin-bottom: 12px;
         }
-        .wp-section h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #d8c8f3; }
-        .wp-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+        .wp-section h4 { margin: 0 0 8px; font-size: clamp(11px,2.1vmin,15px); font-weight: 600; color: #d8c8f3; }
+        .wp-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; font-size: clamp(10px,1.9vmin,14px); }
         .wp-row label { color: rgba(255,255,255,0.75); }
         .wp-select {
             background: rgba(255,255,255,0.08);
             border: 1px solid rgba(255,255,255,0.22);
             color: white; border-radius: 4px;
-            padding: 5px 8px; font-size: 12px;
+            padding: 5px 8px; font-size: clamp(10px,1.9vmin,14px);
             font-family: inherit;
         }
         .wp-toggle {
@@ -416,7 +416,7 @@
             background: rgba(160, 110, 220, 0.18);
             border: 1px solid rgba(160, 110, 220, 0.55);
             color: #d8c0f5; border-radius: 4px;
-            font-size: 12px; font-weight: 600;
+            font-size: clamp(10px,1.9vmin,14px); font-weight: 600;
             cursor: pointer; -webkit-tap-highlight-color: transparent;
         }
         .wp-toggle.off { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.55); }
@@ -426,7 +426,7 @@
             background: rgba(160, 110, 220, 0.22);
             border: 1px solid rgba(160, 110, 220, 0.55);
             color: #e6d5fb; border-radius: 5px;
-            font-size: 12px; font-weight: 600;
+            font-size: clamp(10px,1.9vmin,14px); font-weight: 600;
             cursor: pointer; -webkit-tap-highlight-color: transparent;
             -webkit-user-select: none; user-select: none;
         }
@@ -451,14 +451,14 @@
             position: absolute; inset: 0;
             display: flex; align-items: center; justify-content: center;
             background: #000; color: rgba(255,255,255,0.55);
-            font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            font-size: clamp(10px,1.7vmin,13px); letter-spacing: 1px; text-transform: uppercase;
             transition: opacity 0.25s ease;
             pointer-events: none;
         }
         .wp-preview-loading.hidden { opacity: 0; }
         .wp-first-bind {
             display: none;
-            font-size: 11px; line-height: 1.45;
+            font-size: clamp(10px,1.7vmin,13px); line-height: 1.45;
             color: rgba(255,255,255,0.62);
             background: rgba(160, 110, 220, 0.10);
             border: 1px solid rgba(160, 110, 220, 0.28);
@@ -488,7 +488,7 @@
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.20);
             color: rgba(255,255,255,0.75); border-radius: 5px;
-            font-size: 12px; font-weight: 600;
+            font-size: clamp(10px,1.9vmin,14px); font-weight: 600;
             cursor: pointer; -webkit-tap-highlight-color: transparent;
         }
 
@@ -510,10 +510,10 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
         }
         #tz-modal-heading {
-            font-size: 13px; font-weight: 700; text-transform: uppercase;
+            font-size: clamp(11px,2.1vmin,15px); font-weight: 700; text-transform: uppercase;
             letter-spacing: 1.3px; margin-bottom: 6px;
         }
-        #tz-modal-card p { font-size: 12px; line-height: 1.4; color: rgba(255,255,255,0.7); margin: 0 0 10px; }
+        #tz-modal-card p { font-size: clamp(10px,1.9vmin,14px); line-height: 1.4; color: rgba(255,255,255,0.7); margin: 0 0 10px; }
         #tz-modal-list {
             display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
             margin: 8px 0 12px;
@@ -521,7 +521,7 @@
         .tz-option {
             padding: 7px 6px; background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.18); border-radius: 4px;
-            color: white; font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace;
+            color: white; font-size: clamp(10px,1.9vmin,14px); font-family: ui-monospace, Menlo, Consolas, monospace;
             cursor: pointer; text-align: center;
             -webkit-tap-highlight-color: transparent;
         }
@@ -531,7 +531,7 @@
             display: inline-block; margin: 4px 4px 0 0;
             padding: 6px 14px; background: rgba(255,255,255,0.08);
             border: 1px solid rgba(255,255,255,0.25); color: white;
-            border-radius: 5px; font-size: 12px; font-weight: 600;
+            border-radius: 5px; font-size: clamp(10px,1.9vmin,14px); font-weight: 600;
             cursor: pointer; -webkit-tap-highlight-color: transparent;
         }
         #tz-system-btn { background: rgba(111,255,138,0.14); border-color: rgba(111,255,138,0.45); color: #d6ffe1; }
@@ -546,7 +546,7 @@
             border: 1px solid rgba(58, 122, 217, 0.55);
             color: #b9d2ff;
             border-radius: 3px;
-            font-size: 10px;
+            font-size: clamp(9px,1.6vmin,12px);
             font-weight: 700;
             cursor: pointer;
             user-select: none;
@@ -580,7 +580,7 @@
         }
         #time-display {
             font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-            font-size: 13px;
+            font-size: clamp(10px,2.2vmin,14px);
             line-height: 1.2;
             padding: 6px 10px;
             background: rgba(0, 0, 0, 0.55);
@@ -616,7 +616,7 @@
             border: 1px solid rgba(255, 255, 255, 0.25);
             color: white;
             border-radius: 5px;
-            font-size: 12px;
+            font-size: clamp(10px,2.2vmin,13px);
             font-weight: 600;
             cursor: pointer;
             user-select: none;
@@ -638,7 +638,7 @@
             border: 1px solid rgba(255, 255, 255, 0.25);
             color: white;
             border-radius: 5px;
-            font-size: 12px;
+            font-size: clamp(10px,2.2vmin,13px);
             font-family: inherit;
             color-scheme: dark;
         }
@@ -649,7 +649,7 @@
             border: 1px solid rgba(111, 255, 138, 0.45);
             color: #d6ffe1;
             border-radius: 5px;
-            font-size: 11px;
+            font-size: clamp(9px,1.8vmin,13px);
             font-weight: 700;
             cursor: pointer;
             user-select: none;
@@ -868,7 +868,7 @@
         <div style="display:flex; flex-direction:column; gap:5px; margin-top:5px;">
             <button id="pluto-toggle" class="btn-glass" style="max-width: 140px; text-align: center;">Hide Pluto</button>
             <button id="reset-btn" class="btn-glass" style="max-width: 140px; text-align: center;">Reset View</button>
-            <button id="nav-trigger" class="btn-glass" style="max-width: 140px; font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 6px;" aria-haspopup="listbox" aria-expanded="false">
+            <button id="nav-trigger" class="btn-glass" style="max-width: 140px; font-size: clamp(11px,2.4vmin,15px); display: flex; align-items: center; justify-content: space-between; gap: 6px;" aria-haspopup="listbox" aria-expanded="false">
                 <span>Jump to Body...</span><span aria-hidden="true" style="opacity:0.7;">&#9662;</span>
             </button>
         </div>
