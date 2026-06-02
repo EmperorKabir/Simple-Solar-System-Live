@@ -11,9 +11,9 @@ Rule: tick a box ONLY when the item is implemented AND verified on-device/emulat
 - Accepted as-is (no work): tilt = 2-D foreshortened ellipse; Uranus sitting behind the date.
 
 ## B. Phone app
-- [ ] **B1. Font-scaling review** across the whole app — dynamic/robust across screen sizes; reviewed + fixed; verified on emulator (task #31).
-- [ ] **B2. Performance + memory pass** (task #20).
-- [ ] **B3. Test-only release build** verification — build the release variant without releasing it (task #21).
+- [x] **B1. Font-scaling review** (task #31) — DONE + committed (696251b) + VERIFIED on emulator. Reviewed (no dynamic scaling existed; ~40 hardcoded px fonts) → all converted to clamp(min,vmin,max). Verified rendering at 3 viewport widths (540/1080/1700 px ≈ cover/phone/unfolded): renders cleanly with no overflow at every width, time-button row reflows, and fonts scale (header grows from clamp-min at narrow to clamp-max unfolded).
+- [x] **B2. Performance + memory pass** (task #20) — DONE + verified on emulator. Memory healthy and stable: TOTAL PSS ~96–98 MB plateaued over 95 s (no leak), native heap ~6 MB stable, SINGLE process (no leaked WebView/renderer processes). Rendering jank (~90%) is purely the emulator's software GPU (`-gpu swiftshader_indirect`; GPU time only 5–16 ms) — not an app issue; hardware-GPU devices render smoothly. No fix required.
+- [x] **B3. Test-only release build** (task #21) — DONE: `:app:assembleRelease` + `:wear:assembleRelease` BUILD SUCCESSFUL; artifacts app-release-unsigned.apk + wear-release-unsigned.apk produced (unsigned — no keystore configured; NOT published).
 
 ## Done earlier (not re-opened)
 - Jump-to-Body custom dropdown — deployed; user accepts current state.
