@@ -1958,6 +1958,7 @@
         const _resolverScratchNeighbours = [];
         const _resolverScratchHostWorld = { x: 0, y: 0, z: 0 };
         const _vecScratch = new THREE.Vector3();
+        let _planetEntries = null;  // cached: planetsData is built once, never mutated
 
         // ============================================================
         // 11. UI Controls
@@ -3160,7 +3161,7 @@
 
             // Update planet positions and rotations
             // Planet positions and rotations — all routed through offline OrbitalEngine
-            for (const [key, data] of Object.entries(planetsData)) {
+            for (const [key, data] of (_planetEntries ??= Object.entries(planetsData))) {
                 planets[key].position.copy(getOrbitPositionFast(data, dNow, false));
                 data.bodyMesh.rotation.y = computeBodyRotation(data, dNow);
             }
