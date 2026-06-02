@@ -1,21 +1,19 @@
 // Phobos / Deimos osculating orbital elements in ECLIPTIC-J2000 frame.
 // Source: JPL Horizons OSCULATING ELEMENTS (CENTER=@499, REF_PLANE=ECLIPTIC,
 // REF_SYSTEM=ICRF) at epoch JD 2461163.5 TDB (= 2026-05-03 00:00 TDB).
-// Verified to <0.001° at epoch vs Horizons VECTORS (tests/moon-frame-fix.test.mjs).
+// Agrees with Horizons VECTORS to <0.001° at epoch.
 //
-// IMPORTANT: these elements are in J2000 ecliptic — orbital math output is
-// already ecliptic-J2000 Cartesian. Caller MUST attach to un-tilted planet
-// pivot (NOT groupPivot) to avoid double-applying any axial tilt.
+// These elements are in J2000 ecliptic, so the orbital math output is already
+// ecliptic-J2000 Cartesian. Caller must attach to the un-tilted planet pivot
+// (not groupPivot) to avoid double-applying any axial tilt.
 //
 // N is mean motion in deg/day (converted from Horizons deg/sec by ×86400).
 
-// OM_DOT, W_DOT secular precession rates (deg/day) — linear least-squares
-// fit through 25 monthly samples of JPL Horizons APX OSCULATING ELEMENTS
-// spanning JD 2460803.5..2461523.5 (T-12mo..T+12mo around epoch). The
-// long baseline averages out monthly libration (which dominated the
-// earlier 30-day differencing approach). Source:
-//   tools/fetch-precession-rates-2yr.mjs
-//   docs/diag/2026-05-05-moon-investigation/22-precession-rates-2yr.txt
+// OM_DOT, W_DOT secular precession rates (deg/day) — linear least-squares fit
+// through 25 monthly samples of JPL Horizons APX osculating elements spanning
+// JD 2460803.5..2461523.5 (T-12mo..T+12mo around epoch). The long baseline
+// averages out the monthly libration that dominated a 30-day differencing
+// approach.
 export const phobos = {
     name: "Phobos",
     epochJD: 2461163.5,

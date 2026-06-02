@@ -1,9 +1,8 @@
 // SLSS_DIAG_TEMPORARY — JS-side diagnostic logging bridge wrapper.
-// Part of the temporary diagnostic logging system (plan §1, §6 new JS).
 // Calls window.SlssLog.event(type, jsonStr) when the Kotlin @JavascriptInterface
-// bridge is present (diagnostic builds); otherwise every function is a cheap
-// no-op so non-diagnostic builds pay nothing. Remove with index.html imports
-// and the diag/ package (grep -r SLSS_DIAG_TEMPORARY).
+// bridge is present (diagnostic builds); otherwise every function is a no-op so
+// non-diagnostic builds pay nothing. Removable together with the index.html
+// imports and the diag/ package (search SLSS_DIAG_TEMPORARY).
 
 const _bridge =
     (typeof window !== 'undefined' && window.SlssLog && typeof window.SlssLog.event === 'function')

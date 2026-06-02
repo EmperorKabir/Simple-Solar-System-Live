@@ -1,19 +1,17 @@
 // Charon osculating orbital elements in ECLIPTIC-J2000 frame.
 // Source: JPL Horizons OSCULATING ELEMENTS (CENTER=@999, REF_PLANE=ECLIPTIC,
 // REF_SYSTEM=ICRF) at epoch JD 2461163.5 TDB (= 2026-05-03 00:00 TDB).
-// Verified to <0.001° at epoch vs Horizons VECTORS.
+// Agrees with Horizons VECTORS to <0.001° at epoch.
 //
-// Other Pluto moons (Styx, Nix, Kerberos, Hydra) have very chaotic orbits
-// not well-modelled by simple Kepler propagation; they remain on the
-// circular-fallback path until proper TASS/SAT-style theory is vendored.
+// The other Pluto moons (Styx, Nix, Kerberos, Hydra) have chaotic orbits not
+// well-modelled by simple Kepler propagation; they stay on the
+// circular-fallback path until a proper TASS/SAT-style theory is vendored.
 //
 // N is mean motion in deg/day (×86400 from Horizons deg/sec).
 
-// OM_DOT, W_DOT secular precession rates (deg/day) — linear least-squares
-// fit through 25 monthly samples of JPL Horizons APX. Charon is tidally
-// locked with Pluto so rates are essentially zero. Source:
-//   tools/fetch-precession-rates-2yr.mjs
-//   docs/diag/2026-05-05-moon-investigation/22-precession-rates-2yr.txt
+// OM_DOT, W_DOT secular precession rates (deg/day) — linear least-squares fit
+// through 25 monthly samples of JPL Horizons APX. Charon is tidally locked
+// with Pluto, so rates are essentially zero.
 export const charon = {
     name: "Charon",
     epochJD: 2461163.5,

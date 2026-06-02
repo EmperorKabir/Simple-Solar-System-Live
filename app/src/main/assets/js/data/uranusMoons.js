@@ -2,21 +2,19 @@
 // in ECLIPTIC-J2000 frame.
 // Source: JPL Horizons OSCULATING ELEMENTS (CENTER=@799, REF_PLANE=ECLIPTIC,
 // REF_SYSTEM=ICRF) at epoch JD 2461163.5 TDB (= 2026-05-03 00:00 TDB).
-// Verified to <0.001° at epoch vs Horizons VECTORS.
+// Agrees with Horizons VECTORS to <0.001° at epoch.
 //
-// All Uranian moons orbit nearly in Uranus's equatorial plane, which is
-// tilted 97.77° to the ecliptic (Uranus's "sideways" rotation). This
-// shows up directly as IN ≈ 97.7° in every entry.
+// All Uranian moons orbit nearly in Uranus's equatorial plane, tilted 97.77°
+// to the ecliptic (Uranus's "sideways" rotation). This shows up directly as
+// IN ≈ 97.7° in every entry.
 //
-// IMPORTANT: ecliptic-J2000 frame — caller attaches to un-tilted planet pivot.
+// Ecliptic-J2000 frame — caller attaches to the un-tilted planet pivot.
 // N is mean motion in deg/day (×86400 from Horizons deg/sec).
 
-// OM_DOT, W_DOT secular precession rates (deg/day) — linear least-squares
-// fit through 25 monthly samples of JPL Horizons APX OSCULATING ELEMENTS
-// spanning JD 2460803.5..2461523.5 (T-12mo..T+12mo around epoch). The
-// long baseline averages out monthly libration. Source:
-//   tools/fetch-precession-rates-2yr.mjs
-//   docs/diag/2026-05-05-moon-investigation/22-precession-rates-2yr.txt
+// OM_DOT, W_DOT secular precession rates (deg/day) — linear least-squares fit
+// through 25 monthly samples of JPL Horizons APX osculating elements spanning
+// JD 2460803.5..2461523.5 (T-12mo..T+12mo around epoch). The long baseline
+// averages out monthly libration.
 export const miranda = {
     name: "Miranda",
     epochJD: 2461163.5,

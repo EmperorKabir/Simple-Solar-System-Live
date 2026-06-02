@@ -57,10 +57,10 @@ class SolarSystemAppWidgetProvider : AppWidgetProvider() {
                 //
                 // enqueueUniqueWork(REPLACE) coalesces concurrent enqueues for
                 // the same widget — a flurry of rapid-fire refresh triggers
-                // (resize events, settings spam, etc.) collapses to a single
-                // pending render instead of spawning N concurrent
+                // (resize events, repeated settings changes) collapses to a
+                // single pending render instead of spawning N concurrent
                 // VirtualDisplays, which OEM systems can refuse with a null
-                // return that previously NPEd the process.
+                // return.
                 val once = OneTimeWorkRequestBuilder<SolarSystemWidgetWorker>()
                     .setInputData(data)
                     .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)

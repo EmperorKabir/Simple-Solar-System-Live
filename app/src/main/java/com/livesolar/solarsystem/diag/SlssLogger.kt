@@ -3,8 +3,8 @@
 // the diagnostic-logging design).
 // Gated at compile time by BuildConfig.SLSS_DIAG_ENABLED (release = false) and
 // at runtime by the [enabled] flag. Zero-cost in release builds: init() is a
-// no-op and logEvent() returns immediately. Remove the whole diag/ package
-// when the investigation concludes (grep -r SLSS_DIAG_TEMPORARY).
+// no-op and logEvent() returns immediately. Removable as a whole diag/ package
+// (search SLSS_DIAG_TEMPORARY).
 package com.livesolar.solarsystem.diag
 
 import android.content.Context
@@ -27,16 +27,16 @@ import java.util.concurrent.atomic.AtomicLong
 /**
  * Thread-safe singleton diagnostic logger.
  *
- * Design (plan §1, §2):
+ * Design:
  * - One [logEvent] entry point; an auto-built envelope is merged with the
  *   caller's payload.
  * - Producers append to a bounded [LinkedBlockingDeque]; a single dedicated
  *   background thread drains it to the sinks. Keeps producer cost ~µs and all
  *   file I/O off the caller threads.
- * - Backpressure: if the queue is full, the OLDEST event is dropped and a
- *   running counter is flushed as a `dropped_events` line (plan §2, §3.19).
+ * - Backpressure: if the queue is full, the oldest event is dropped and a
+ *   running counter is flushed as a `dropped_events` line.
  * - Per-boot [sessionId] shared across processes via a sentinel file so the
- *   four app processes' logs reconcile (plan §1 per-process behaviour).
+ *   per-process logs reconcile.
  */
 object SlssLogger {
 
@@ -108,8 +108,8 @@ object SlssLogger {
     }
 
     /**
-     * Primary API. Builds the common envelope (plan §2), merges [data], and
-     * enqueues for the background writer. Returns immediately.
+     * Primary API. Builds the common envelope, merges [data], and enqueues for
+     * the background writer. Returns immediately.
      */
     fun logEvent(
         eventType: String,
@@ -193,7 +193,7 @@ object SlssLogger {
         sinks.forEach { it.flush() }
     }
 
-    /** Snapshot of the in-RAM ring for in-app export (plan §7). */
+    /** Snapshot of the in-RAM ring for in-app export. */
     fun memorySnapshot(): List<String> = memoryBuffer?.snapshot() ?: emptyList()
 
     /** Generate a short correlation id for a span of related events. */

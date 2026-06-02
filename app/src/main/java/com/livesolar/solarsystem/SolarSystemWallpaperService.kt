@@ -59,9 +59,9 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         private var lastRenderH = 0
         private val refreshIntervalMs = 10L * 60 * 1000
         // Coalesce a burst of onSurfaceChanged events (a fold/rotation fires
-        // several within ~300ms) into ONE render. Each render is a heavy
-        // (2-12s, >1GB) off-screen WebView pass; firing one per intermediate
-        // size stole CPU/memory from the foreground app and caused the lag.
+        // several within ~300ms) into one render. Each render is a heavy
+        // (2-12s, >1GB) off-screen WebView pass; one per intermediate size
+        // starves the foreground app of CPU/memory.
         private val renderDebounceMs = 400L
         private val renderRunnable = Runnable { renderAndPaint() }
         private fun scheduleRender() {
@@ -77,18 +77,15 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         }
 
         // Fold-refresh: DisplayManager.DisplayListener with debounce.
-        // Why debounce: a single fold/unfold on the Z Fold 6 fires
-        // displayAdded + displayChanged + displayChanged… (5-7 events
-        // within ~200ms). Without debounce the listener would enqueue
-        // a widget refresh per event, fan-out N renders concurrently,
-        // exhaust the system VirtualDisplay budget, and crash with
-        // 'createVirtualDisplay returned null' (root cause of the
-        // earlier force-close loop). Collapsing all events within a
-        // 500ms quiet window into a SINGLE trigger keeps us inside
-        // the system's resource limits.
-        // Why ownsFoldRefresh(): only the home service registers, so
-        // we don't fire twice per display event when the user has both
-        // home and lock services bound.
+        // A single fold/unfold fires displayAdded + displayChanged +
+        // displayChanged… (5-7 events within ~200ms). Without debounce the
+        // listener enqueues a widget refresh per event, fans out N concurrent
+        // renders, exhausts the system VirtualDisplay budget, and crashes with
+        // 'createVirtualDisplay returned null'. Collapsing all events within a
+        // 500ms quiet window into a single trigger stays inside the resource
+        // limits.
+        // ownsFoldRefresh(): only the home service registers, so we don't fire
+        // twice per display event when both home and lock services are bound.
         private val displayManager by lazy {
             applicationContext.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
         }
@@ -106,20 +103,19 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
             for (id in mgr.getAppWidgetIds(provider)) {
                 SolarSystemAppWidgetProvider.scheduleWidget(applicationContext, id, runImmediately = true)
             }
-            // No engine re-render here: onSurfaceChanged fires anyway when
-            // the surface dimensions actually change after a fold; calling
-            // renderAndPaint from this runnable risked piling on a second
-            // WebView render concurrent with the surface-changed one and
-            // contributed to the 'main app flickers white/black' feedback
-            // loop the user observed.
+            // No engine re-render here: onSurfaceChanged fires anyway when the
+            // surface dimensions actually change after a fold. Calling
+            // renderAndPaint from this runnable would pile a second WebView
+            // render onto the surface-changed one and feed the white/black
+            // flicker loop.
         }
         // Our own virtual displays are named "SolarRenderer-<nanoTime>" by
-        // WebViewBitmapRenderer.render. They get added/removed every render
+        // WebViewBitmapRenderer.render and are added/removed every render
         // cycle. If the listener reacts to those events it forms a feedback
         // loop: render -> VD added -> fold-refresh trigger -> renderAndPaint
-        // -> render -> VD added -> ... ad infinitum, observed as 'main app
-        // flickers white/black, stuck on loading screen' on the user's
-        // device. Track which display IDs are ours so we can ignore them.
+        // -> render -> VD added -> ... (the white/black flicker, stuck on the
+        // loading screen). Track which display IDs are ours so we can ignore
+        // them.
         private val ourVirtualIds = HashSet<Int>()
         private fun isOurVirtual(displayId: Int): Boolean {
             if (ourVirtualIds.contains(displayId)) return true
@@ -267,11 +263,11 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         private fun renderAndPaint() {
             if (widthPx <= 0 || heightPx <= 0 || rendering) return
             rendering = true
-            // Capture the dims this render is FOR. If the surface changes size
-            // while the (async) WebView render is in flight, the completed
-            // bitmap is sized for the OLD surface — painting it 1:1 on the new
-            // surface is what threw the solar system off-corner. We compare
-            // against the live widthPx/heightPx on completion and re-render.
+            // Capture the dims this render is for. If the surface changes size
+            // while the async WebView render is in flight, the completed bitmap
+            // is sized for the old surface — painting it 1:1 on the new surface
+            // would put the solar system off-corner. Compare against the live
+            // widthPx/heightPx on completion and re-render.
             val rw = widthPx; val rh = heightPx
             val params = currentParams()
             val sKind = surfaceKind()

@@ -1,9 +1,8 @@
 // SLSS_DIAG_TEMPORARY — passive system-event observers.
-// Part of the temporary diagnostic logging system (plan §1, §3.5-3.7, §3.15-3.16, §4.4).
 // Installs: ActivityLifecycleCallbacks, ComponentCallbacks2 (trim/config),
-// DisplayManager.DisplayListener, DeviceStateManager.DeviceStateCallback,
-// the hinge-angle SensorEventListener, and the runtime screen-state receiver.
-// Remove with the rest of the diag/ package (grep -r SLSS_DIAG_TEMPORARY).
+// DisplayManager.DisplayListener, the hinge-angle SensorEventListener, thermal
+// + significant-motion listeners, and the runtime screen-state receiver.
+// Removable with the rest of the diag/ package (search SLSS_DIAG_TEMPORARY).
 package com.livesolar.solarsystem.diag
 
 import android.app.Activity
@@ -44,11 +43,11 @@ internal object SlssLoggerObservers {
         installLifecycle(app)
         installComponentCallbacks(app)
         installDisplayListener(app)
-        // NOTE: android.hardware.devicestate.DeviceStateManager is a @SystemApi
-        // and is not reachable from a normal app. Foldable posture is instead
-        // captured precisely via the hinge-angle sensor below (continuous
-        // degrees) and via display-geometry deltas feeding the fold_unfold
-        // synthetic event — both public APIs.
+        // android.hardware.devicestate.DeviceStateManager is a @SystemApi, not
+        // reachable from a normal app. Foldable posture is instead captured via
+        // the hinge-angle sensor below (continuous degrees) and via
+        // display-geometry deltas feeding the fold_unfold synthetic event —
+        // both public APIs.
         installHingeSensor(app)
         installThermalListener(app)
         installSignificantMotion(app)

@@ -1,9 +1,8 @@
 // SLSS_DIAG_TEMPORARY — screen power + timezone broadcast receiver.
-// Part of the temporary diagnostic logging system (plan §3.6, §4.3, §5).
-// ACTION_SCREEN_ON/OFF/USER_PRESENT are delivered ONLY to runtime-registered
+// ACTION_SCREEN_ON/OFF/USER_PRESENT are delivered only to runtime-registered
 // receivers (never manifest-declared), so this is registered dynamically in
-// SlssLoggerObservers.install(), NOT in AndroidManifest. Remove with the rest
-// of the diag/ package (grep -r SLSS_DIAG_TEMPORARY).
+// SlssLoggerObservers.install(), not in AndroidManifest. Removable with the
+// rest of the diag/ package (search SLSS_DIAG_TEMPORARY).
 package com.livesolar.solarsystem.diag
 
 import android.app.KeyguardManager

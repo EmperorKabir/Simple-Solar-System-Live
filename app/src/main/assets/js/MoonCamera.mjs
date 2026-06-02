@@ -1,23 +1,22 @@
-// MoonCamera v22 — orientation-solving, data-driven (2026-05-29).
+// MoonCamera — orientation-solving moon-view camera placement.
 //
-// Rule:
-//   - View ALONG THE ECLIPTIC (camera in the orbital/XZ plane, horizontal view
-//     direction). camera.up stays world (0,1,0) — NEVER changed by the caller.
-//   - Moon CENTRED (target = moon).
-//   - PRIMARY: show BOTH the parent planet's disc AND the Sun's disc (>=20% of
-//     each, measured on the disc — centre +/- angular radius), positioned toward
-//     OPPOSITE frame edges, with the moon zoomed in as close as possible while
-//     both still fit. The right ORIENTATION (view azimuth) lets both fit at a
-//     much tighter zoom than a naive bisector view — so we SOLVE for the azimuth
-//     that fits both at the largest moon size.
-//   - FALLBACK: when both genuinely cannot fit without shrinking the moon to a
-//     dot (e.g. Io folded — Jupiter is too big/close for the narrow screen),
-//     keep the SUN + moon (the Sun is the body the user prioritises) and let the
-//     planet fall off.
-//   - Aspect-correct: THREE PerspectiveCamera.fov is VERTICAL; horizontal
+// Rules:
+//   - View along the ecliptic (camera in the orbital/XZ plane, horizontal view
+//     direction). camera.up stays world (0,1,0); never changed by the caller.
+//   - Moon centred (target = moon).
+//   - Primary: show both the parent planet's disc and the Sun's disc (>=20% of
+//     each, measured on the disc — centre +/- angular radius), toward opposite
+//     frame edges, moon zoomed in as close as possible while both still fit.
+//     The right view azimuth fits both at a much tighter zoom than a naive
+//     bisector view, so solve for the azimuth that fits both at the largest
+//     moon size.
+//   - Fallback: when both cannot fit without shrinking the moon to a dot (e.g.
+//     Io folded — Jupiter too big/close for the narrow screen), keep Sun + moon
+//     (Sun is the priority body) and let the planet fall off.
+//   - Aspect-correct: THREE PerspectiveCamera.fov is vertical; horizontal
 //     half-angle = atan(tan(fov/2)*aspect).
-//   - Auto re-framed per fold mode (index.html resize handler re-invokes this),
-//     so each of folded/unfolded gets its own optimal placement.
+//   - Re-framed per fold mode (index.html resize handler re-invokes this), so
+//     folded/unfolded each get their own placement.
 //
 // Pure function. No THREE.js dependency.
 
@@ -39,22 +38,20 @@ const PHI_RANGE = Math.PI;     // search the FULL 360 deg so the symmetric
                                 // bisector) is never missed
 const N_TILT = 21;             // vertical-tilt sweep resolution
 const TILT_RANGE = (60 * Math.PI) / 180; // max camera tilt to recentre off-ecliptic bodies
-// Cost weights CALIBRATED against 261 of the user's real repositioned targets
-// (tools/diag/calibrate-moon.mjs): mean framing error 0.486 vs 1.25 without
-// tilt. cost = |pX+sX| + W_Y*(|pY|+|sY|) + W_SPREAD*spreadX + W_ZOOM*(d/dMin-1).
+// Cost weights tuned against a set of hand-placed reference framings:
+// cost = |pX+sX| + W_Y*(|pY|+|sY|) + W_SPREAD*spreadX + W_ZOOM*(d/dMin-1).
 const W_Y = 1.5;       // vertical-centre both bodies (the key missing axis)
 const W_SPREAD = 0.15; // mild bias to a more central framing
 const W_ZOOM = 0.5;    // prefer max zoom (biggest moon)
-// Prefer a LEVEL (near-horizontal) view: the user's folded repositions are all
-// ~horizontal (polar ~90deg) — they would rather ZOOM OUT than have the camera
-// tilt steeply down to cram horizontally-separated bodies onto the narrow folded
-// screen. A steep "looking down" angle reads as wrong. Tilt is still used when a
-// moon is genuinely off-ecliptic (Triton): there the vertical-centring benefit
+// Prefer a level (near-horizontal) view: better to zoom out than tilt the camera
+// steeply down to cram horizontally-separated bodies onto the narrow folded
+// screen — a steep "looking down" angle reads as wrong. Tilt is still used for a
+// genuinely off-ecliptic moon (Triton), where the vertical-centring benefit
 // (W_Y) outweighs this penalty. Penalty on the camera pitch |viewDir.y|.
 const W_TILT = 1.5;
-// A close/dominant planet (Io's Jupiter: apparent radius ~1 even at max zoom)
-// is NOT framed symmetrically — the user rotates the frame toward the Sun so the
-// Sun sits near a small offset and the planet stays at the edge. (calibrate-moon)
+// A close/dominant planet (Io's Jupiter: apparent radius ~1 even at max zoom) is
+// not framed symmetrically — rotate the frame toward the Sun so the Sun sits at
+// a small offset and the planet stays at the edge.
 const BIG_PLANET_RADIUS = 0.5;   // min apparent radius (at max zoom) to count as dominant
 const SUN_LEAN_TARGET = 0.25;    // Sun NDC offset (opposite the planet) for big planets
 const BIG_PLANET_WALL = 1.2;     // (relaxing beyond the normal cap regressed Io)
@@ -63,18 +60,18 @@ const BIG_PLANET_WALL = 1.2;     // (relaxing beyond the normal cap regressed Io
 // it as a recognisable body. Such solutions are rejected so e.g. Io folded
 // doesn't count Jupiter-as-a-wall as "both visible".
 const MAX_BODY_RADIUS_NDC = 1.2;
-// How far PAST the tightest both-visible distance we admit candidates. A tight
-// window (1.10) kept the moon biggest but, for collinear far systems on the
-// narrow folded screen (Pluto's moons — Hydra/Nix), the OPPOSITE-edge framing
-// only exists a bit further out, so the search was stuck with a same-side fit.
-// 1.45 admits it; W_ZOOM still keeps the pick as tight as the well-framed
-// options allow, so well-behaved moons are unaffected.
+// How far past the tightest both-visible distance to admit candidates. A tight
+// window keeps the moon biggest, but for collinear far systems on the narrow
+// folded screen (Pluto's Hydra/Nix) the opposite-edge framing only exists a bit
+// further out, so a tight window gets stuck with a same-side fit. 1.45 admits
+// it; W_ZOOM still keeps the pick as tight as the well-framed options allow, so
+// well-behaved moons are unaffected.
 const ZOOM_WINDOW = 1.45;
-// C_auto: show BOTH bodies (zooming out as needed) when the parent planet sits
-// as a clean disc (radius <= this). A close, crowding planet (e.g. Io→Jupiter,
-// radius ~1.2) instead triggers mode B (drop the planet, keep the moon big).
-// Confirmed on-device: Io folded planet radius 1.20 -> B; Titan/Titania/Triton/
-// Iapetus folded 0.15-0.37 -> show both.
+// Show both bodies (zooming out as needed) when the parent planet sits as a
+// clean disc (radius <= this). A close, crowding planet (e.g. Io→Jupiter,
+// radius ~1.2) instead triggers mode B (drop the planet, keep the moon big):
+// Io folded planet radius ~1.20 -> B; Titan/Titania/Triton/Iapetus folded
+// 0.15-0.37 -> show both.
 const PLANET_CLEAN_RADIUS = 0.6;
 
 function projNDC(world, camPos, viewDir, right, trueUp, halfH, halfV) {
@@ -175,8 +172,8 @@ export function computeMoonCameraPlacement({
         discVisibleFrac(ndc, rad) >= MIN_VISIBLE_FRAC &&
         rad.x <= MAX_BODY_RADIUS_NDC && rad.y <= MAX_BODY_RADIUS_NDC;
     // BOTH = planet & Sun both properly visible. Balance/centring is handled by
-    // the central-target + symmetric tie-break below (NOT a hard opposite-sides
-    // rule, which wrongly rejected the same-direction case — e.g. Earth's Moon
+    // the central-target + symmetric tie-break below, not a hard opposite-sides
+    // rule (which wrongly rejected the same-direction case — e.g. Earth's Moon
     // near new moon, where Earth & Sun share a direction and frame centrally).
     // Is the parent planet close/dominant (a big disc even at max zoom)? If so,
     // frame toward the Sun rather than symmetrically (Io's Jupiter).
@@ -192,7 +189,7 @@ export function computeMoonCameraPlacement({
     // be a larger disc at the edge (so the Sun-leaned framing is reachable).
     // Folded narrow screen: zoom in as far as a real CRESCENT of the planet still
     // shows at the edge WHILE the planet and Sun stay on OPPOSITE sides. This one
-    // geometric rule produces both behaviours the user wants, purely from the live
+    // geometric rule produces both desired behaviours purely from the live
     // geometry (so it tracks orbital drift): where a tight crescent is already
     // opposite-sided (Io) it stays tight; where a tight crescent would be same-
     // sided (Tethys) it zooms out until they separate — the "disc at the edge"
@@ -264,10 +261,10 @@ export function computeMoonCameraPlacement({
         return r;
     };
 
-    // Best framing at a FIXED distance: planet & Sun on OPPOSITE sides, both in
-    // front, planet not covering the moon. NO disc-size requirement — the user
-    // frames a dominant planet's moon big with the bodies pushed to opposite
-    // EDGES (Europa: Jupiter +1.69 / Sun -1.11 at zoom 3.68), not as full discs.
+    // Best framing at a fixed distance: planet & Sun on opposite sides, both in
+    // front, planet not covering the moon. No disc-size requirement — a dominant
+    // planet's moon is framed big with the bodies pushed to opposite edges
+    // (Europa: Jupiter +1.69 / Sun -1.11 at zoom 3.68), not as full discs.
     const searchAtDist = (d) => {
         let r = null;
         for (let i = 0; i < N_PHI; i++) {
@@ -292,10 +289,10 @@ export function computeMoonCameraPlacement({
         }
         return r;
     };
-    // Dominant planet (the Galileans): frame at a CONSISTENT moon size (~4.5%
-    // radius — the user's repositions put Io and Europa both at cd ~3.6-3.7),
-    // with the bodies at opposite edges. Driven by the live geometry, so it
-    // tracks drift; non-dominant moons keep the disc/crescent rules below.
+    // Dominant planet (the Galileans): frame at a consistent moon size (~4.5%
+    // radius — puts Io and Europa both at cd ~3.6-3.7), bodies at opposite
+    // edges. Driven by the live geometry, so it tracks drift; non-dominant moons
+    // keep the disc/crescent rules below.
     let both;
     if (bigPlanet && !FOLDED) {
         const dTarget = Math.min(MAX_DIST, Math.max(MIN_DIST, moonSize / (0.045 * Math.tan(halfV))));
@@ -314,11 +311,10 @@ export function computeMoonCameraPlacement({
     const modeB = () => ({ b: mbBasis, d: MIN_DIST, mode: 'B_moon' });
 
     let chosen, fallbackMode;
-    // ALWAYS show both bodies when a valid both-framing exists (the user wants
-    // the planet kept even as a big disc at the edge — e.g. Io's Jupiter). Only
-    // fall back to Sun + moon when both is geometrically impossible (no
-    // orientation fits both without the planet being a wall — e.g. Io folded).
-    // The 2D both-search is calibrated to the user's targets.
+    // Always show both bodies when a valid both-framing exists (keep the planet
+    // even as a big disc at the edge — e.g. Io's Jupiter). Only fall back to
+    // Sun + moon when both is geometrically impossible (no orientation fits both
+    // without the planet being a wall — e.g. Io folded).
     if (both) { chosen = both; fallbackMode = 'C_both'; }
     else { const m = modeB(); chosen = m; fallbackMode = m.mode; }
     chosen.d = Math.max(MIN_DIST, Math.min(chosen.d, MAX_DIST));

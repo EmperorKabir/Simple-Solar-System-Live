@@ -1,9 +1,7 @@
 // SLSS_DIAG_TEMPORARY — synthetic higher-level event detector.
-// Part of the temporary diagnostic logging system (plan §3.16, §4.4).
-// Correlates raw display/device-state/screen events into a single
-// `fold_unfold` summary. (lock_shift_observation, which needs centroid data,
-// is added in Phase L3.) Remove with the rest of the diag/ package
-// (grep -r SLSS_DIAG_TEMPORARY).
+// Correlates raw display/device-state/screen events into a single `fold_unfold`
+// summary, and emits lock_shift_observation from render centroid drift.
+// Removable with the rest of the diag/ package (search SLSS_DIAG_TEMPORARY).
 package com.livesolar.solarsystem.diag
 
 import android.os.SystemClock
@@ -25,7 +23,7 @@ internal object SlssSyntheticEventDetector {
     private val recent = ArrayDeque<Pair<String, Long>>()
 
     // Per-surface baseline centroid offset (surface -> [xPct, yPct]) for the
-    // lock-screen-shift detector (plan §3.17). Updated on stable renders.
+    // lock-screen-shift detector. Updated on stable renders.
     private val baselines = HashMap<String, DoubleArray>()
 
     // Drift (in % of bitmap dimension) past which a post-trigger render is
@@ -102,7 +100,7 @@ internal object SlssSyntheticEventDetector {
 
     /**
      * Feed a wallpaper render's centroid offset. Emits lock_shift_observation
-     * (plan §3.17) when this render was preceded (within [SHIFT_WINDOW_MS]) by a
+     * when this render was preceded (within [SHIFT_WINDOW_MS]) by a
      * screen-on / fold / unfold AND the centroid drifted past [SHIFT_DRIFT_PCT]
      * from the surface's stable baseline. Baseline is (re)seeded on stable
      * (non-triggered) renders.

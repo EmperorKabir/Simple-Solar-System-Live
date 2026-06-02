@@ -1,8 +1,5 @@
 // SLSS_DIAG_TEMPORARY — pluggable sinks for the diagnostic logger.
-// Part of the temporary diagnostic logging system (see
-// the diagnostic-logging design).
-// Remove the whole diag/ package when the investigation concludes
-// (grep -r SLSS_DIAG_TEMPORARY for the full cleanup hit list).
+// Removable as a whole diag/ package (search SLSS_DIAG_TEMPORARY).
 package com.livesolar.solarsystem.diag
 
 import android.util.Log
@@ -181,9 +178,9 @@ internal class LogcatMirrorSink(private val tag: String = "SlssDiag") : SlssSink
 }
 
 /**
- * Keeps the last [capacity] serialised lines in RAM for in-app export
- * (see plan §7 in-app share). Read via [snapshot]. Only mutated on the writer
- * thread; [snapshot] copies under lock.
+ * Keeps the last [capacity] serialised lines in RAM for in-app export. Read
+ * via [snapshot]. Only mutated on the writer thread; [snapshot] copies under
+ * lock.
  */
 internal class MemoryBufferSink(private val capacity: Int = 1000) : SlssSink {
     private val ring = ArrayDeque<String>(capacity)

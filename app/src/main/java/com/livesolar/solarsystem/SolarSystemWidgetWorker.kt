@@ -52,8 +52,8 @@ class SolarSystemWidgetWorker(
             .urlParams("widget")
 
         // SLSS_DIAG_TEMPORARY — widget_render{worker_start} with the full
-        // options bundle, including OPTION_APPWIDGET_SIZES (the Samsung One UI
-        // size list, never logged before — central to the L/R asymmetry).
+        // options bundle, including OPTION_APPWIDGET_SIZES (the One UI size
+        // list, relevant to the L/R framing asymmetry).
         val corr = SlssLogger.newCorrelationId()
         if (SlssLogger.enabled) {
             SlssLogger.logEvent(
@@ -120,7 +120,7 @@ class SolarSystemWidgetWorker(
 
     // SLSS_DIAG_TEMPORARY — snapshot the full AppWidget options bundle for the
     // widget render diagnostics. OPTION_APPWIDGET_SIZES (API 31+) is the list
-    // of SizeF the launcher actually offers — the black box behind the L/R gap.
+    // of SizeF the launcher actually offers.
     private fun slssOptionsBundle(opts: Bundle): Map<String, Any?> {
         val sizes: List<Map<String, Any?>>? = try {
             @Suppress("DEPRECATION")

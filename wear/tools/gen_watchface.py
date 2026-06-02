@@ -5,7 +5,7 @@ Parametric from real J2000 orbital elements so planet positions track the phone'
 VSOP87 ephemeris closely (mean longitude + first/second-order equation of centre
 via WFF sin()/rad()).
 
-Design that fixes the earlier issues:
+Design:
   * Each planet is a Group POSITIONED by Transform target="x"/"y" computed from
     cos/sin of its live longitude -> the Group only TRANSLATES, so the sprite and
     label inside stay UPRIGHT and ROUND (no spin).
@@ -41,7 +41,7 @@ ORDER = ["mercury","venus","earth","mars","jupiter","saturn","uranus","neptune",
 
 # Global orientation knobs to match the phone (eclipticToScene: screen-x = +x_ecl,
 # screen-y_down = -y_ecl => standard CCW, Aries at 3 o'clock). ROT rotates the whole
-# map; flip via SIGN_Y if the phone reads mirrored. Adjustable after eyeball vs phone.
+# map; flip via SIGN_Y if the phone reads mirrored.
 ROT = 0.0
 SIGN_Y = -1.0   # canvas y is down; -sin gives CCW prograde north-up
 

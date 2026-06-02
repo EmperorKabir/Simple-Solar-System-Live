@@ -1,9 +1,8 @@
 // SLSS_DIAG_TEMPORARY — in-process centroid/bbox probe.
-// Kotlin port of tools/diag/measure-centroid.mjs (plan §4.2, §4.3, §6).
 // Measures orbital-ring centroid + bounding box of a rendered Bitmap so the
 // widget L/R asymmetry and the lock-screen shift can be quantified in-process,
-// without pulling PNGs. Remove with the rest of the diag/ package
-// (grep -r SLSS_DIAG_TEMPORARY).
+// without pulling PNGs. Removable with the rest of the diag/ package
+// (search SLSS_DIAG_TEMPORARY).
 package com.livesolar.solarsystem.diag
 
 import android.graphics.Bitmap
@@ -11,7 +10,7 @@ import android.graphics.Bitmap
 internal object SlssCentroidProbe {
 
     // Ring pixels: faint rim of a stroked orbit. Excludes Sun (full bright) and
-    // dark sky (full dark). Matches measure-centroid.mjs thresholds exactly.
+    // dark sky (full dark).
     private const val RING_LUMA_MIN = 60.0
     private const val RING_LUMA_MAX = 230.0
 

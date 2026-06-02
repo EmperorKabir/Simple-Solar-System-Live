@@ -104,7 +104,7 @@ if __name__ == "__main__":
         im = fn()
         out = os.path.join(OUT, name + ".png")
         im.save(out)
-        # quick stats for headless verification
+        # quick stats
         a = im.getchannel("A"); bbox = im.getbbox()
         nonzero = sum(1 for p in a.getdata() if p > 8)
         print(f"{name:16s} size={im.size} opaque_px={nonzero} bbox={bbox}")

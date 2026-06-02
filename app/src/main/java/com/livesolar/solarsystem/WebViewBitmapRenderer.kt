@@ -93,14 +93,12 @@ object WebViewBitmapRenderer {
         val imageReader = ImageReader.newInstance(widthPx, heightPx, PixelFormat.RGBA_8888, 2)
         val displayManager = app.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
         val density = app.resources.displayMetrics.densityDpi
-        // createVirtualDisplay returns null when the system is out of
-        // resources (concurrent VD count limit, surface flinger pressure,
-        // OEM throttling). The Kotlin signature here was non-null which
-        // crashed the app process on null with java.lang.NullPointerException
-        // and triggered an immediate crash loop because the failed widget
-        // worker re-fires WorkManager jobs on app restart. Treat as a
-        // recoverable failure — log + cleanup + return null bitmap so the
-        // launcher keeps the previous cached bitmap instead of force-closing.
+        // createVirtualDisplay returns null when the system is out of resources
+        // (concurrent VD count limit, surface flinger pressure, OEM throttling).
+        // A NullPointerException here would crash the process and loop, since
+        // the failed widget worker re-fires WorkManager jobs on restart. Treat
+        // as recoverable: log, clean up, return a null bitmap so the launcher
+        // keeps the previous cached bitmap instead of force-closing.
         val virtualDisplay: VirtualDisplay? = displayManager.createVirtualDisplay(
             "SolarRenderer-${System.nanoTime()}",
             widthPx, heightPx, density,

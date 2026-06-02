@@ -76,7 +76,7 @@ class MainActivity : Activity() {
             addJavascriptInterface(WallpaperPickerBridge(this@MainActivity), "WallpaperPicker")
 
             // SLSS_DIAG_TEMPORARY — forward JS console output to webview_console
-            // (plan §3.8). Lets us see JS logs/errors in the diagnostic log.
+            // so JS logs/errors land in the diagnostic log.
             if (com.livesolar.solarsystem.diag.SlssLogger.enabled) {
                 webChromeClient = object : WebChromeClient() {
                     override fun onConsoleMessage(cm: ConsoleMessage): Boolean {
@@ -96,8 +96,8 @@ class MainActivity : Activity() {
             }
 
             // SLSS_DIAG_TEMPORARY — expose the diagnostic logging bridge to JS
-            // as window.SlssLog (diagnostic builds only). Remove with the diag/
-            // package (grep -r SLSS_DIAG_TEMPORARY).
+            // as window.SlssLog (diagnostic builds only). Removable with the
+            // diag/ package (search SLSS_DIAG_TEMPORARY).
             if (com.livesolar.solarsystem.diag.SlssLogger.enabled) {
                 addJavascriptInterface(
                     com.livesolar.solarsystem.diag.SlssLoggerJsBridge("MainActivity", this@MainActivity),
@@ -130,10 +130,9 @@ class MainActivity : Activity() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         // Activity is preserved across fold/unfold via manifest configChanges.
-        // Dispatch a JS resize event so the WebView's existing listener
-        // (index.html:2836) updates camera.aspect + renderer.setSize.
-        // Android does not auto-fire 'resize' inside a WebView whose host
-        // Activity handled the configChange itself.
+        // Dispatch a JS resize event so the WebView's listener updates
+        // camera.aspect + renderer.setSize. Android does not auto-fire 'resize'
+        // inside a WebView whose host Activity handled the configChange itself.
         pendingWebView?.evaluateJavascript(
             "window.dispatchEvent(new Event('resize'));",
             null
@@ -256,14 +255,11 @@ class MainActivity : Activity() {
 
         // Detect whether our service is the currently active live wallpaper.
         //
-        // Direct WallpaperManager.getWallpaperInfo() is AUTHORITATIVE when
-        // it returns non-null. Verified on the
-        // SM-F966B that Samsung One UI does correctly return the bound
-        // service from the no-arg API. Earlier worry that 'Samsung lies'
-        // was a misdiagnosis — the actual case was our service getting
-        // silently REPLACED by Samsung's FoldInteractive default after
-        // the crash loop, and our cache (set eagerly by markBound) was
-        // pointing at a non-existent binding.
+        // Direct WallpaperManager.getWallpaperInfo() is authoritative when it
+        // returns non-null; One UI correctly returns the bound service from the
+        // no-arg API. The failure mode that looked like the API lying was our
+        // service being silently replaced by Samsung's default, leaving the
+        // markBound cache pointing at a stale binding.
         //
         // Behaviour:
         //   direct == expected   → bound; cache=true; return true

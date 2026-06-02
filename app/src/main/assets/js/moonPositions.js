@@ -1,8 +1,8 @@
 /**
  * moonPositions.js
  *
- * Planetocentric moon-position evaluators backed by verified
- * astronomia (commenthol/astronomia, MIT) — Meeus Astronomical Algorithms.
+ * Planetocentric moon-position evaluators backed by astronomia
+ * (commenthol/astronomia, MIT) — Meeus Astronomical Algorithms.
  *
  * Each function returns a position vector whose direction is correct in the
  * host planet's equatorial / ecliptic frame, scaled to the per-moon visual
@@ -84,8 +84,8 @@ const D2R      = Math.PI / 180.0;
 
 /**
  * Earth Moon planetocentric ecliptic Cartesian (direction only),
- * scaled to mc.dist scene units.  Result matches astronomia's
- * moonposition.position (verified to JPL DE441 within ~5 km in distance).
+ * scaled to mc.dist scene units. Result matches astronomia's
+ * moonposition.position (agrees with JPL DE441 to within ~5 km in distance).
  *
  *   λ, β, Δ  ← astronomia.moonposition.position(jde)
  *   geocentric ecliptic cartesian = (Δ cos β cos λ, Δ cos β sin λ, Δ sin β)
@@ -103,9 +103,7 @@ export function earthMoon(mc, jde) {
     if (len < 1e-12) return { x: 0, y: 0, z: 0 };
     const k = mc.dist / len;
     // Ecliptic → scene mapping (matches every other moon evaluator):
-    //   scene_x = ecl_x, scene_y = ecl_z (ecliptic NORTH = scene UP), scene_z = -ecl_y.
-    // Previous (xKm, yKm, zKm) bug placed the Moon's in-plane direction
-    // along scene-up, throwing the Moon far below Earth.
+    //   scene_x = ecl_x, scene_y = ecl_z (ecliptic north = scene up), scene_z = -ecl_y.
     return { x: xKm * k, y: zKm * k, z: -yKm * k };
 }
 
@@ -189,11 +187,10 @@ const GAL_INDEX = { Io: 0, Europa: 1, Ganymede: 2, Callisto: 3 };
 /**
  * Galilean moon planetocentric position in scene-local frame.
  *
- * Uses Meeus Ch.44 high-precision Lieske E5 MEAN longitudes — verbatim
- * constants from astronomia/src/jupitermoons.js E5 function (lines 146-149),
- * verified.  These are TRUE planetocentric mean longitudes in
- * Jupiter's equatorial plane, measured from the ascending node of
- * Jupiter's equator on Earth's equator at the Lieske 1976 epoch.
+ * Uses Meeus Ch.44 Lieske E5 mean longitudes — constants taken from
+ * astronomia/src/jupitermoons.js E5 function. These are planetocentric mean
+ * longitudes in Jupiter's equatorial plane, measured from the ascending node
+ * of Jupiter's equator on Earth's equator at the Lieske 1976 epoch.
  *
  *   t  = jde - 2443000.5                (Lieske 1976 epoch)
  *   l1 = 106.07719° + 203.48895579°·t   (Io)
@@ -207,10 +204,10 @@ const GAL_INDEX = { Io: 0, Europa: 1, Ganymede: 2, Callisto: 3 };
  *   Jupiter pole RA=268.057° via RA_node = RA_pole + 90°). Converting that
  *   equatorial point to ecliptic gives ecliptic longitude ≈ 358° as well
  *   (declination 0 + obliquity rotation only shifts longitude by ~1.8°).
- *   So l_i in degrees IS our scene-ecliptic longitude to within ~2°,
- *   no offset rotation is needed.  This was empirically verified against
- *   astronomia.jupitermoons.e5 sky-plane positions: Io slightly west,
- *   Europa+Ganymede east, Callisto far west — matching Stellarium.
+ *   So l_i in degrees is our scene-ecliptic longitude to within ~2°, no
+ *   offset rotation is needed. Cross-checked against astronomia.jupitermoons.e5
+ *   sky-plane positions: Io slightly west, Europa+Ganymede east, Callisto far
+ *   west — matching Stellarium.
  *
  * Final scene-local position (Jupiter pivot has no tilt applied for
  * Galilean moons since they attach to planets[host], not groupPivot):
@@ -238,17 +235,15 @@ export function galileanMoon(mc, jde) {
     const idx = GAL_INDEX[mc.name];
     if (idx == null) return { x: 0, y: 0, z: 0 };
     const k = GAL_E5[idx];
-    // Light-time retardation: astronomia.jupitermoons.e5 lines 67-68
-    // apply 'dd = d - τ' before evaluating l_i. Same here.
+    // Light-time retardation: astronomia.jupitermoons.e5 applies 'dd = d - τ'
+    // before evaluating l_i. Same here.
     const tau = lightTimeDays(jde, _jupiterVSOP);
     const t = (jde - tau) - JUPITER_LIESKE_EPOCH;
     const lDeg = ((k.L0 + k.n * t) % 360 + 360) % 360;
     const sceneLonRad = lDeg * D2R;
-    // scene_z = -ecl_y per project convention (line 102, 282, 331). For
-    // ecl = (cos l, sin l, 0) treating Lieske l as ecliptic longitude,
-    // scene_z must be -sin(l) not +sin(l). The previous +sin(l) put
-    // Galilean moons on the wrong side of Jupiter — verified by
-    // tools/galilean-fix-test.mjs (Callisto error 164 deg -> 1.99 deg).
+    // scene_z = -ecl_y per project convention. For ecl = (cos l, sin l, 0)
+    // treating Lieske l as ecliptic longitude, scene_z must be -sin(l) not
+    // +sin(l); +sin(l) puts Galilean moons on the wrong side of Jupiter.
     return {
         x: mc.dist * Math.cos(sceneLonRad),
         y: 0,
@@ -275,8 +270,8 @@ const SAT_METHOD = {
 /**
  * Saturn-moon planetocentric position in scene-ecliptic frame.
  *
- * Mirrors astronomia.saturnmoons.positions reduction at lines 100-123 of
- * the vendored saturnmoons.js (verified):
+ * Mirrors the astronomia.saturnmoons.positions reduction in the vendored
+ * saturnmoons.js:
  *   1. Compute (X, Y, Z) from per-moon orbital elements (Qs.{moon}() →
  *      r4 = {λ, r, γ, Ω}) via Meeus Ch.46 formulas 46.D-G:
  *        u = λ - Ω,  w = Ω - 168.8112°
@@ -284,12 +279,12 @@ const SAT_METHOD = {
  *        Y = r (sin u cos w cos γ + cu sin w)
  *        Z = r sin u sin γ
  *   2. Rotate by Saturn's obliquity 28.0817° around X-axis to take
- *      Saturn-equator-of-1950 → ecliptic-of-1950 (line 119 of source):
+ *      Saturn-equator-of-1950 → ecliptic-of-1950:
  *        a = X
  *        b = c1·Y - s1·Z
  *        c = s1·Y + c1·Z          (c1=cos 28.0817°, s1=sin 28.0817°)
  *   3. Rotate by 168.8112° around Z to align with ecliptic vernal
- *      equinox of 1950 (line 121 of source):
+ *      equinox of 1950:
  *        a' = c2·a - s2·b
  *        b' = s2·a + c2·b          (c2=cos 168.8112°, s2=sin 168.8112°)
  *      → (a', b', c) is now in ecliptic-of-1950 frame.
@@ -300,10 +295,9 @@ const SAT_METHOD = {
  * Scaled to mc.dist preserving direction. (B1950 → J2000 precession of
  * ~0.7° over 50 yr is ignored for visual rendering.)
  *
- * IMPORTANT: callers must attach Saturn moons to the un-tilted
- * planets[host] pivot (NOT the obliquity-tilted groupPivot), since the
- * c1/s1 rotation here already brings the result into ecliptic frame —
- * applying the pivot's tilt again would double-rotate.
+ * Callers must attach Saturn moons to the un-tilted planets[host] pivot, not
+ * the obliquity-tilted groupPivot: the c1/s1 rotation here already brings the
+ * result into the ecliptic frame, so the pivot's tilt would double-rotate.
  */
 const SAT_OBLIQUITY_DEG = 28.0817;     // Saturn equator → ecliptic-of-1950
 const SAT_NODE_DEG      = 168.8112;    // Saturn equator's ascending node on ecliptic-1950
@@ -480,7 +474,7 @@ export function plutoMoon(mc, jde) {
     const period = mc.p || 1;
     const L = ((mc.L0 + 360.0 / period * d) % 360 + 360) % 360;
     const Lr = L * D2R;
-    // scene_z = -sin(L) per project convention (matches galileanMoon fix).
+    // scene_z = -sin(L) per project convention.
     return { x: mc.dist * Math.cos(Lr), y: 0, z: -mc.dist * Math.sin(Lr) };
 }
 
@@ -499,7 +493,7 @@ export function simpleCircular(mc, jde) {
     const period = mc.p || 1;
     const L = ((mc.L0 + 360.0 / period * d) % 360 + 360) % 360;
     const Lr = L * D2R;
-    // scene_z = -sin(L) per project convention (matches galileanMoon fix).
+    // scene_z = -sin(L) per project convention.
     return { x: mc.dist * Math.cos(Lr), y: 0, z: -mc.dist * Math.sin(Lr) };
 }
 

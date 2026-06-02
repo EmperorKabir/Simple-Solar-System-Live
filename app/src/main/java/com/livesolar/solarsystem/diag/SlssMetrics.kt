@@ -1,8 +1,8 @@
-// SLSS_DIAG_TEMPORARY — memory + CPU sampling (plan §3.9, §3.10, §4.5, §5).
+// SLSS_DIAG_TEMPORARY — memory + CPU sampling.
 // A periodic background sampler plus on-demand snapshots around named events.
 // All work runs on a dedicated background HandlerThread; nothing touches the
-// main/UI thread. Remove with the rest of the diag/ package
-// (grep -r SLSS_DIAG_TEMPORARY).
+// main/UI thread. Removable with the rest of the diag/ package
+// (search SLSS_DIAG_TEMPORARY).
 package com.livesolar.solarsystem.diag
 
 import android.app.ActivityManager

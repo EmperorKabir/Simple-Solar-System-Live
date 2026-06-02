@@ -1,9 +1,7 @@
 // SLSS_DIAG_TEMPORARY — @JavascriptInterface bridge exposed to the WebView as
-// window.SlssLog. Part of the temporary diagnostic logging system (plan §1, §6).
-// The event type carried by JS is namespaced "js" implicitly via the
-// webview_owner field added here, and the raw payload JSON is merged with the
-// Kotlin envelope. Remove with the rest of the diag/ package
-// (grep -r SLSS_DIAG_TEMPORARY).
+// window.SlssLog. The webview_owner field added here tags each JS event, and
+// the raw payload JSON is merged with the Kotlin envelope. Removable with the
+// rest of the diag/ package (search SLSS_DIAG_TEMPORARY).
 package com.livesolar.solarsystem.diag
 
 import android.content.Context

@@ -1065,11 +1065,10 @@
         let forcedLabelName = null;
         controls.addEventListener('start', () => { forcedLabelName = null; });
 
-        // SLSS_DIAG_TEMPORARY — capture the user's hand-tuned framing each time
-        // they finish a drag while viewing a MOON. This is the repositioning
-        // target used to calibrate the moon-camera fix (the last settled view
-        // before the next selection is the user's chosen framing). Logs the
-        // actual NDC of moon/host/sun + orbit angles + zoom distance.
+        // SLSS_DIAG_TEMPORARY — capture the hand-tuned framing each time a drag
+        // finishes while viewing a moon (the last settled view before the next
+        // selection), as a reference target for moon-camera placement. Logs the
+        // NDC of moon/host/sun + orbit angles + zoom distance.
         controls.addEventListener('end', () => {
             if (!slssEnabled() || viewMode !== 'PLANET' || !targetPlanet) return;
             const _mc = (typeof moonSystemConfig !== 'undefined') ? moonSystemConfig.find(m => m.name === targetPlanet.name) : null;
@@ -1385,13 +1384,13 @@
             }
             
             /**
-             * Option B Moon Distance Scaling.
+             * Moon distance scaling.
              *
-             * Goal: each moon system's INTERNAL relative spacing matches reality
-             * (the user's "if A is up-left of B and B is up-left of C, that
-             * arrangement should look right" requirement). Outliers (basically
-             * just Iapetus, 19× Mimas) get gracefully compressed only because
-             * a faithful linear scale would push them off-screen.
+             * Goal: each moon system's internal relative spacing matches reality
+             * (if A is up-left of B and B is up-left of C, that arrangement
+             * should look right). Outliers (mainly Iapetus, 19× Mimas) are
+             * compressed only because a faithful linear scale would push them
+             * off-screen.
              *
              *   linear      = baseInner * (sma / sma_inner)
              *   systemRatio = sma_outer / sma_inner
@@ -1402,7 +1401,7 @@
              *   else                  → dist = linear up to softCap (0.625 *
              *                          maxOuter), then log-compress the tail
              *                          so outliers fit under maxOuter (Saturn:
-             *                          Mimas-Rhea honest linear; Titan slightly
+             *                          Mimas-Rhea linear; Titan slightly
              *                          compressed; Iapetus heavily compressed)
              *
              * Replaces the prior log2 normalisation, which squished Titan to
@@ -1698,8 +1697,7 @@
             // opacity; surfaces (widget/wallpaper) use higher 0.45 opacity +
             // requested linewidth=2 so the ring remains visible at small
             // render sizes where it is the primary visual cue for tilt.
-            // (LineBasicMaterial.linewidth honoured ≤2 on most WebGL impls;
-            // if device shows hairlines we'll escalate to Line2 in Phase 6.)
+            // (LineBasicMaterial.linewidth is honoured ≤2 on most WebGL impls.)
             const ringPoints = [];
             for(let i = 0; i <= 360; i+=2) {
                 ringPoints.push(getOrbitPositionFast(data, (i / 360) * (data.period * 365.25), true).clone());
@@ -2524,10 +2522,9 @@
                     }
                 }
                 // Leave camera.up at world (0,1,0) so OrbitControls keeps the
-                // scene right-side-up after lookAt. Setting a custom up vector
-                // here flips the apparent world orientation when the moon is
-                // at a high vertical offset (tested 2026-05-07 — caused
-                // upside-down view of solar system from inside Earth's Moon).
+                // scene right-side-up after lookAt. A custom up vector here
+                // flips the apparent world orientation when the moon is at a
+                // high vertical offset (upside-down view from inside the Moon).
             } else {
                 // === PLANET SELECTED ===
                 // Restore standard FOV
@@ -3148,7 +3145,7 @@
         let frameCount = 0;
         const visibilityRaycaster = new THREE.Raycaster();
 
-        // Pre-allocated scratch vectors for the animation loop (Phase 6: GC elimination)
+        // Pre-allocated scratch vectors for the animation loop (avoids per-frame GC).
         const _followWorldPos = new THREE.Vector3();
         const _followDelta = new THREE.Vector3();
         const _labelWorldPos = new THREE.Vector3();
@@ -3554,7 +3551,7 @@
                     // Export raw WebGL scene PNG. Compositing offset/labels is done in
                     // native Kotlin Canvas because drawImage(WebGLcanvas, ...) silently
                     // produces a black bitmap in some Presentation/VirtualDisplay
-                    // contexts (verified via on-device diag 2026-05-04).
+                    // contexts.
                     const sceneDataUrl = sceneCanvas.toDataURL('image/png');
                     // Collect label positions/text for native compositing. Coordinates
                     // are CSS pixels; native side multiplies by dpr.

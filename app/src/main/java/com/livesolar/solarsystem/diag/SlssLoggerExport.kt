@@ -1,8 +1,8 @@
-// SLSS_DIAG_TEMPORARY — in-app diagnostic log export + share (plan §7).
+// SLSS_DIAG_TEMPORARY — in-app diagnostic log export + share.
 // Zips filesDir/slss_logs + filesDir/diag into filesDir/slss_export/ and fires
-// an ACTION_SEND chooser via FileProvider so the user can share the bundle
-// (Drive / email / save). Remove with the rest of the diag/ package and the
-// <provider> + res/xml/slss_file_paths.xml (grep -r SLSS_DIAG_TEMPORARY).
+// an ACTION_SEND chooser via FileProvider so the bundle can be shared
+// (Drive / email / save). Removable with the rest of the diag/ package and the
+// <provider> + res/xml/slss_file_paths.xml (search SLSS_DIAG_TEMPORARY).
 package com.livesolar.solarsystem.diag
 
 import android.content.Context

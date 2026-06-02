@@ -1,5 +1,5 @@
 /**
- * OrbitalEngine.js — Stage 7: Computation Engine
+ * OrbitalEngine.js
  *
  * Given a J2000 day offset and orbital element sets, computes heliocentric
  * ecliptic state vectors and body rotations for every planet and moon.
@@ -95,7 +95,7 @@ const KEPLER_TOLERANCE = 1e-12;
 //   B_j = phase     (radians)
 //   C_j = frequency (radians / Julian millennium)
 //
-// Data layout expected from Sub-Agent 1C:
+// Expected data layout:
 //   vsopData[bodyId] = {
 //     L:  [[A,B,C], ...],   // α=0 longitude terms
 //     L1: [[A,B,C], ...],   // α=1

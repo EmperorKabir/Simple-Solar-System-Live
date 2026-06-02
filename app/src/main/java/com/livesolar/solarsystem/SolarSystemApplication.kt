@@ -1,7 +1,7 @@
 // SLSS_DIAG_TEMPORARY — Application subclass that bootstraps the diagnostic
 // logger as early as possible in every process. Registered via
-// android:name=".SolarSystemApplication" in the manifest. Remove with the rest
-// of the diagnostic system (grep -r SLSS_DIAG_TEMPORARY).
+// android:name=".SolarSystemApplication" in the manifest. Removable with the
+// rest of the diagnostic system (search SLSS_DIAG_TEMPORARY).
 package com.livesolar.solarsystem
 
 import android.app.Application
@@ -23,9 +23,8 @@ class SolarSystemApplication : Application() {
     }
 
     /**
-     * Per-process hello-world. Captures device + display + locale context once
-     * per process start so every later event can be reconciled against the
-     * hardware/config it ran on (plan §3 envelope + §5 extra dimensions).
+     * Captures device + display + locale context once per process start so
+     * every later event can be reconciled against the hardware/config it ran on.
      */
     private fun emitSessionStart() {
         val dm = resources.displayMetrics
