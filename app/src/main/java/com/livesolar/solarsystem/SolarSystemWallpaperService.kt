@@ -57,6 +57,13 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         // visible when the surface actually changed size while hidden.
         private var lastRenderW = 0
         private var lastRenderH = 0
+        // Bounded auto-retry when a render yields no bitmap (WebGL context lost
+        // under the concurrent-render memory pressure of a fold burst, or
+        // VirtualDisplay exhaustion). Without this the surface stays on the
+        // stale/previous frame until the user nudges a setting; with it the
+        // surface self-heals once the GL context pool clears. Reset on success.
+        private var renderRetries = 0
+        private val maxRenderRetries = 4
         private val refreshIntervalMs = 10L * 60 * 1000
         // Coalesce a burst of onSurfaceChanged events (a fold/rotation fires
         // several within ~300ms) into one render. Each render is a heavy
@@ -314,6 +321,7 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                     SlssMetrics.snapshotMemoryAsync("post_wallpaper_render")
                 }
                 if (bm != null) {
+                    renderRetries = 0
                     lastBitmap = bm
                     // Only mark these params 'last seen' once we successfully
                     // produced a bitmap. If we set lastParams pre-render and
@@ -332,6 +340,13 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                     // cover-scaled it so it's centred (not off-corner), but a
                     // crisp 1:1 render for the new dims is needed — re-render.
                     if (widthPx != rw || heightPx != rh) renderAndPaint()
+                } else if (visible && renderRetries < maxRenderRetries) {
+                    // No bitmap (lost GL context / VD exhaustion). Back off and
+                    // retry so the surface self-heals once the context pool
+                    // clears, instead of leaving a stale/partial frame. Backoff
+                    // grows (0.6s, 1.2s, 1.8s, 2.4s) to let the burst drain.
+                    renderRetries++
+                    handler.postDelayed({ if (visible) renderAndPaint() }, 600L * renderRetries)
                 }
             }
         }

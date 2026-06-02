@@ -1001,11 +1001,18 @@
         // on the lost event is REQUIRED for the browser to later fire
         // 'webglcontextrestored'; THREE re-initialises GL state on restore, so we
         // re-frame and redraw. console.warn is captured by the diagnostic log.
+        // Tracks GL health so the surface-mode snapshot never captures a blank
+        // drawing buffer (a lost context makes renderer.render a no-op while
+        // toDataURL still returns a valid-but-empty PNG → the "labels but no
+        // planets/orbital rings" frame seen after a fold's concurrent-render burst).
+        let _glContextLost = false;
         renderer.domElement.addEventListener('webglcontextlost', function (ev) {
             ev.preventDefault();
+            _glContextLost = true;
             console.warn('SLSS_DIAG webglcontextlost');
         }, false);
         renderer.domElement.addEventListener('webglcontextrestored', function () {
+            _glContextLost = false;
             console.warn('SLSS_DIAG webglcontextrestored');
             try { if (typeof calcResetView === 'function') calcResetView(); } catch (e) {}
             try { renderer.render(scene, camera); } catch (e) {}
@@ -3537,8 +3544,29 @@
         //      are invisible because canvas.toDataURL never sees them.
         if (SURFACE === 'widget' || SURFACE === 'wallpaper') {
             window.__slssCaptured = false;
-            const _capture = () => {
+            const _capture = (isFallback) => {
                 if (window.__slssCaptured) return;
+                // Never capture from a lost/unhealthy GL context — toDataURL would
+                // return a valid-but-EMPTY PNG (blank scene) while the label
+                // projection math still produces positions, yielding a "labels but
+                // no planets/orbital rings" frame. While lost, re-arm and wait for
+                // 'webglcontextrestored' (which redraws). On the hard fallback,
+                // report an error so native returns null — the engine then keeps
+                // the previous good bitmap and retries, rather than painting a
+                // partial frame.
+                const _gl = renderer.getContext();
+                const _lost = _glContextLost || (_gl && _gl.isContextLost && _gl.isContextLost());
+                if (_lost) {
+                    if (isFallback) {
+                        window.__slssCaptured = true;
+                        if (window.SnapshotBridge && window.SnapshotBridge.onSnapshotError) {
+                            window.SnapshotBridge.onSnapshotError('webgl_context_lost');
+                        }
+                        return;
+                    }
+                    setTimeout(() => _capture(false), 120);
+                    return;
+                }
                 window.__slssCaptured = true;
                 // Free CPU after the bitmap is composed — neither widget nor
                 // wallpaper need an ongoing animation loop once the snapshot
@@ -3546,6 +3574,9 @@
                 if (_rafId) cancelAnimationFrame(_rafId);
                 try {
                     renderer.render(scene, camera);
+                    // The context can drop between the health check and here; a
+                    // post-render re-check ensures we never serialise a blank buffer.
+                    if (_gl && _gl.isContextLost && _gl.isContextLost()) throw new Error('webgl_context_lost_mid_render');
                     const sceneCanvas = renderer.domElement;
                     const dpr = window.devicePixelRatio || 1;
                     // Export raw WebGL scene PNG. Compositing offset/labels is done in
@@ -3651,9 +3682,9 @@
             // textures bound has actually completed). Hard 8 s fallback so the
             // WorkManager job never hangs even if texture decode stalls.
             Promise.all(texLoadPromises).then(() => {
-                requestAnimationFrame(() => requestAnimationFrame(_capture));
+                requestAnimationFrame(() => requestAnimationFrame(() => _capture(false)));
             });
-            setTimeout(_capture, 8000);
+            setTimeout(() => _capture(true), 8000);
         }
     </script>
 </body>

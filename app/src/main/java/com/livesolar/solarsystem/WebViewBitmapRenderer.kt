@@ -50,6 +50,35 @@ object WebViewBitmapRenderer {
     private const val TAG = "SolarRenderer"
     private const val OVERALL_TIMEOUT_MS = 12000L
 
+    // Process-global concurrency gate. Each render holds a live WebGL context
+    // (>1GB peak at inner-display sizes). A fold/unfold animation fires a
+    // CASCADE of size changes; without a cap the widget + wallpaper pipelines
+    // spawn 5+ simultaneous contexts, overflowing Chromium's process-wide
+    // context pool — the browser then evicts the OLDEST context ("Too many
+    // active WebGL contexts. Oldest context will be lost." → "Context Lost."),
+    // which is what blanks a render's scene and yields the "labels but no
+    // planets/orbital rings" frame. Capping concurrent renders keeps the pool
+    // (and peak memory) within budget. All access is on the main looper, so no
+    // locking is needed.
+    private const val MAX_CONCURRENT_RENDERS = 2
+    private var activeRenders = 0
+    private class PendingRender(
+        val context: Context,
+        val widthPx: Int,
+        val heightPx: Int,
+        val urlParams: String,
+        val surfaceKind: String,
+        val correlationId: String?,
+        val onResult: (Bitmap?) -> Unit
+    )
+    private val pendingRenders = ArrayDeque<PendingRender>()
+
+    /**
+     * Public entry: queue a render behind the concurrency gate. A fold's
+     * intermediate animation sizes are superseded — a newer request for the
+     * same surfaceKind drops any still-queued one (its caller gets null, i.e.
+     * "keep your previous bitmap"), so only the latest size actually renders.
+     */
     fun render(
         context: Context,
         widthPx: Int,
@@ -67,7 +96,38 @@ object WebViewBitmapRenderer {
             "WebViewBitmapRenderer.render must be called on the main thread"
         }
         if (widthPx <= 0 || heightPx <= 0) { onResult(null); return }
+        // Collapse superseded same-surface requests still waiting in the queue.
+        val it = pendingRenders.iterator()
+        while (it.hasNext()) {
+            val p = it.next()
+            if (p.surfaceKind == surfaceKind) { it.remove(); p.onResult(null) }
+        }
+        pendingRenders.addLast(
+            PendingRender(context, widthPx, heightPx, urlParams, surfaceKind, correlationId, onResult)
+        )
+        pumpRenderQueue()
+    }
 
+    private fun pumpRenderQueue() {
+        while (activeRenders < MAX_CONCURRENT_RENDERS && pendingRenders.isNotEmpty()) {
+            val p = pendingRenders.removeFirst()
+            activeRenders++
+            runRender(p.context, p.widthPx, p.heightPx, p.urlParams, p.surfaceKind, p.correlationId) { bm ->
+                activeRenders--
+                try { p.onResult(bm) } finally { pumpRenderQueue() }
+            }
+        }
+    }
+
+    private fun runRender(
+        context: Context,
+        widthPx: Int,
+        heightPx: Int,
+        urlParams: String,
+        surfaceKind: String,
+        correlationId: String?,
+        onResult: (Bitmap?) -> Unit
+    ) {
         val app = context.applicationContext
         val handler = Handler(Looper.getMainLooper())
         var done = false
@@ -149,7 +209,7 @@ object WebViewBitmapRenderer {
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(app))
             .build()
 
-        val bridge = SnapshotBridge { json ->
+        val bridge = SnapshotBridge(onSnapshotJson = { json ->
             if (done) return@SnapshotBridge
             done = true
             val tSnap = android.os.SystemClock.elapsedRealtime()
@@ -190,7 +250,29 @@ object WebViewBitmapRenderer {
                     onResult(bm)
                 }
             }
-        }
+        }, onSnapshotError = { msg ->
+            // JS refused to emit a frame (e.g. WebGL context lost under the
+            // concurrent-render memory pressure of a fold burst). Resolve null
+            // NOW instead of waiting out OVERALL_TIMEOUT_MS — the engine keeps
+            // the previous good bitmap and schedules a retry, so the surface
+            // never shows the blank-scene ("labels but no planets") frame.
+            if (done) return@SnapshotBridge
+            done = true
+            Log.w(TAG, "DIAG snapshot error: $msg — returning null")
+            if (SlssLogger.enabled) {
+                SlssLogger.logEvent(
+                    slssEvt,
+                    mapOf(
+                        "stage" to "js_snapshot_error",
+                        "surface" to surfaceKind,
+                        "error" to msg,
+                        "ms_since_start" to (android.os.SystemClock.elapsedRealtime() - tStart)
+                    ),
+                    correlationId = correlationId
+                )
+            }
+            handler.post { cleanup(); onResult(null) }
+        })
 
         val wv = WebView(app)
         renderWebView = wv
@@ -362,10 +444,13 @@ object WebViewBitmapRenderer {
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
     }
 
-    private class SnapshotBridge(val onSnapshotJson: (String) -> Unit) {
+    private class SnapshotBridge(
+        val onSnapshotJson: (String) -> Unit,
+        val onSnapshotError: (String) -> Unit
+    ) {
         @JavascriptInterface
         fun onSnapshotJson(json: String) { onSnapshotJson.invoke(json) }
         @JavascriptInterface
-        fun onSnapshotError(msg: String) { Log.w("SolarRenderer", "JS error: $msg") }
+        fun onSnapshotError(msg: String) { onSnapshotError.invoke(msg) }
     }
 }

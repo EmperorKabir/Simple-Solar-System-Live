@@ -7,6 +7,7 @@ import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
@@ -234,21 +235,48 @@ class MainActivity : Activity() {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             activity.runOnUiThread {
-                try {
-                    activity.startActivity(intent)
-                    // Optimistically mark as bound for the pre-API-34 fallback
-                    // path. If the user cancels the system preview, the worst
-                    // outcome is we skip the preview next time (still works
-                    // because the wallpaper isn't ours and the apply intent
-                    // re-fires on next 'Set'). API 34+ uses real WallpaperInfo
-                    // so this flag is just a fallback.
-                    markBound(target)
-                } catch (_: Throwable) {
-                    try { activity.startActivity(
-                        Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER)
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    ) } catch (_: Throwable) {}
+                val pm = activity.packageManager
+                // OEM-agnostic chain. PRIMARY: ACTION_CHANGE_LIVE_WALLPAPER with
+                // EXTRA_LIVE_WALLPAPER_COMPONENT (AOSP standard, API 16+) opens the
+                // system preview scoped to OUR service. Samsung One UI intercepts
+                // this with its own setter; Pixel/AOSP open the AOSP preview — both
+                // honour the same standard intent. resolveActivity() first so we
+                // pick a working target deterministically rather than via exception.
+                if (intent.resolveActivity(pm) != null) {
+                    try {
+                        activity.startActivity(intent)
+                        // Optimistically mark as bound for the pre-API-34 fallback
+                        // path. If the user cancels the system preview, the worst
+                        // outcome is we skip the preview next time (still works
+                        // because the wallpaper isn't ours and the apply intent
+                        // re-fires on next 'Set'). API 34+ uses real WallpaperInfo
+                        // so this flag is just a fallback.
+                        markBound(target)
+                        return@runOnUiThread
+                    } catch (_: Throwable) { /* fall through to the chooser */ }
                 }
+                // FALLBACK: the generic live-wallpaper chooser, for ROMs/OEMs that
+                // don't expose the component-scoped preview. The user selects our
+                // entry from the list.
+                val chooser = Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                if (chooser.resolveActivity(pm) != null) {
+                    try { activity.startActivity(chooser); return@runOnUiThread } catch (_: Throwable) {}
+                }
+                // LAST RESORT: neither the component preview nor the chooser
+                // resolved. Message accurately by capability — DON'T send the user
+                // to a "Live wallpapers" menu that may not exist. Our two
+                // WallpaperServices ARE registered in the manifest (intent-filter
+                // android.service.wallpaper.WallpaperService + android.service.
+                // wallpaper meta-data), so on any device that SUPPORTS live
+                // wallpapers (FEATURE_LIVE_WALLPAPER) the OS lists us automatically
+                // in Settings → Live wallpapers even when our in-app launch failed.
+                // Where the feature is absent, live wallpapers can't be set at all.
+                val msg = if (pm.hasSystemFeature(PackageManager.FEATURE_LIVE_WALLPAPER))
+                    "Couldn't open the picker. Set it manually: Settings → Wallpaper → Live wallpapers → Solar System."
+                else
+                    "This device doesn't support live wallpapers, so this can't be set as one."
+                Toast.makeText(activity, msg, Toast.LENGTH_LONG).show()
             }
             return false
         }
