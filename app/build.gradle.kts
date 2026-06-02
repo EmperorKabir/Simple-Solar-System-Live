@@ -29,8 +29,8 @@ android {
         applicationId = "com.livesolar.solarsystem"
         minSdk = 31
         targetSdk = 35
-        versionCode = 14
-        versionName = "1.0.8"
+        versionCode = 16
+        versionName = "1.0.9"
 
         // SLSS_DIAG_TEMPORARY — build commit for diagnostic log envelope.
         buildConfigField("String", "BUILD_COMMIT", "\"$gitCommitSha\"")

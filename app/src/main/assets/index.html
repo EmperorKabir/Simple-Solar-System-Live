@@ -3155,6 +3155,15 @@
 
         // Set initial camera to the same dynamic zoom as reset view
         calcResetView();
+        // The viewport can still be settling at this synchronous point — the
+        // status-bar inset relayouts a frame or two after first paint, changing
+        // window.innerHeight. Re-run the framing once layout has stabilised so the
+        // OPEN view isn't left slightly off-centre / mis-zoomed against the
+        // pre-settle viewport. Guarded by isAtResetView so it only ever corrects
+        // an untouched overview (never a view the user just adjusted).
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            try { if (isAtResetView()) calcResetView(); } catch (_) {}
+        }));
         statusTxt.innerText = "Solar System";
         document.getElementById("hud-telemetry").style.display = "none";
 
@@ -3547,6 +3556,12 @@
             // reloads the preview). The main interactive view keeps the user's
             // own pan/zoom, so it is left untouched.
             if (SURFACE !== 'main') { try { calcResetView(); } catch (_) {} }
+            // The MAIN interactive view re-frames on resize ONLY when the user is
+            // still at the reset/overview framing (hasn't panned/zoomed/selected).
+            // This corrects a launch-time off-centre/mis-zoom (the status-bar inset
+            // settles a frame after the initial framing) and re-fits on a fold,
+            // WITHOUT ever disturbing a view the user has manually adjusted.
+            else if (typeof isAtResetView === 'function' && isAtResetView()) { try { calcResetView(); } catch (_) {} }
             // v21: auto re-frame the MOON camera for the new aspect on
             // fold/unfold (per user: separate optimal placement per mode is
             // fine — no need to force one viewpoint to suit both). Moons only;
