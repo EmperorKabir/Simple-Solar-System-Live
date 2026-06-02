@@ -134,8 +134,8 @@ def B(x):
     return "TRUE" if x else "FALSE"
 
 # Ordinal suffix for [DAY] as a string-valued expression (1st/2nd/3rd/...; 11-13 -> th).
-SUF = ('(floor([DAY] / 10) % 10 != 1) ? (([DAY] % 10 == 1) ? &quot;st&quot; : '
-       '(([DAY] % 10 == 2) ? &quot;nd&quot; : (([DAY] % 10 == 3) ? &quot;rd&quot; : &quot;th&quot;))) : &quot;th&quot;')
+SUF = ('(floor([DAY] / 10) % 10 != 1) ? (([DAY] % 10 == 1) ? &quot;ˢᵗ&quot; : '
+       '(([DAY] % 10 == 2) ? &quot;ⁿᵈ&quot; : (([DAY] % 10 == 3) ? &quot;ʳᵈ&quot; : &quot;ᵗʰ&quot;))) : &quot;ᵗʰ&quot;')
 
 def _txt(arc, size, color, cond, fmt, params):
     """Date (top) / time (bottom) as straight PartText with isAutoSize: the box is
@@ -163,11 +163,13 @@ def date_texts():
     ord_suffix = f'(([CONFIGURATION.showOrdinal] == &quot;TRUE&quot;) ? ({SUF}) : &quot;&quot;)'
     DAY = ('%d%s', ['[DAY]', ord_suffix])
     WD = {'short': '[DAY_OF_WEEK_S]', 'long': '[DAY_OF_WEEK_F]'}
+    # Month: full ("June") vs short ("Jun"), folded into one conditional parameter.
+    MONTH = ('%s', ['(([CONFIGURATION.fullMonth] == &quot;TRUE&quot;) ? [MONTH_F] : [MONTH_S])'])
     for dayfirst in (True, False):
         for wmode in ('none', 'short', 'long'):
             for yr in (True, False):
                 pieces = ([('%s', [WD[wmode]])] if wmode in WD else [])
-                pieces += [DAY, ('%s', ['[MONTH_S]'])] if dayfirst else [('%s', ['[MONTH_S]']), DAY]
+                pieces += [DAY, MONTH] if dayfirst else [MONTH, DAY]
                 if yr: pieces.append(('%d', ['[YEAR]']))
                 fmt = ' '.join(p[0] for p in pieces)
                 params = [e for p in pieces for e in p[1]]
@@ -189,8 +191,9 @@ def time_texts():
         out.append(_txt('bottom', 44, '#ffffffff', cond, fmt, params))
     for ampm in (True, False):  # 12h
         for sec in (True, False):
-            params = ['[HOUR_1_12_Z]', '[MINUTE_Z]'] + (['[SECOND_Z]'] if sec else [])
-            fmt = ('%s:%s:%s' if sec else '%s:%s') + (' %s' if ampm else '')
+            # 12h hour: non-padded (1-12, no leading zero); minutes/seconds padded.
+            params = ['[HOUR_1_12]', '[MINUTE_Z]'] + (['[SECOND_Z]'] if sec else [])
+            fmt = ('%d:%s:%s' if sec else '%d:%s') + (' %s' if ampm else '')
             if ampm: params.append('([AMPM_STATE] == 1) ? &quot;PM&quot; : &quot;AM&quot;')
             cond = (f'([CONFIGURATION.showTime] == &quot;TRUE&quot;) &amp;&amp; ([CONFIGURATION.clock24] == &quot;FALSE&quot;) &amp;&amp; '
                     f'([CONFIGURATION.showAmPm] == &quot;{B(ampm)}&quot;) &amp;&amp; ([CONFIGURATION.showSeconds] == &quot;{B(sec)}&quot;)')
@@ -209,23 +212,27 @@ def build():
   <Metadata key="PREVIEW_TIME" value="10:08:32" />
 
   <UserConfigurations>
+    <!-- Graphics -->
     <BooleanConfiguration id="altGraphics" displayName="@string/cfg_alt_graphics" defaultValue="FALSE" />
-    <BooleanConfiguration id="showLabels"  displayName="@string/cfg_show_labels"  defaultValue="FALSE" />
     <BooleanConfiguration id="showPluto"   displayName="@string/cfg_show_pluto"   defaultValue="FALSE" />
     <BooleanConfiguration id="tilt"        displayName="@string/cfg_tilt"         defaultValue="FALSE" />
+    <BooleanConfiguration id="showLabels"  displayName="@string/cfg_show_labels"  defaultValue="FALSE" />
+    <!-- Time -->
     <BooleanConfiguration id="showTime"    displayName="@string/cfg_show_time"    defaultValue="TRUE" />
     <BooleanConfiguration id="clock24"     displayName="@string/cfg_clock24"      defaultValue="FALSE" />
-    <BooleanConfiguration id="showAmPm"    displayName="@string/cfg_show_ampm"    defaultValue="FALSE" />
     <BooleanConfiguration id="showSeconds" displayName="@string/cfg_show_seconds" defaultValue="FALSE" />
+    <BooleanConfiguration id="showAmPm"    displayName="@string/cfg_show_ampm"    defaultValue="FALSE" />
+    <!-- Date -->
     <BooleanConfiguration id="showDate"    displayName="@string/cfg_show_date"    defaultValue="TRUE" />
-    <BooleanConfiguration id="dayFirst"    displayName="@string/cfg_day_first"    defaultValue="TRUE" />
     <ListConfiguration   id="weekday"     displayName="@string/cfg_weekday"      defaultValue="short">
       <ListOption id="none"  displayName="@string/opt_weekday_none" />
       <ListOption id="short" displayName="@string/opt_weekday_short" />
       <ListOption id="long"  displayName="@string/opt_weekday_long" />
     </ListConfiguration>
-    <BooleanConfiguration id="showYear"    displayName="@string/cfg_show_year"    defaultValue="FALSE" />
+    <BooleanConfiguration id="dayFirst"    displayName="@string/cfg_day_first"    defaultValue="TRUE" />
     <BooleanConfiguration id="showOrdinal" displayName="@string/cfg_show_ordinal" defaultValue="FALSE" />
+    <BooleanConfiguration id="fullMonth"   displayName="@string/cfg_full_month"   defaultValue="FALSE" />
+    <BooleanConfiguration id="showYear"    displayName="@string/cfg_show_year"    defaultValue="FALSE" />
   </UserConfigurations>
 
   <Scene backgroundColor="#ff000000">

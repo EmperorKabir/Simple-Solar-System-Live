@@ -18,4 +18,5 @@
     <string name="opt_weekday_long">Long (Tuesday)</string>
     <string name="cfg_show_year">Show year</string>
     <string name="cfg_show_ordinal">Ordinal day (1st, 2nd)</string>
+    <string name="cfg_full_month">Full month name (June)</string>
 </resources>
