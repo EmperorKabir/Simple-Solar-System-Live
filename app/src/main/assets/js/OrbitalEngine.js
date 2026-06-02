@@ -59,7 +59,6 @@ export const VSOP87B = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DEG2RAD = Math.PI / 180.0;
-const RAD2DEG = 180.0 / Math.PI;
 const TWO_PI  = 2.0 * Math.PI;
 
 /** J2000.0 epoch in Julian Days (TT) */

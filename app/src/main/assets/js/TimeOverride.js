@@ -35,36 +35,6 @@ export function getEffectiveJ2000Days() {
     return ms / MS_PER_DAY + UNIX_EPOCH_JD - J2000_EPOCH_JD;
 }
 
-/** Format Date as "YYYY-MM-DD HH:MM:SS UT" (always UTC, never local). */
-export function formatUT(date) {
-    const Y = date.getUTCFullYear();
-    const M = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const D = String(date.getUTCDate()).padStart(2, '0');
-    const h = String(date.getUTCHours()).padStart(2, '0');
-    const m = String(date.getUTCMinutes()).padStart(2, '0');
-    const s = String(date.getUTCSeconds()).padStart(2, '0');
-    return `${Y}-${M}-${D} ${h}:${m}:${s} UT`;
-}
-
-/** Format Date for <input type="datetime-local"> value (YYYY-MM-DDTHH:MM:SS, UTC). */
-export function formatForInput(date) {
-    const Y = date.getUTCFullYear();
-    const M = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const D = String(date.getUTCDate()).padStart(2, '0');
-    const h = String(date.getUTCHours()).padStart(2, '0');
-    const m = String(date.getUTCMinutes()).padStart(2, '0');
-    const s = String(date.getUTCSeconds()).padStart(2, '0');
-    return `${Y}-${M}-${D}T${h}:${m}:${s}`;
-}
-
-/** Parse "YYYY-MM-DDTHH:MM[:SS]" from <input type="datetime-local"> as UT. */
-export function parseFromInput(value) {
-    if (!value) return null;
-    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(value);
-    if (!m) return null;
-    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)));
-    return isFinite(d.getTime()) ? d : null;
-}
 
 /** Add hours/days/weeks/months/years to a Date as UT (months/years calendar-aware). */
 export function addUT(date, { hours = 0, days = 0, weeks = 0, months = 0, years = 0 } = {}) {
