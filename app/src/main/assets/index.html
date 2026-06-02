@@ -1070,6 +1070,18 @@
         controls.minDistance = 1.0;
         controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
         controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+        // Camera interaction (pan/zoom/rotate) belongs ONLY to the main
+        // interactive app. The widget/wallpaper OFFSCREEN bitmap renders are
+        // one-shot and non-interactive, and the in-app live PREVIEW iframes are
+        // glanceable previews — the user shouldn't be able to drag them, and
+        // OrbitControls' pointer/touch/wheel listeners are dead overhead in those
+        // one-shot offscreen renders. Disable + dispose the DOM listeners for
+        // every non-main surface. controls.target/.update() still function for
+        // the static surface camera (calcResetView sets target to the origin).
+        if (SURFACE !== 'main') {
+            controls.enabled = false;
+            controls.dispose();
+        }
 
         // Selected-label override: the label of a tapped/selected body ALWAYS
         // shows (winning over the occlusion + overlap hide rules) until the user
@@ -3527,6 +3539,14 @@
             renderer.setSize(w, h);
             labelRenderer.setSize(w, h);
             _applySurfaceOffset();
+            // Non-interactive surface modes (widget/wallpaper/preview) must
+            // RE-FRAME for the new aspect on a fold/unfold — not merely resize
+            // the buffer. Without this the framing computed for the old aspect
+            // leaves planets clipped at the edge after a fold (e.g. Neptune's
+            // orbit/label cut off, only corrected by toggling tilt/offset which
+            // reloads the preview). The main interactive view keeps the user's
+            // own pan/zoom, so it is left untouched.
+            if (SURFACE !== 'main') { try { calcResetView(); } catch (_) {} }
             // v21: auto re-frame the MOON camera for the new aspect on
             // fold/unfold (per user: separate optimal placement per mode is
             // fine — no need to force one viewpoint to suit both). Moons only;
