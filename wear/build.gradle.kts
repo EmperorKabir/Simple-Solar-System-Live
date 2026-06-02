@@ -16,12 +16,15 @@ android {
         // SAME applicationId as the phone app -> same Play listing -> auto-install
         // on the paired watch (multi-APK delivery).
         applicationId = "com.livesolar.solarsystem"
-        // WFF requires Wear OS 4+ (API 33). Below this the runtime is absent.
-        minSdk = 33
+        // WFF v3 (isAutoSize / font scaling) needs the Wear OS 5.1 runtime = API 35.
+        // The format.version property in the manifest is 3; minSdk must match the v3
+        // floor so Play only targets devices whose WFF runtime can render it.
+        minSdk = 35
         targetSdk = 35
-        // OWN versionCode band, globally unique vs the phone (phone = 6).
-        versionCode = 7
-        versionName = "1.0.5"
+        // OWN versionCode band, globally unique vs the phone (phone = 8). Bumped
+        // 7 -> 9 after the code-7 bundle was rejected at Play validation.
+        versionCode = 9
+        versionName = "1.0.6"
     }
 
     // A WFF watch face AAB must contain ZERO compiled code — Google Play rejects it

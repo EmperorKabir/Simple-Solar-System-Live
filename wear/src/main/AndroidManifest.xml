@@ -18,11 +18,13 @@
         android:allowBackup="false"
         android:supportsRtl="true">
 
-        <!-- Watch Face Format runtime version. v1 = Wear OS 4+ (API 33+). The face
-             uses only v1 elements, so v1 maximises device compatibility. Must be a
-             child of <application>, not <manifest>. -->
+        <!-- Watch Face Format runtime version. v3 = Wear OS 5.1+ (API 35+). The face
+             uses isAutoSize text (font size scaling), a v3 feature, so Play REQUIRES
+             format.version >= 3 ("you're required to specify a version of at least 3").
+             minSdk is set to 35 to match (the v3 runtime floor). Must be a child of
+             <application>, not <manifest>. -->
         <property
             android:name="com.google.wear.watchface.format.version"
-            android:value="1" />
+            android:value="3" />
     </application>
 </manifest>
