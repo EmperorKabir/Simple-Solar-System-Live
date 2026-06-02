@@ -21,10 +21,11 @@ android {
         // floor so Play only targets devices whose WFF runtime can render it.
         minSdk = 35
         targetSdk = 35
-        // OWN versionCode band, globally unique vs the phone (phone = 8). Bumped
-        // 7 -> 9 after the code-7 bundle was rejected at Play validation.
-        versionCode = 9
-        versionName = "1.0.6"
+        // OWN versionCode band (odd), globally unique vs the phone (even band).
+        // 7 -> 9 (dex/font-gate fixes) -> 11 (9 already consumed on Play; face
+        // unchanged, bumped only so it is uploadable again).
+        versionCode = 11
+        versionName = "1.0.7"
     }
 
     // A WFF watch face AAB must contain ZERO compiled code — Google Play rejects it
