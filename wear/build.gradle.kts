@@ -24,6 +24,18 @@ android {
         versionName = "1.0.5"
     }
 
+    // A WFF watch face AAB must contain ZERO compiled code — Google Play rejects it
+    // ("Watch face cannot have any dex files"). Disable every code/BuildConfig
+    // generator so no classes.dex is produced (the dex is stripped post-bundle below
+    // as a belt-and-braces guarantee).
+    buildFeatures {
+        buildConfig = false
+        resValues = false
+        aidl = false
+        renderScript = false
+        shaders = false
+    }
+
     // Reuse the phone app's release keystore (same signing key REQUIRED under the
     // same listing).
     val releaseKeystorePath = (project.findProperty("RELEASE_STORE_FILE") as String?) ?: ""
@@ -43,6 +55,22 @@ android {
         release {
             isMinifyEnabled = false
             if (releaseKeystoreExists) signingConfig = signingConfigs.getByName("release")
+        }
+    }
+}
+
+// Belt-and-braces: AGP still emits a stub base/dex/classes.dex even with every
+// code feature disabled above. Google Play HARD-REJECTS a watch face that
+// contains any dex ("Watch face cannot have any dex files"). Strip it from the
+// bundle immediately after it is built so the artifact is Play-uploadable.
+tasks.matching { it.name == "bundleRelease" || it.name == "bundleDebug" }.configureEach {
+    doLast {
+        val variant = if (name.contains("Release")) "release" else "debug"
+        val aab = layout.buildDirectory.file("outputs/bundle/$variant/wear-$variant.aab").get().asFile
+        if (aab.exists()) {
+            exec {
+                commandLine("python", "${rootProject.projectDir}/wear/tools/strip_dex.py", aab.absolutePath)
+            }
         }
     }
 }
