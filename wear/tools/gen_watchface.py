@@ -141,7 +141,7 @@ def _txt(arc, size, color, cond, fmt, params):
     """Date (top) / time (bottom) as straight PartText with isAutoSize: the box is
        sized to the round face's chord and the font shrinks to fit, so long format
        configurations never overflow the circle (TextCircular can't render
-       data-source templates on this runtime, so curved dynamic text isn't
+       data-source templates, so curved dynamic text isn't
        possible). `cond` is a boolean (uses &amp;&amp;); alpha-gated via ternary."""
     p = ''.join(f'<Parameter expression="{e}" />' for e in params)
     if arc == 'top':

@@ -1,7 +1,7 @@
 // node --test app/src/test/js/MoonCamera.test.mjs
 //
 // MoonCamera v22 contract (2026-05-29, data-driven — see
-// docs/superpowers/specs/2026-05-29-moon-camera-fix-design.md):
+// the design notes):
 //   - moon centred (|NDC| < 0.05), view along the ecliptic (|viewDir.y| < 0.02),
 //     camera.up = world up
 //   - the Sun is ALWAYS kept >=20% visible (it is the body the user prioritises)

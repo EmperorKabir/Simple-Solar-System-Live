@@ -1,6 +1,6 @@
 // SLSS_DIAG_TEMPORARY — pluggable sinks for the diagnostic logger.
 // Part of the temporary diagnostic logging system (see
-// docs/superpowers/plans/2026-05-29-diagnostic-logging-plan.md §1, §2).
+// the diagnostic-logging design).
 // Remove the whole diag/ package when the investigation concludes
 // (grep -r SLSS_DIAG_TEMPORARY for the full cleanup hit list).
 package com.livesolar.solarsystem.diag

@@ -2411,7 +2411,7 @@
             } else if (isMoon) {
                 // === MOON CAMERA v20 — ecliptic-view + zoom-solve ===
                 // Algorithm in ./js/MoonCamera.mjs (pure-function, unit-tested
-                // in Node against real harvested geometries). View along the
+                // in Node against real geometries). View along the
                 // ecliptic, moon centred, both planet & Sun discs >=20% visible,
                 // aspect-correct. camera.up stays world (0,1,0).
                 // SLSS_DIAG_TEMPORARY — snapshot camera BEFORE the jump.
@@ -2588,7 +2588,7 @@
 
         // === Screen-space, thumb-aware body picking ===========================
         // Replaces single-ray picking, which missed sub-5px targets at zoomed-out
-        // / folded view (tap_pick_diag harvest: bodies project to 0.1-5px discs, a
+        // / folded view (tap_pick_diag: bodies project to 0.1-5px discs, a
         // thumb lands 3-20px off, so the infinitesimal ray almost never connects).
         // Every selectable body is projected to screen px; the tap selects the
         // nearest body whose dot is within max(thumb-radius, the body's own pixel

@@ -1,7 +1,6 @@
 // MoonCamera v22 — orientation-solving, data-driven (2026-05-29).
-// See docs/superpowers/specs/2026-05-29-moon-camera-fix-design.md.
 //
-// Rule (from on-device harvest + user confirmation):
+// Rule:
 //   - View ALONG THE ECLIPTIC (camera in the orbital/XZ plane, horizontal view
 //     direction). camera.up stays world (0,1,0) — NEVER changed by the caller.
 //   - Moon CENTRED (target = moon).
@@ -16,7 +15,7 @@
 //     keep the SUN + moon (the Sun is the body the user prioritises) and let the
 //     planet fall off.
 //   - Aspect-correct: THREE PerspectiveCamera.fov is VERTICAL; horizontal
-//     half-angle = atan(tan(fov/2)*aspect) (confirmed via Context7).
+//     half-angle = atan(tan(fov/2)*aspect).
 //   - Auto re-framed per fold mode (index.html resize handler re-invokes this),
 //     so each of folded/unfolded gets its own optimal placement.
 //

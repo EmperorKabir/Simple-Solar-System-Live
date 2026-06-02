@@ -257,7 +257,7 @@ class MainActivity : Activity() {
         // Detect whether our service is the currently active live wallpaper.
         //
         // Direct WallpaperManager.getWallpaperInfo() is AUTHORITATIVE when
-        // it returns non-null. Confirmed via dumpsys evidence on the
+        // it returns non-null. Verified on the
         // SM-F966B that Samsung One UI does correctly return the bound
         // service from the no-arg API. Earlier worry that 'Samsung lies'
         // was a misdiagnosis — the actual case was our service getting

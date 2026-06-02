@@ -1,6 +1,6 @@
 // SLSS_DIAG_TEMPORARY — core diagnostic logger.
 // Part of the temporary diagnostic logging system (see
-// docs/superpowers/plans/2026-05-29-diagnostic-logging-plan.md §1, §2).
+// the diagnostic-logging design).
 // Gated at compile time by BuildConfig.SLSS_DIAG_ENABLED (release = false) and
 // at runtime by the [enabled] flag. Zero-cost in release builds: init() is a
 // no-op and logEvent() returns immediately. Remove the whole diag/ package

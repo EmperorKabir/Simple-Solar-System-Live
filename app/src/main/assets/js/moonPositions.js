@@ -1,7 +1,7 @@
 /**
  * moonPositions.js
  *
- * Planetocentric moon-position evaluators backed by Context7-verified
+ * Planetocentric moon-position evaluators backed by verified
  * astronomia (commenthol/astronomia, MIT) — Meeus Astronomical Algorithms.
  *
  * Each function returns a position vector whose direction is correct in the
@@ -191,7 +191,7 @@ const GAL_INDEX = { Io: 0, Europa: 1, Ganymede: 2, Callisto: 3 };
  *
  * Uses Meeus Ch.44 high-precision Lieske E5 MEAN longitudes — verbatim
  * constants from astronomia/src/jupitermoons.js E5 function (lines 146-149),
- * Context7-verified.  These are TRUE planetocentric mean longitudes in
+ * verified.  These are TRUE planetocentric mean longitudes in
  * Jupiter's equatorial plane, measured from the ascending node of
  * Jupiter's equator on Earth's equator at the Lieske 1976 epoch.
  *
@@ -276,7 +276,7 @@ const SAT_METHOD = {
  * Saturn-moon planetocentric position in scene-ecliptic frame.
  *
  * Mirrors astronomia.saturnmoons.positions reduction at lines 100-123 of
- * the vendored saturnmoons.js (Context7-verified):
+ * the vendored saturnmoons.js (verified):
  *   1. Compute (X, Y, Z) from per-moon orbital elements (Qs.{moon}() →
  *      r4 = {λ, r, γ, Ω}) via Meeus Ch.46 formulas 46.D-G:
  *        u = λ - Ω,  w = Ω - 168.8112°

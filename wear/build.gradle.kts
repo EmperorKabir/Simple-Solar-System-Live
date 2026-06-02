@@ -2,7 +2,7 @@
 // The watch face is declared entirely in res/raw/watchface.xml and rendered by
 // the on-device WFF runtime (com.google.wear.watchface.runtime). No code, no
 // androidx.wear.watchface dependency — those AndroidX/Canvas faces cannot be
-// activated on Wear OS 5/6 (confirmed: wear-os-samples #1199). WFF is the
+// activated on Wear OS 5/6. WFF is the
 // supported + Play-required format.
 plugins {
     id("com.android.application")

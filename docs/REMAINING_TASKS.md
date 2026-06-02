@@ -18,5 +18,3 @@ Rule: tick a box ONLY when the item is implemented AND verified on-device/emulat
 ## Done earlier (not re-opened)
 - Jump-to-Body custom dropdown — deployed; user accepts current state.
 
----
-Method: Context7 for format/library questions; superpowers/agents for self-contained sweeps; all changes evidence-based (logcat/dumpsys/pixel-or-image verification on emulator-5554 watch / Medium_Phone phone emulator).
