@@ -377,7 +377,12 @@
         #wallpaper-modal {
             position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7);
             z-index: 65; display: flex; align-items: center; justify-content: center;
-            padding: 24px; opacity: 0; pointer-events: none;
+            /* Respect the status bar / nav bar / cutout insets (same --safe-*
+               vars the planet info text uses, injected from real WindowInsets)
+               so the card never overlaps the status bar on any device. */
+            padding: calc(var(--safe-top) + 24px) calc(var(--safe-right) + 24px)
+                     calc(var(--safe-bottom) + 24px) calc(var(--safe-left) + 24px);
+            opacity: 0; pointer-events: none;
             transition: opacity 0.18s ease;
         }
         #wallpaper-modal.visible { opacity: 1; pointer-events: auto; }
@@ -386,7 +391,9 @@
             border: 1px solid rgba(160, 110, 220, 0.6); border-radius: 10px;
             padding: 18px 20px 14px;
             max-width: min(440px, calc(100vw - 48px));
-            max-height: calc(100vh - 64px); overflow-y: auto;
+            /* Fit within the safe (inset-padded) viewport so centring never
+               pushes the card's top edge under the status bar. */
+            max-height: calc(100vh - var(--safe-top) - var(--safe-bottom) - 48px); overflow-y: auto;
             font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
         }
@@ -3530,6 +3537,12 @@
                 moonSystemConfig.find(m => m.name === targetPlanet.name)) {
                 flyToBody(targetPlanet);
             }
+            // Redraw immediately after the resize even when the animation loop is
+            // stopped. setSize() above clears the WebGL drawing buffer; without a
+            // render() the canvas stays blank through a fold/unfold while the
+            // CSS2D label DIVs persist (the labels-only bug). One frame per
+            // resize — cheap, and harmless if the loop is also running.
+            try { renderer.render(scene, camera); labelRenderer.render(scene, camera); } catch (_) {}
         });
 
         animate();
@@ -3568,10 +3581,16 @@
                     return;
                 }
                 window.__slssCaptured = true;
-                // Free CPU after the bitmap is composed — neither widget nor
-                // wallpaper need an ongoing animation loop once the snapshot
-                // has been taken (next refresh re-loads the page).
-                if (_rafId) cancelAnimationFrame(_rafId);
+                // Free CPU after the bitmap is composed — the OFFSCREEN one-shot
+                // render (widget/wallpaper bitmap, no SnapshotBridge difference)
+                // doesn't need an ongoing loop (next refresh re-loads the page).
+                // BUT the in-app LIVE preview iframe (preview=on) is NOT one-shot:
+                // it must keep animating so a fold/unfold resize re-renders the
+                // scene. Cancelling its loop left the canvas blank after a fold
+                // (setSize clears the drawing buffer, nothing redraws it) while
+                // the CSS2D label DIVs persisted — the "labels and nothing else"
+                // bug. Keep the loop alive in preview mode.
+                if (_rafId && !IS_PREVIEW) cancelAnimationFrame(_rafId);
                 try {
                     renderer.render(scene, camera);
                     // The context can drop between the health check and here; a
