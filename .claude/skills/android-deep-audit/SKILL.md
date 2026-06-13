@@ -2,14 +2,14 @@
 name: android-deep-audit
 disable-model-invocation: true
 description: >-
-  Use when the user invokes /android-deep-audit (or asks for a "deep audit",
-  "three-lens audit", "multi-agent code audit", "minimise the codebase",
-  "footprint/battery/memory/CPU/storage audit", or "app-store readiness audit")
-  on an Android project. Runs three heterogeneous parallel audit lenses
-  (model-reasoning, Context7 docs, Superpowers methodology), each writing full
-  findings to its own file, then cross-examines and resolves conflicts, applies
-  only changes that survive an adversarial preservation gate, and is enforced by
-  a multi-level checklist. User-invoked only.
+  Explicitly invoked via /android-deep-audit only; never auto-selected. A
+  three-lens parallel optimisation audit of an Android project — a
+  model-reasoning lens, a Context7-documentation lens, and a Superpowers-
+  methodology lens each write full findings to their own file; the session then
+  cross-examines those files directly, resolves conflicts, and applies only
+  changes that survive an adversarial preservation gate, all tracked by a
+  multi-level checklist. Objective: code minimisation — footprint, battery,
+  memory, CPU, storage, and app-store-acceptance.
 ---
 
 # Android Deep Audit
