@@ -134,3 +134,34 @@ Each item is an existing protection I verified is present and working; listed so
 2. A1 (τ cache + shared SatQs — biggest speed win; spec above)
 3. A3 → `updatePeriodMillis=86400000`; D1 (WebView destroy)
 4. Decisions needed from user: A2 strategy (adaptive vs KTX2 vs blanket downscale), A4 cadence, D2 (hardware-layer removal — test on Samsung), D3/D4
+
+---
+
+# Verification round 3 — 2026-06-13 (three-lens skill: reasoning + Context7 + Superpowers)
+
+Method: the `android-efficiency-audit` three-lens procedure run as a verification pass. Three independent agents (model-reasoning, Context7-docs, Superpowers structured-review) each wrote full findings to their own file; cross-examined by reading the files directly. **Nothing refuted.** Outcome below.
+
+## Confirmed unchanged (all three lenses agree)
+- **A1** — counts verified exact at source (Earth `position2000` ×25/frame, host ×18, `pluto.heliocentric` ×5, `new SatQs` ×7); planet positions use **no** light time (cache cannot move a planet); time-override freezes jde (cache exact under override); `SatQs` is a pure reader → sharing one per retarded timestamp is *identical*, not approximate. Accuracy proof holds (Phobos worst-case 0.009°). **The bigger story is GC: `position2000` allocates ~1 object per series term → ~161k allocations/frame** — A1 is a GC-jank fix as well as a CPU fix. Fully isolated (moons are main-app only, `MOONS_ENABLED` gate) → safe to ship alone.
+- **A3** — double-schedule real; the `updatePeriodMillis` system broadcast is code-confirmed as the only automatic WorkManager re-assert after an OEM freeze. `→ 86400000` (daily), never `0`. Context7: 30-min floor + 15-min WorkManager floor + `setExpedited` (Doze latency) vs system-broadcast (freeze recovery) roles all confirmed.
+- **A4** — product cadence, not a defect. Flag-only (confirmed).
+- **B1, B2, B3, C1, C2, D1, D3** — all confirmed at file:line with preservation-gate cleared. Constraints unchanged from round 2.
+
+## Refinements (do not change the fix, sharpen the framing)
+- **A2 — INVENTORY CORRECTED.** Lens 1 measured every texture file (PIL): the set is **5 × 8192×4096 + 24 × 4096×2048 + 8 × ≤2048 + 1 × 8192×500 (SaturnRing)** — **NOT "33 × 4096×2048"**. True decoded GPU (strict 1.333 mip factor) ≈ **2.0–2.4 GB** (Context7: ~2.3 GB), i.e. the headline "~1.9 GB" is *conservative/low*, not high — memory pressure is worse than stated, reinforcing the case. **Consequence for planning: a blanket 8K→4K downscale only touches the 5 inner 8K bodies (Jupiter/Saturn/Sun are already 4K), saving ≈895→224 MB on those — far less than a "33×4K" reading implied.** Two Context7 hardening notes for the adaptive option: `navigator.deviceMemory` is coarse, clamped to {0.25,0.5,1,2,4,8} GiB, needs an `undefined`/secure-context fallback guard; for the KTX2 option, `ktx2Loader.detectSupport(renderer)` is mandatory in the WebView target (no single GPU format is universal). Bytes/AAB also mildly understated (105.8 MB textures / 106.6 MB AAB).
+- **B1 — real hazard is bridge-resolution vs main-thread timeout.** The two bridge callbacks (`onSnapshotJson`/`onSnapshotError`) run on the *same* JS-bridge thread → serialised → safe *between themselves*; the genuine cross-thread race is a bridge resolution vs the main-looper timeout. The fix is unchanged (AtomicBoolean CAS at all three sites + `removeCallbacks`), and must also cancel the timeout on the **error** path, not just snapshot+timeout.
+- **B2 — bites on the fold-refresh burst / ≥2 queued, not the steady periodic** (each widget has its own WorkManager job, so periodics stagger). Fix unchanged.
+- **D2 — confirmed present; removal NOT verified safe.** A forced hardware layer is a common Samsung WebView+WebGL flicker workaround and this repo has documented flicker history → keep **test-gated on a physical Samsung** (do not remove blind).
+
+## New notes surfaced (M1–M5)
+- **M1** — the per-frame `frame_trace`/`gpu_info` diagnostics are **diagnostic-build only** (release-safe) but would *inflate any on-device profile of A1*. Do not measure A1's frame budget on a diag build with `frame_trace` on.
+- **M2** — the moon-overlap resolver also allocates `{worldPos,bodyR}` per neighbour per frame; stacks with A1's GC pressure. Low priority; fold a scratch-object refactor into A1 if jank persists.
+- **M3** (answers the mandated coroutine/dispatcher target) — the Handler/Looper + WebView model is the **correct** choice, not a defect: WebView/`Presentation`/`VirtualDisplay`/`WebView.destroy()` are main-thread-affine and the gate state is main-looper-confined; coroutines would add a dispatcher layer without removing those affinities and would obscure the single-threaded gate invariant. The only threading defect is the `done` atomic (B1). C1/C2 need just one bounded background `Executor`, not a coroutine migration.
+- **M4** — lifecycle leak surface beyond D1 (no `onPause/onResume`; JS-interface bridges hold an `Activity` ref) — reinforces D1's `onDestroy` teardown; mitigated today by `configChanges` (no recreate on fold).
+- **M5** — the fold-driven widget fan-out power path is debounce+gate-bounded, not eliminated; A3's daily backstop lowers the steady baseline, bursts remain governed by the 500 ms debounce + gate.
+
+## Net for the fix plan
+- **Implement (verified safe, no device/decision needed):** A1 (+M2 scratch fold-in), B1 (+error-path timeout cancel), C1, B2, C2, B3, A3 (→86400000), D1, D3.
+- **Hold for user decision:** A2 strategy (adaptive vs KTX2 vs blanket — note corrected savings), A4 cadence.
+- **Hold for the on-device test stage:** D2 (Samsung flicker A/B). 
+- **Hard ordering:** B1+C1 as one diff; C1/C2 before/with B3; A1 isolatable. Never `pauseTimers()`. Single shared GL process pool governs all of it.

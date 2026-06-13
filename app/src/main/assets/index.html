@@ -992,7 +992,15 @@
         // preserveDrawingBuffer needed in surface mode so canvas.toDataURL()
         // returns valid pixels for the offscreen Bitmap capture.
         const _preserveBuf = (SURFACE !== 'main');
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance", preserveDrawingBuffer: _preserveBuf });
+        // alpha:false on the MAIN interactive surface makes the canvas opaque so the
+        // browser skips the per-frame composite alpha-blend of the canvas over the
+        // (black) page. Surfaces KEEP alpha:true: their one-shot toDataURL snapshot is
+        // composited over black natively in Kotlin, so a transparent canvas stays
+        // byte-identical there. setClearColor matches the #020202 body so MAIN is
+        // visually unchanged.
+        const _useAlpha = (SURFACE !== 'main');
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: _useAlpha, powerPreference: "high-performance", preserveDrawingBuffer: _preserveBuf });
+        if (!_useAlpha) renderer.setClearColor(0x020202, 1);
         renderer.setSize(window.innerWidth, _renderHeight());
         // Cap DPR at 2 on mobile per three.js mobile guidance: most Android
         // displays are 2.75–3.5 DPR; capping at 2 cuts pixel work ~50% with
@@ -1983,6 +1991,11 @@
         // Scratch object reused per-frame to avoid GC churn.
         const _resolverScratchNeighbours = [];
         const _resolverScratchHostWorld = { x: 0, y: 0, z: 0 };
+        // Pre-allocated reusable neighbour slots so the per-frame overlap pass fills
+        // by index instead of allocating {worldPos,bodyR} per neighbour per frame (GC).
+        // 9 slots ≥ max neighbours (8 = all other planets). OverlapResolver only reads
+        // these, so reuse across frames is safe.
+        const _neighbourPool = Array.from({ length: 9 }, () => ({ worldPos: { x: 0, y: 0, z: 0 }, bodyR: 0 }));
         const _vecScratch = new THREE.Vector3();
         let _planetEntries = null;  // cached: planetsData is built once, never mutated
 
@@ -3220,14 +3233,17 @@
                         _resolverScratchHostWorld.y = _vecScratch.y;
                         _resolverScratchHostWorld.z = _vecScratch.z;
                         _resolverScratchNeighbours.length = 0;
+                        let _nbIdx = 0;
                         for (const nbName of _hostNeighbours[hostName]) {
                             const nbPlanet = planets[nbName];
                             if (!nbPlanet) continue;
                             nbPlanet.getWorldPosition(_vecScratch);
-                            _resolverScratchNeighbours.push({
-                                worldPos: { x: _vecScratch.x, y: _vecScratch.y, z: _vecScratch.z },
-                                bodyR: planetsData[nbName].size
-                            });
+                            const _slot = _neighbourPool[_nbIdx++];
+                            _slot.worldPos.x = _vecScratch.x;
+                            _slot.worldPos.y = _vecScratch.y;
+                            _slot.worldPos.z = _vecScratch.z;
+                            _slot.bodyR = planetsData[nbName].size;
+                            _resolverScratchNeighbours.push(_slot);
                         }
                         pos = resolveMoonOverlap(pos, {
                             moonR: mc.config.size,

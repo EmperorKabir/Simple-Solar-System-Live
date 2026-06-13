@@ -79,7 +79,7 @@ class SolarSystemWidgetWorker(
         }
 
         Handler(Looper.getMainLooper()).post {
-            WebViewBitmapRenderer.render(applicationContext, widthPx, heightPx, params, "widget", corr) { bitmap ->
+            WebViewBitmapRenderer.render(applicationContext, widthPx, heightPx, params, "widget-$appWidgetId", corr) { bitmap ->
                 if (SlssLogger.enabled) {
                     val centroid = SlssCentroidProbe.measure(bitmap)
                     SlssLogger.logEvent(

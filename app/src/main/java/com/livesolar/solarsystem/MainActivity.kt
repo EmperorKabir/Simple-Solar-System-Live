@@ -140,6 +140,23 @@ class MainActivity : Activity() {
         )
     }
 
+    override fun onDestroy() {
+        // D1 — promptly free the WebView's WebGL context back to Chromium's
+        // process-global pool (~16) shared with the wallpaper/widget renderers,
+        // instead of leaving it until GC/process death. Remove from the view tree
+        // before destroy(); no method may touch the WebView afterwards. NEVER
+        // pauseTimers() — it is process-wide and would freeze in-flight offscreen
+        // wallpaper renders.
+        pendingWebView?.let { w ->
+            try { (w.parent as? android.view.ViewGroup)?.removeView(w) } catch (_: Throwable) {}
+            try { w.stopLoading() } catch (_: Throwable) {}
+            try { w.loadUrl("about:blank") } catch (_: Throwable) {}
+            try { w.destroy() } catch (_: Throwable) {}
+        }
+        pendingWebView = null
+        super.onDestroy()
+    }
+
     /**
      * JS-side bridge for the in-app wallpaper picker. Exposes per-surface
      * settings (home / lock) to JS and lets JS launch Android's live-wallpaper

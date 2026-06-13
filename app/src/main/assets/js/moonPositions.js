@@ -50,6 +50,23 @@ const _jupiterVSOP = new Planet(vsop87Bjupiter);
 const _saturnVSOP  = new Planet(vsop87Bsaturn);
 const _uranusVSOP  = new Planet(vsop87Buranus);
 
+// SLSS perf — per-host light-time (τ) memo. τ drifts ≤ ~2e-4 d/day, so holding it
+// constant within a small jde window is sub-arcsecond (worst case Phobos ~0.009°,
+// far below visibility) while removing the per-moon-per-frame full-VSOP87B
+// evaluation that τ requires. Keyed on the host Planet instance (plus 'Neptune'/
+// 'Pluto' for their custom paths). Tolerance < 1/24 d so any ≥ +1 h time nudge
+// recomputes. Single-threaded JS → no locking. Live jde still drives the Kepler/
+// series propagation every frame; only the τ constant is reused, so motion is smooth.
+const TAU_TOL_DAYS = 0.04;
+const _tauCache = new Map();
+function _cachedTau(key, jde, computeFn) {
+    const c = _tauCache.get(key);
+    if (c && Math.abs(jde - c.jde) <= TAU_TOL_DAYS) return c.tau;
+    const tau = computeFn();
+    _tauCache.set(key, { jde, tau });
+    return tau;
+}
+
 /**
  * Compute the light-time τ in days from a host planet to Earth at jde.
  * Uses VSOP87B heliocentric positions for both bodies; same formula
@@ -61,7 +78,7 @@ const _uranusVSOP  = new Planet(vsop87Buranus);
  */
 export { _marsVSOP, _jupiterVSOP, _saturnVSOP, _uranusVSOP };
 export function lightTimeDays(jde, hostVSOP) {
-    return _lightTimeDays(jde, hostVSOP);
+    return _cachedTau(hostVSOP, jde, () => _lightTimeDays(jde, hostVSOP));
 }
 function _lightTimeDays(jde, hostVSOP) {
     const e = _earthVSOP.position2000(jde);
@@ -302,6 +319,10 @@ const SAT_METHOD = {
 const SAT_OBLIQUITY_DEG = 28.0817;     // Saturn equator → ecliptic-of-1950
 const SAT_NODE_DEG      = 168.8112;    // Saturn equator's ascending node on ecliptic-1950
 
+// SLSS perf — build one SatQs per retarded timestamp and reuse it across all 7
+// Saturn moons in a frame (they share the same jde and cached τ → identical t).
+// SatQs is a pure reader after construction, so sharing is exact, not approximate.
+let _satQsMemo = { t: NaN, q: null };
 export function saturnMoon(mc, jde) {
     const fn = SAT_METHOD[mc.name];
     if (!fn) return { x: 0, y: 0, z: 0 };
@@ -309,7 +330,9 @@ export function saturnMoon(mc, jde) {
     // f() with τ = base.lightTime(Δ). Apply same here using a single-pass
     // approximation (sufficient at our visual precision).
     const tau = lightTimeDays(jde, _saturnVSOP);
-    const q = new SatQs(jde - tau);
+    const t = jde - tau;
+    if (_satQsMemo.t !== t) _satQsMemo = { t, q: new SatQs(t) };
+    const q = _satQsMemo.q;
     const r4 = q[fn]();
 
     const u = r4.λ - r4.Ω;
@@ -367,6 +390,7 @@ export function uranusMoon(mc, jde) {
  *  approximation for Neptune (we don't vendor vsop87Bneptune). Error in τ
  *  ≤ 0.005 days → <0.3° angular error for fastest Neptune moon (Proteus). */
 function _neptuneLightTime(jde) {
+  return _cachedTau('Neptune', jde, () => {
     const e = _earthVSOP.position2000(jde);
     const ex = e.range * Math.cos(e.lat) * Math.cos(e.lon);
     const ey = e.range * Math.cos(e.lat) * Math.sin(e.lon);
@@ -379,6 +403,7 @@ function _neptuneLightTime(jde) {
     const ny = NEPTUNE_HELIO_AU * NEPTUNE_HELIO_DIRECTION.y;
     const nz = NEPTUNE_HELIO_AU * NEPTUNE_HELIO_DIRECTION.z;
     return LIGHT_TIME_DAYS_PER_AU * Math.hypot(nx - ex, ny - ey, nz - ez);
+  });
 }
 /** Triton / Proteus planetocentric scene position. Skips the
  *  eclipticKeplerMoon helper because it needs a custom Neptune-specific
@@ -423,6 +448,7 @@ export function neptuneMoon(mc, jde) {
 /** Light-time τ (days) from Pluto to Earth. astronomia.pluto.heliocentric
  *  returns ecliptic spherical (lon, lat, range AU). */
 function _plutoLightTime(jde) {
+  return _cachedTau('Pluto', jde, () => {
     const e = _earthVSOP.position2000(jde);
     const p = plutoMod.heliocentric(jde);
     const ex = e.range * Math.cos(e.lat) * Math.cos(e.lon);
@@ -432,6 +458,7 @@ function _plutoLightTime(jde) {
     const py = p.range * Math.cos(p.lat) * Math.sin(p.lon);
     const pz = p.range * Math.sin(p.lat);
     return LIGHT_TIME_DAYS_PER_AU * Math.hypot(px - ex, py - ey, pz - ez);
+  });
 }
 
 export function plutoMoon(mc, jde) {

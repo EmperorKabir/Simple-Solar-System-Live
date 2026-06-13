@@ -25,6 +25,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
 import org.json.JSONObject
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 import com.livesolar.solarsystem.BuildConfig
 // SLSS_DIAG_TEMPORARY — render-pipeline diagnostic logging.
 import com.livesolar.solarsystem.diag.SlssLogger
@@ -49,6 +51,14 @@ import com.livesolar.solarsystem.diag.SlssLoggerJsBridge
 object WebViewBitmapRenderer {
     private const val TAG = "SolarRenderer"
     private const val OVERALL_TIMEOUT_MS = 12000L
+
+    // SLSS perf (C1) — bitmap compose (JSON parse + Base64 + multi-MP PNG decode +
+    // Canvas draw) runs OFF the main looper on this single background thread so it
+    // never janks the foreground app (the whole app shares one main thread). Single-
+    // threaded: composes serialise (≤2 in flight via the gate) and we avoid idle pool
+    // threads for a render that fires every 10–15 min. cleanup() + onResult still hop
+    // back to MAIN (WebView.destroy + gate bookkeeping are main-thread-only).
+    private val composeExecutor = Executors.newSingleThreadExecutor()
 
     // Process-global concurrency gate. Each render holds a live WebGL context
     // (>1GB peak at inner-display sizes). A fold/unfold animation fires a
@@ -130,12 +140,15 @@ object WebViewBitmapRenderer {
     ) {
         val app = context.applicationContext
         val handler = Handler(Looper.getMainLooper())
-        var done = false
+        // B1 — atomic first-wins across the JS-bridge thread (snapshot/error) and the
+        // main-thread timeout. A non-atomic var let two resolutions both pass the
+        // guard and double-decrement activeRenders, corrupting the gate.
+        val done = AtomicBoolean(false)
         val tStart = android.os.SystemClock.elapsedRealtime()
         Log.i(TAG, "DIAG render start ${widthPx}x${heightPx} surface=${urlParams}")
 
         // SLSS_DIAG_TEMPORARY — render-pipeline stage logging.
-        val slssEvt = if (surfaceKind == "widget") "widget_render" else "wallpaper_render"
+        val slssEvt = if (surfaceKind.startsWith("widget")) "widget_render" else "wallpaper_render"
         if (SlssLogger.enabled) {
             SlssLogger.logEvent(
                 slssEvt,
@@ -209,9 +222,17 @@ object WebViewBitmapRenderer {
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(app))
             .build()
 
+        // B1 — named so snapshot/error resolution can cancel it; otherwise a resolved
+        // render holds this delayed lambda + its captures for the full 12 s timeout.
+        val timeoutRunnable = Runnable {
+            if (!done.compareAndSet(false, true)) return@Runnable
+            Log.w(TAG, "render timeout — JS bridge never fired")
+            cleanup(); onResult(null)
+        }
+
         val bridge = SnapshotBridge(onSnapshotJson = { json ->
-            if (done) return@SnapshotBridge
-            done = true
+            if (!done.compareAndSet(false, true)) return@SnapshotBridge
+            handler.removeCallbacks(timeoutRunnable)
             val tSnap = android.os.SystemClock.elapsedRealtime()
             Log.i(TAG, "DIAG snapshot received t=${tSnap - tStart}ms chars=${json.length}")
             if (SlssLogger.enabled) {
@@ -226,28 +247,34 @@ object WebViewBitmapRenderer {
                     correlationId = correlationId
                 )
             }
-            handler.post {
+            // C1 — compose on the background executor (heavy: JSON+Base64+PNG decode+
+            // Canvas), then hop to MAIN for cleanup()+onResult so WebView.destroy and
+            // the gate bookkeeping stay main-thread. try/finally guarantees
+            // cleanup+onResult(null) even if compose throws.
+            composeExecutor.execute {
                 var bm: Bitmap? = null
                 try {
                     bm = composeBitmap(json, widthPx, heightPx, app, urlParams, surfaceKind, correlationId)
                 } catch (t: Throwable) {
                     Log.w(TAG, "compose failed", t)
                 } finally {
-                    cleanup()
-                    Log.i(TAG, "DIAG bitmap done t=${android.os.SystemClock.elapsedRealtime() - tStart}ms")
-                    if (SlssLogger.enabled) {
-                        SlssLogger.logEvent(
-                            slssEvt,
-                            mapOf(
-                                "stage" to "callback_returned",
-                                "surface" to surfaceKind,
-                                "bitmap_null" to (bm == null),
-                                "total_ms" to (android.os.SystemClock.elapsedRealtime() - tStart)
-                            ),
-                            correlationId = correlationId
-                        )
+                    handler.post {
+                        cleanup()
+                        Log.i(TAG, "DIAG bitmap done t=${android.os.SystemClock.elapsedRealtime() - tStart}ms")
+                        if (SlssLogger.enabled) {
+                            SlssLogger.logEvent(
+                                slssEvt,
+                                mapOf(
+                                    "stage" to "callback_returned",
+                                    "surface" to surfaceKind,
+                                    "bitmap_null" to (bm == null),
+                                    "total_ms" to (android.os.SystemClock.elapsedRealtime() - tStart)
+                                ),
+                                correlationId = correlationId
+                            )
+                        }
+                        onResult(bm)
                     }
-                    onResult(bm)
                 }
             }
         }, onSnapshotError = { msg ->
@@ -256,8 +283,8 @@ object WebViewBitmapRenderer {
             // NOW instead of waiting out OVERALL_TIMEOUT_MS — the engine keeps
             // the previous good bitmap and schedules a retry, so the surface
             // never shows the blank-scene ("labels but no planets") frame.
-            if (done) return@SnapshotBridge
-            done = true
+            if (!done.compareAndSet(false, true)) return@SnapshotBridge
+            handler.removeCallbacks(timeoutRunnable)
             Log.w(TAG, "DIAG snapshot error: $msg — returning null")
             if (SlssLogger.enabled) {
                 SlssLogger.logEvent(
@@ -321,12 +348,7 @@ object WebViewBitmapRenderer {
             cleanup(); onResult(null); return
         }
 
-        handler.postDelayed({
-            if (done) return@postDelayed
-            done = true
-            Log.w(TAG, "render timeout — JS bridge never fired")
-            cleanup(); onResult(null)
-        }, OVERALL_TIMEOUT_MS)
+        handler.postDelayed(timeoutRunnable, OVERALL_TIMEOUT_MS)
 
         // SLSS_DIAG_TEMPORARY — pass the correlation id into JS so calcResetView
         // can tag its framing diagnostics with the same span id.
@@ -369,7 +391,7 @@ object WebViewBitmapRenderer {
         sceneBitmap.recycle()
 
         if (SlssLogger.enabled) {
-            val evt = if (surfaceKind == "widget") "widget_render" else "wallpaper_render"
+            val evt = if (surfaceKind.startsWith("widget")) "widget_render" else "wallpaper_render"
             SlssLogger.logEvent(
                 evt,
                 mapOf(

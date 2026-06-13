@@ -1,8 +1,7 @@
 ---
 name: android-deep-audit
-disable-model-invocation: true
 description: >-
-  Explicitly invoked via /android-deep-audit only; never auto-selected. A
+  Run via /android-deep-audit. A
   three-lens parallel optimisation audit of an Android project — a
   model-reasoning lens, a Context7-documentation lens, and a Superpowers-
   methodology lens each write full findings to their own file; the session then

@@ -11,6 +11,7 @@ import kotlin.math.max
 import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.Looper
+import java.util.concurrent.Executors
 import android.service.wallpaper.WallpaperService
 import android.view.SurfaceHolder
 // SLSS_DIAG_TEMPORARY — wallpaper render + lock-shift diagnostics.
@@ -65,6 +66,19 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         private var renderRetries = 0
         private val maxRenderRetries = 4
         private val refreshIntervalMs = 10L * 60 * 1000
+        // B3 — wall-clock of the last SUCCESSFUL render. The 10-min refreshRunnable
+        // only runs while visible, so a lock surface shown seconds at a time never
+        // fires it; unchanged params+dims then repaint the cached bitmap forever
+        // (positions go stale by days). On becoming visible we also render when this
+        // is older than refreshIntervalMs — at most one render per unlock, only when
+        // stale. Stamped ONLY on success (mirrors lastParams) so a null render still
+        // retries. 0 = never rendered yet.
+        private var lastSuccessfulRenderWallMs = 0L
+        // C2 — single-threaded background executor for the WebP disk-cache encode
+        // (~100-400 ms for a full-screen bitmap) so it never stalls the shared main
+        // thread. Single thread serialises writes to the same per-dimension file so
+        // two quick renders can't interleave-corrupt it. Shut down in onDestroy.
+        private val diskExecutor = Executors.newSingleThreadExecutor()
         // Coalesce a burst of onSurfaceChanged events (a fold/rotation fires
         // several within ~300ms) into one render. Each render is a heavy
         // (2-12s, >1GB) off-screen WebView pass; one per intermediate size
@@ -231,7 +245,16 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                 // resized while hidden (a fold/rotation we deferred). Otherwise
                 // re-paint the cached bitmap — no wasted render.
                 val current = currentParams()
+                // B3 — also refresh when the last successful render is older than the
+                // refresh interval (the lock surface is visible too briefly for the
+                // 10-min timer to ever fire). Paint the cached frame FIRST so the
+                // surface is instant, then render async in the background.
+                val stale = lastSuccessfulRenderWallMs == 0L ||
+                    (System.currentTimeMillis() - lastSuccessfulRenderWallMs) > refreshIntervalMs
                 if (current != lastParams || widthPx != lastRenderW || heightPx != lastRenderH) {
+                    renderAndPaint()
+                } else if (stale) {
+                    paintToSurface(lastBitmap)
                     renderAndPaint()
                 } else {
                     paintToSurface(lastBitmap)
@@ -258,6 +281,7 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                 try { displayManager.unregisterDisplayListener(displayListener) } catch (_: Throwable) {}
             }
             lastBitmap = null
+            diskExecutor.shutdown()
             super.onDestroy()
         }
 
@@ -333,6 +357,7 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
                     // get retried on the next visibility cycle.
                     lastParams = params
                     lastRenderW = rw; lastRenderH = rh
+                    lastSuccessfulRenderWallMs = System.currentTimeMillis()
                     paintToSurface(bm)
                     cacheBitmapToDisk(bm, rw, rh)
                     // Surface resized mid-render (fold / reconnect display
@@ -354,10 +379,11 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         // Persist the most recent successful render to filesDir so the next
         // process start (after force-stop / OOM kill / reboot) can show it
         // immediately on Engine.onCreate. WebP at quality 80 keeps the file
-        // ~150-300 KB on a typical inner-display render. Fire-and-forget on
-        // the engine's main handler — no caller blocks on this.
+        // ~150-300 KB on a typical inner-display render. Encoded on a single
+        // background thread (C2) so the ~100-400 ms compress never stalls the
+        // shared main thread; single-threaded so same-file writes can't interleave.
         private fun cacheBitmapToDisk(bm: Bitmap, w: Int, h: Int) {
-            handler.post {
+            diskExecutor.execute {
                 try {
                     diskCacheFile(w, h).outputStream().use { os ->
                         @Suppress("DEPRECATION")
