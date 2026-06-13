@@ -165,3 +165,9 @@ Method: the `android-efficiency-audit` three-lens procedure run as a verificatio
 - **Hold for user decision:** A2 strategy (adaptive vs KTX2 vs blanket — note corrected savings), A4 cadence.
 - **Hold for the on-device test stage:** D2 (Samsung flicker A/B). 
 - **Hard ordering:** B1+C1 as one diff; C1/C2 before/with B3; A1 isolatable. Never `pauseTimers()`. Single shared GL process pool governs all of it.
+
+## User decisions — 2026-06-13
+- **A1, B1, B2, B3, C1, C2, A3, D1, D3 — IMPLEMENTED** (commit `dbba6ea`; `:app:assembleDebug` green).
+- **A2 — DECLINED (no change).** `deviceMemory` tiering rejected as not solid (total ignores live pressure; available-at-load is a flaky snapshot). Textures left as-is; residual ~2 GB main-app footprint is covered by the existing nets (surfaces use `lowres/`, `webglcontextlost` degrades gracefully, 2-render gate). KTX2 (the only non-predictive option) parked for possible future revisit.
+- **A4 — KEEP AS-IS (10-min wallpaper / 15-min widget).** No performance impact (offscreen renders; compose/encode now off-main via C1/C2). Battery cost is modest + bounded (wallpaper timer runs only while visible; A3 already removed the redundant 30-min widget render). Accepted.
+- **D2 — OPEN, on-device only.** `LAYER_TYPE_HARDWARE` removal awaits a physical-Samsung flicker A/B; not decidable off-device. No action until a device-test pass (or an explicit "leave it").
