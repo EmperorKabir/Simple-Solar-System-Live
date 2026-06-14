@@ -29,8 +29,11 @@ android {
         applicationId = "com.livesolar.solarsystem"
         minSdk = 31
         targetSdk = 35
-        versionCode = 16
-        versionName = "1.0.9"
+        // 16 already consumed on Play; phone stays on the EVEN band (wear = odd),
+        // so the next phone release is 18. Ships the verified audit fixes
+        // (A1/B1/B2/B3/C1/C2/A3/D1/D2/D3) + the time-nudge layout.
+        versionCode = 18
+        versionName = "1.1.0"
 
         // SLSS_DIAG_TEMPORARY — build commit for diagnostic log envelope.
         buildConfigField("String", "BUILD_COMMIT", "\"$gitCommitSha\"")
