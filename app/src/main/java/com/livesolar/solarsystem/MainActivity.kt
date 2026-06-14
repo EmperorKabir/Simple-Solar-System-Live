@@ -58,7 +58,10 @@ class MainActivity : Activity() {
             settings.displayZoomControls = false
             settings.mediaPlaybackRequiresUserGesture = false
 
-            setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            // D2 — forced hardware layer removed: redundant (WebView is hardware-
+            // accelerated by default) and it added a per-frame full-screen composite.
+            // Verified on a physical Galaxy Z Fold 6 (SM-F966B): no fold/unfold flicker
+            // with OR without it, so it was not masking a Samsung WebView flicker.
             setBackgroundColor(Color.BLACK)
             fitsSystemWindows = false
 

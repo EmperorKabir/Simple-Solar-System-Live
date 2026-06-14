@@ -610,8 +610,12 @@
             margin-right: 6px;
         }
         #time-controls {
-            display: flex;
-            flex-wrap: wrap;
+            /* 6 columns → the 6 minus units land on row 1 and the 6 plus units on
+               row 2, deterministically (was flex-wrap, which packed +1h onto the
+               first line by available width). minmax(0,1fr) lets cells shrink on the
+               narrow cover screen rather than overflow. */
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
             gap: 4px;
         }
         .time-btn {
@@ -850,12 +854,15 @@
         </div>
         <div id="time-display"><span class="live-tag">LIVE</span><span id="time-text">—</span><span id="zone-chip" title="Change time zone">UTC</span></div>
         <div id="time-controls">
-            <button class="time-btn" data-tnudge="-1dec" title="-1 decade">−1dec</button>
-            <button class="time-btn" data-tnudge="-1y"   title="-1 year">−1y</button>
-            <button class="time-btn" data-tnudge="-1mo"  title="-1 month">−1mo</button>
-            <button class="time-btn" data-tnudge="-1w"   title="-1 week">−1w</button>
-            <button class="time-btn" data-tnudge="-1d"   title="-1 day">−1d</button>
+            <!-- Order: each unit's − and + aligned in the same grid column (6 cols),
+                 so −1h sits directly above +1h, −1d above +1d, … hour on the left
+                 growing to decade on the right. -->
             <button class="time-btn" data-tnudge="-1h"   title="-1 hour">−1h</button>
+            <button class="time-btn" data-tnudge="-1d"   title="-1 day">−1d</button>
+            <button class="time-btn" data-tnudge="-1w"   title="-1 week">−1w</button>
+            <button class="time-btn" data-tnudge="-1mo"  title="-1 month">−1mo</button>
+            <button class="time-btn" data-tnudge="-1y"   title="-1 year">−1y</button>
+            <button class="time-btn" data-tnudge="-1dec" title="-1 decade">−1dec</button>
             <button class="time-btn" data-tnudge="+1h"   title="+1 hour">+1h</button>
             <button class="time-btn" data-tnudge="+1d"   title="+1 day">+1d</button>
             <button class="time-btn" data-tnudge="+1w"   title="+1 week">+1w</button>
