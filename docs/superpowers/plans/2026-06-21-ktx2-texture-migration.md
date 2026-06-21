@@ -1,10 +1,10 @@
 # KTX2/ETC1S Texture Migration — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax. This is a WebGL/WebView visual change — the "tests" are on-device verification gates (no unit-test framework covers the GPU path). The core approach is de-risked: the throwaway `compare-app/` rig proved KTX2/ETC1S renders all 36 bodies correctly (orientation, position, alpha, lighting) with sub-1/255 difference from the JPEG original.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax. This is a WebGL/WebView visual change — the "tests" are on-device verification gates (no unit-test framework covers the GPU path). The core approach is de-risked: the throwaway `compare-app/` rig proved KTX2/ETC1S renders all 36 bodies correctly (orientation, position, alpha, lighting) with sub-1/255 difference from the JPEG original. **This plan has been triple-reviewed against the live source + Context7; all findings folded in (no must-fix blockers remained).**
 
-**Goal:** Replace the main app's **34** colour textures with pre-flipped, mipmapped KTX2/ETC1S (GPU-compressed) to fix the low-RAM out-of-memory crash, shrink the app ~42% (101.7 → ~59 MB), and speed up cold-start — while keeping **4 carve-outs** (`Sun`, `EarthNormal`, `EarthSpecular`, `SaturnRing`) in their original format (lighting + ring alpha), gating KTX2 to the main interactive surface only (widget/wallpaper/picker untouched), and falling back to the already-shipped lowres backup on any KTX2 failure (no crash, no blank). A later, separate task adds size-independent label-occlusion speed tweaks.
+**Goal:** Replace the main app's **34** colour textures with pre-flipped, mipmapped KTX2/ETC1S (GPU-compressed) to fix the low-RAM out-of-memory crash, shrink the app (estimate ~42%), and speed up cold-start — while keeping **4 carve-outs** (`Sun`, `EarthNormal`, `EarthSpecular`, `SaturnRing`) in their original format (lighting + ring alpha), gating KTX2 to the main interactive surface only (widget/wallpaper/picker untouched), and falling back to the already-shipped lowres backup on any KTX2 failure (no crash, no blank). A later, separate task adds size-independent label-occlusion speed tweaks.
 
-**Architecture:** Only the *main* interactive surface (`SURFACE === 'main'`) uses `KTX2Loader` + a bundled Basis worker/WASM transcoder; every offscreen surface (widget, both wallpapers, picker previews) keeps loading the 512px lowres set via `TextureLoader`, exactly as today. **`KTX2Loader.load()` does NOT return the texture synchronously** — it delivers via the `onLoad` callback. So each main-surface KTX2 body is built with its **lowres backup texture first** (synchronous, file exists), then **upgraded** to the full KTX2 via a material→key registry swap once the worker finishes transcoding; if the KTX2 transcode fails, the lowres backup stays in place (automatic fallback, no blank). Wear OS, procedural rings, time jumps, capture/compose, and all UI are format-agnostic and untouched.
+**Architecture:** Only the *main* interactive surface (`SURFACE === 'main'`) uses `KTX2Loader` + a bundled Basis worker/WASM transcoder; every offscreen surface (widget, both wallpapers, picker previews) keeps loading the 512px lowres set via `TextureLoader`, exactly as today. **`KTX2Loader.load()` does NOT return the texture synchronously** (verified: the bundled r160 loader's `load()` has no return; texture arrives via `onLoad`). So each main-surface KTX2 body is built with its **lowres backup texture first** (`TextureLoader.load()` DOES return synchronously), then **upgraded** to the full KTX2 via a material→key registry swap once the worker transcodes it; if the KTX2 transcode fails, the lowres backup stays in place (automatic fallback, no blank). This is the exact pattern the `compare-app` proved. Wear OS, procedural rings, time jumps, capture/compose, and all UI are format-agnostic and untouched.
 
 **Tech Stack:** three.js r160 (`KTX2Loader` + `WorkerPool` + Basis transcoder), `toktx` (KTX-Software) for encoding, Android WebView + `WebViewAssetLoader`, AGP 8.9.3 / Gradle 8.11.1.
 
@@ -12,21 +12,24 @@
 
 ## Pre-flight facts (verified by source-grounded cross-examination — do not re-derive)
 
-- **Decision:** ETC1S is the only full-replacement set within Play's ~150 MB base-module download limit (UASTC = 283 MB → forces Play Asset Delivery; ETC1S = ~53 MB → fits in `assets/`). Per-body on-device sweep: all bodies render correctly in ETC1S.
+- **Decision:** ETC1S is the only full-replacement set within Play's ~150 MB base-module download limit (UASTC = 283 MB → forces Play Asset Delivery; ETC1S ≈ 53 MB → fits in `assets/`). Per-body on-device sweep: all bodies render correctly in ETC1S.
 - **4 carve-outs kept in original format** (NOT converted):
   - `Sun.jpg` — banding under tone-mapping on its big bright disc; also used as both `map` AND `emissiveMap` (index.html:1716).
   - `EarthNormal.jpg` — normal/relief map (lighting input).
   - `EarthSpecular.jpg` — roughness map (lighting input).
   - `SaturnRing.png` — **alpha-transparent** ring texture (`transparent:true`, index.html:1845-1846). **ETC1S has no usable alpha channel** → converting it would render the rings as an opaque disc. Keep it PNG.
-- **38 texture keys total** = 34 KTX2 + 4 carve-outs. (Verified `urls` map, index.html:1582-1621.)
+- **38 texture keys total** = 34 KTX2 + 4 carve-outs. (Verified `urls` map, index.html:1582-1621: 35 `.jpg` + 3 `.png` = `Io.png`, `Titan.png`, `SaturnRing.png`.)
 - **Flip:** `CompressedTexture.flipY` is `false` and cannot be changed at runtime. JPEGs/PNGs are `flipY:true`. On the SHARED sphere geometry the fix is to **pre-flip the source image vertically before encoding** — proven in `compare-app`. Carve-outs stay `flipY:true` and are NOT pre-flipped; flip is per-texture, so the two coexist correctly.
-- **Async (CORRECTED):** the bundled r160 `KTX2Loader.load()` has **no return statement** — it returns `undefined`; the texture only exists inside the `onLoad` callback (`_createTexture` is async). The earlier "returns synchronously like CompressedTextureLoader" assumption was WRONG (that doc describes the base class, which KTX2Loader overrides). Therefore `tex[k] = ktx2Loader.load(...)` would set `undefined` and crash the scene build. The build-with-lowres-then-swap design (above) is mandatory, and is exactly the pattern the `compare-app` used successfully.
-- **Gate:** widget/wallpaper/picker rewrite all `urls` to `textures/lowres/` (`SURFACE !== 'main'`, index.html:1637-1639). `KTX2Loader` is instantiated only when `SURFACE === 'main'`, so no offscreen render WebView (Presentation/VirtualDisplay/ImageReader) ever spawns a worker/WASM. Cross-exam confirmed offscreen callers always pass `?surface=widget|wallpaper`, so the gate holds.
-- **Mipmaps:** baked at encode time (`--genmipmap`) or small distant moons shimmer; the loader sets `generateMipmaps=false` and uses the baked mips.
-- **Colour space:** encode base colour as sRGB (`--assign_oetf srgb`); the loader sets `colorSpace` from the container; the code also assigns `SRGBColorSpace` (idempotent). No double-gamma.
-- **Lowres extensions vary:** `textures/lowres/` contains 35 `.jpg` + 3 `.png` (`Io.png`, `Titan.png`, `SaturnRing.png`). The fallback/backup URL MUST use the real extension (derive from `urls[k]`), never a hardcoded `.jpg`.
+- **Async (verified):** the bundled r160 `KTX2Loader.load()` has **no return statement** (returns `undefined`); the texture only exists inside `onLoad`. `TextureLoader.load()` DOES return the texture object synchronously. Hence the build-with-lowres-then-swap design (mandatory, proven in compare-app).
+- **Swap mechanism (Context7-confirmed):** `material[slot] = newTexture; material.needsUpdate = true;` is three.js's canonical runtime texture swap. Identity-matching `m[slot] === tex[key]` is the exact mechanism the compare-app proved (no clones / no `.map` reassignment in the build, so each slot holds the same object `tLoad.load` returned).
+- **Gate:** widget/wallpaper/picker rewrite all `urls` to `textures/lowres/` (`SURFACE !== 'main'`, index.html:1637-1639). `KTX2Loader` is instantiated only when `SURFACE === 'main'`, so no offscreen render WebView spawns a worker/WASM. Offscreen callers always pass `?surface=widget|wallpaper`; the gate holds.
+- **Mipmaps:** baked at encode time (`--genmipmap`); the loader sets `generateMipmaps=false` and uses the baked mips.
+- **Colour space:** encode base colour as sRGB (`--assign_oetf srgb`); the loader sets `colorSpace` from the container; the code also assigns `SRGBColorSpace` (idempotent — no double-gamma).
+- **Lowres extensions vary:** `textures/lowres/` contains 35 `.jpg` + 3 `.png` (`Io.png`, `Titan.png`, `SaturnRing.png`). The fallback/backup URL MUST derive the real extension from `urls[k]` (`urls[k].replace('textures/','textures/lowres/')`), never a hardcoded `.jpg`.
+- **SLSS telemetry (keep-the-logger rule):** `slssEnabled`/`slssEvent` are always-defined ES-module imports (index.html:921); gate logging with `if (slssEnabled())` (NOT `typeof`). The existing per-texture event is `slssEvent('texture_load', { key, url, load_ms, success, anisotropy_set })` fired from the real onLoad/onError (index.html:1660) — PRESERVE that exact shape + timing; add KTX2-specific events alongside, do not replace it.
 - **Wear OS:** separate WFF resource-only module, own odd versionCode band, no shared asset path. Provably untouched. Do not modify `wear/`.
-- **Build:** importmap maps `three/addons/` → `./js/` (index.html:685), so `three/addons/loaders/KTX2Loader.js` → `js/loaders/KTX2Loader.js`; KTX2Loader's relative deps resolve from `js/loaders/` into `js/libs/` + `js/utils/`. Add `androidResources { noCompress += "ktx2" }` — reason: **avoid double-compression** (ETC1S is already compressed; an APK gzip pass wastes build time for ~0 size delta). The asset loader uses `AssetManager.open()` which inflates transparently, so this is a build-efficiency directive, NOT a load-correctness one. Call `ktx2Loader.dispose()` after load to free the worker pool. No `<uses-feature>`. R8/minify IS on in release (it only touches `res/`, not `assets/`, so `.ktx2` is safe).
+- **Build:** importmap maps `three/addons/` → `./js/` (index.html:685), so `three/addons/loaders/KTX2Loader.js` → `js/loaders/KTX2Loader.js`; relative deps resolve into `js/libs/` + `js/utils/`. Add `androidResources { noCompress += "ktx2" }` (extension string, no dot) — reason: **avoid double-compression** (ETC1S is already compressed; the APK gzip pass wastes build time for ~0 delta). The asset loader (`AssetManager.open()`) inflates transparently, so this is build-efficiency, NOT load-correctness. Call `ktx2Loader.dispose()` after load (free the worker pool). No `<uses-feature>`. R8/minify is on in release but only touches `res/`, not `assets/`, so `.ktx2` is safe.
+- **Size figures are ESTIMATES pending the actual encode** (Task 2 Step 4 + Task 5 Step 3 measure the real values). Current `textures/` top-level = **98.3 MB**. Target payload ≈ 56 MB, AAB ≈ 59 MB — confirm empirically, do not quote as fact until measured.
 
 ---
 
@@ -35,12 +38,12 @@
 | File | Responsibility | Action |
 |---|---|---|
 | `tools/texture-masters/` | Archive of the 38 original JPEG/PNG masters (lowres regen + rollback; PIL can't read .ktx2). | Create |
-| `tools/gen-ship-ktx2.py` | Encode the **34** shipping KTX2 textures (pre-flipped, mipmapped, sRGB) into `app/src/main/assets/textures/`. Keeps the 4 carve-outs untouched. | Create |
-| `app/src/main/assets/textures/<Body>.ktx2` (×34) | The shipping compressed textures (replace 34 JPEG/PNG colour masters). | Create (34) |
+| `tools/gen-ship-ktx2.py` | Encode the **34** shipping KTX2 textures (pre-flipped, mipmapped, sRGB). Keeps the 4 carve-outs untouched. | Create |
+| `app/src/main/assets/textures/<Body>.ktx2` (×34) | Shipping compressed textures (replace 34 colour masters). | Create (34) |
 | 34 replaced `*.jpg`/`*.png` colour masters in `textures/` | Old colour masters. | Delete (34) — copies retained in `tools/texture-masters/` |
 | `app/src/main/assets/textures/{Sun.jpg, EarthNormal.jpg, EarthSpecular.jpg, SaturnRing.png}` | The 4 carve-outs. | UNCHANGED |
-| `app/src/main/assets/js/loaders/KTX2Loader.js` + `js/libs/{ktx-parse,zstddec}.module.js` + `js/libs/basis/basis_transcoder.{js,wasm}` + `js/utils/WorkerPool.js` | Loader + Basis transcoder (copy verbatim from `compare-app/`). | Create (6) |
-| `app/src/main/assets/index.html` | Gated KTX2 path: build-with-lowres → upgrade-swap registry; preserve SLSS telemetry; `?ktx2=off` test flag; dispose. (Modify texture block 1650-1691; the synchronous material refs at 1716/1756/1846/1916 need NO edit — the swap patches them by object identity.) | Modify |
+| `app/src/main/assets/js/loaders/KTX2Loader.js` + `js/libs/{ktx-parse,zstddec}.module.js` + `js/libs/basis/basis_transcoder.{js,wasm}` + `js/utils/WorkerPool.js` | Loader + Basis transcoder (verbatim from `compare-app/`). | Create (6) |
+| `app/src/main/assets/index.html` | Gated KTX2 path: build-with-lowres → upgrade-swap registry; preserve SLSS telemetry; try/catch + reveal-timeout safety; `?ktx2=off` flag; dispose. (Modify texture block 1650-1691; material refs at 1716/1756/1846/1916 need NO edit — the swap patches them by identity.) | Modify |
 | `app/build.gradle.kts` | Add `androidResources { noCompress += "ktx2" }`; bump `versionCode`/`versionName`. | Modify |
 | `app/src/main/assets/textures/lowres/*` (35 jpg + 3 png) | 512px backup set (widget/wallpaper/picker + main-app fallback). | UNCHANGED — must stay |
 
@@ -49,6 +52,8 @@
 ## Task 1: Archive the original masters (enables lowres regen + rollback)
 
 **Files:** Create `tools/texture-masters/`
+
+> Note: the lowres regen tool `tools/gen-lowres-textures.py` hardcodes `SRC = app/src/main/assets/textures` (its line 11). After Task 2 deletes the 34 colour masters, regenerating lowres later REQUIRES first repointing that `SRC` to `tools/texture-masters/` (or copying the masters back). The archive is what makes that possible.
 
 - [ ] **Step 1: Copy all 38 current masters out of the asset tree**
 
@@ -71,21 +76,21 @@ git commit -m "chore(textures): archive original JPEG/PNG masters before KTX2 mi
 
 **Files:** Create `tools/gen-ship-ktx2.py`; produces `app/src/main/assets/textures/<Body>.ktx2` ×34
 
-- [ ] **Step 1: Write the generator** (`tools/gen-ship-ktx2.py`)
+- [ ] **Step 1: Write the generator** (`tools/gen-ship-ktx2.py`) — flags are SET-IDENTICAL to the proven `compare-app/gen-ktx2.py` ETC1S branch
 
 ```python
 #!/usr/bin/env python3
 """Encode the 34 shipping colour textures to KTX2/ETC1S (pre-flipped, mipmapped,
 sRGB) IN PLACE in app/src/main/assets/textures/. KEEPS the 4 carve-outs
 (Sun/EarthNormal/EarthSpecular = lighting; SaturnRing = alpha) untouched.
-Source = tools/texture-masters/ (archived originals)."""
+Source = tools/texture-masters/ (archived originals). Flags match the proven rig."""
 import os, subprocess, shutil
 from PIL import Image
 TOKTX = r"C:\Program Files\KTX-Software\bin\toktx.exe"
 SRC = "tools/texture-masters"
 DST = "app/src/main/assets/textures"
 TMP = "tools/_flip_tmp"
-KEEP = {"Sun", "EarthNormal", "EarthSpecular", "SaturnRing"}   # carve-outs, stay original
+KEEP = {"Sun", "EarthNormal", "EarthSpecular", "SaturnRing"}   # carve-outs (by stem), stay original
 if os.path.isdir(TMP): shutil.rmtree(TMP)
 os.makedirs(TMP, exist_ok=True)
 ok = fail = 0
@@ -115,7 +120,7 @@ python tools/gen-ship-ktx2.py
 ```
 Expected: `DONE ok=34 fail=0`.
 
-- [ ] **Step 3: Delete the 34 now-replaced colour masters from the asset tree (keep the 4 carve-outs)**
+- [ ] **Step 3: Delete the 34 now-replaced colour masters (keep the 4 carve-outs); the guard only removes a master once its `.ktx2` sibling exists**
 
 ```bash
 python -c "
@@ -131,25 +136,25 @@ ls app/src/main/assets/textures/*.ktx2 | wc -l   # expect 34
 ```
 Expected: 34 `.ktx2`; the only loose images left in `textures/` are the 4 carve-outs.
 
-- [ ] **Step 4: Verify payload shrank**
+- [ ] **Step 4: Measure the real payload (confirms/replaces the estimate)**
 
 ```bash
 python -c "import os; d='app/src/main/assets/textures'; print('main textures MB:', round(sum(os.path.getsize(os.path.join(d,f)) for f in os.listdir(d) if os.path.isfile(os.path.join(d,f)))/1024/1024,1))"
 ```
-Expected: ~56 MB (was ~98 MB).
+Expected: noticeably below 98.3 MB (estimate ≈ 56 MB). Record the actual number.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add tools/gen-ship-ktx2.py app/src/main/assets/textures
-git commit -m "feat(textures): KTX2/ETC1S shipping set (34 bodies, pre-flipped+mipmapped); keep 4 carve-outs (Sun/EarthNormal/EarthSpecular/SaturnRing)"
+git commit -m "feat(textures): KTX2/ETC1S shipping set (34 bodies, pre-flipped+mipmapped); keep 4 carve-outs"
 ```
 
 ---
 
 ## Task 3: Bundle the KTX2 loader + Basis transcoder
 
-**Files:** Create 6 files under `app/src/main/assets/js/` (verbatim from `compare-app/`)
+**Files:** Create 6 files under `app/src/main/assets/js/` (verbatim from `compare-app/`; all 6 confirmed present there)
 
 - [ ] **Step 1: Copy the loader + transcoder tree**
 
@@ -186,9 +191,9 @@ git commit -m "feat(textures): bundle KTX2Loader + Basis transcoder (r160) for t
 
 ## Task 4: Wire the gated KTX2 path into index.html (build-with-lowres → upgrade-swap)
 
-**Files:** Modify `app/src/main/assets/index.html` — import (~898), texture block (1650-1674), first `Promise.all().then()` (1675-1691). Do NOT touch the second `Promise.all(texLoadPromises)` at 3761 (surface-capture path). The material refs at 1716/1756/1846/1916 need NO edit (the swap patches them by object identity).
+**Files:** Modify `app/src/main/assets/index.html` — import (898), texture block (1650-1674), first `Promise.all().then()` (1675-1691). Do NOT touch the second `Promise.all(texLoadPromises)` at 3761 (surface-capture path, `SURFACE==='widget'|'wallpaper'` only). Material refs at 1716/1756/1846/1916 need NO edit.
 
-> **Design:** main surface → each of the 34 KTX2 bodies is built with its **lowres backup** (synchronous, file exists) so `tex[k]` is always a valid texture; then the full `.ktx2` is loaded and **swapped onto the material** via a registry once the worker transcodes it. KTX2 failure → lowres backup stays. Carve-outs + all surface modes use the existing JPEG/PNG path unchanged. `texLoadPromises` and `tex` are ALREADY declared (1650-1651) — reuse, do not redeclare. Preserve the existing `slssEvent('texture_load', …)` telemetry.
+> **Ground first:** confirm the exact existing `slssEvent('texture_load', {...})` field set at index.html:1660 and reproduce it verbatim in the new loop (the field list below is reconstructed from review — verify before committing). `tex` and `texLoadPromises` are ALREADY declared at 1650-1651 — reuse, do not redeclare.
 
 - [ ] **Step 1: Add the KTX2Loader import** (after the CSS2DRenderer import at index.html:898)
 
@@ -196,56 +201,69 @@ git commit -m "feat(textures): bundle KTX2Loader + Basis transcoder (r160) for t
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 ```
 
-- [ ] **Step 2: Replace the texture-load loop body** (index.html:1652-1674) — keep the existing `const tex = {}` and `const texLoadPromises = []` declarations above it; replace only the loop:
+- [ ] **Step 2: Replace the texture-load loop body** (1652-1674) — keep the existing `const tex = {}` / `const texLoadPromises = []` above it:
 
 ```js
-        // MAIN surface: 34 colour bodies use KTX2/ETC1S (GPU-compressed, fixes the OOM
-        // crash); 4 carve-outs (Sun/EarthNormal/EarthSpecular/SaturnRing) stay original.
+        // MAIN surface: 34 colour bodies use KTX2/ETC1S; 4 carve-outs stay original.
         // KTX2Loader.load() does NOT return the texture, so each KTX2 body is BUILT with
-        // its lowres backup, then UPGRADED to the full .ktx2 via a registry swap (below).
-        // Surface modes (widget/wallpaper/preview) never enter the KTX2 branch.
+        // its lowres backup (TextureLoader DOES return synchronously), then UPGRADED to
+        // the full .ktx2 via the registry swap in Step 3. Surface modes never enter KTX2.
         const KTX2_KEEP = new Set(['Sun', 'EarthNormal', 'EarthSpecular', 'SaturnRing']);
         const useKtx2 = (SURFACE === 'main');
-        const _forceNoKtx2 = (new URLSearchParams(location.search).get('ktx2') === 'off'); // fallback test
+        // ?ktx2=off forces the lowres-backup path for the Task 6.9 fallback test. INERT on
+        // the stock build (MainActivity:112 loads no query string) — see Task 6.9.
+        const _forceNoKtx2 = (new URLSearchParams(location.search).get('ktx2') === 'off');
         let ktx2Loader = null;
         if (useKtx2) ktx2Loader = new KTX2Loader().setTranscoderPath('js/libs/basis/').detectSupport(renderer);
-        const _ktx2Upgrades = [];   // {key, tex} swapped onto materials after scene build
+        const _ktx2Upgrades = [];
         const _applyTexProps = (t) => {
             t.colorSpace = THREE.SRGBColorSpace;
             if (SURFACE === 'main' && renderer.capabilities.getMaxAnisotropy) t.anisotropy = renderer.capabilities.getMaxAnisotropy();
         };
+        // Preserve the existing texture_load telemetry (shape + timing) — verify fields vs 1660.
+        const _logTex = (key, url, t0, success) => { if (slssEnabled()) slssEvent('texture_load', { key, url, load_ms: Math.round(performance.now() - t0), success, anisotropy_set: (SURFACE === 'main') }); };
         for (let k in urls) {
             const isKtx2 = useKtx2 && !KTX2_KEEP.has(k);
-            if (typeof slssEvent === 'function') slssEvent('texture_load', { body: k, url: isKtx2 ? ('textures/' + k + '.ktx2') : urls[k] });
+            const t0 = performance.now();
             if (isKtx2) {
-                const baseUrl = urls[k].replace('textures/', 'textures/lowres/');   // extension-correct backup
+                const baseUrl = urls[k].replace('textures/', 'textures/lowres/');   // extension-correct
                 const ktx2Url = 'textures/' + k + '.ktx2';
                 texLoadPromises.push(new Promise((resolve) => {
                     tex[k] = tLoad.load(baseUrl, () => {
-                        if (_forceNoKtx2) { console.warn('SLSS_DIAG ktx2 forced-off ' + k); resolve(); return; }
-                        ktx2Loader.load(ktx2Url,
-                            (kt) => { _applyTexProps(kt); _ktx2Upgrades.push({ key: k, tex: kt }); resolve(); },
-                            undefined,
-                            () => { console.warn('SLSS_DIAG ktx2 fail ' + k + ' -> lowres'); if (typeof slssEvent === 'function') slssEvent('ktx2_fail', { body: k }); resolve(); });
-                    }, undefined, () => resolve());   // backup itself failed → still resolve (blank, but no hang)
+                        if (_forceNoKtx2) { console.warn('SLSS_DIAG ktx2 forced-off ' + k); _logTex(k, baseUrl, t0, true); resolve(); return; }
+                        try {
+                            ktx2Loader.load(ktx2Url,
+                                (kt) => { _applyTexProps(kt); _ktx2Upgrades.push({ key: k, tex: kt }); _logTex(k, ktx2Url, t0, true); resolve(); },
+                                undefined,
+                                () => { console.warn('SLSS_DIAG ktx2 fail ' + k + ' -> lowres'); if (slssEnabled()) slssEvent('ktx2_fail', { key: k }); _logTex(k, ktx2Url, t0, false); resolve(); });
+                        } catch (e) {
+                            console.warn('SLSS_DIAG ktx2 throw ' + k); if (slssEnabled()) slssEvent('ktx2_fail', { key: k, threw: true }); _logTex(k, ktx2Url, t0, false); resolve();
+                        }
+                    }, undefined, () => { _logTex(k, baseUrl, t0, false); resolve(); });
                     _applyTexProps(tex[k]);
                 }));
             } else {
                 texLoadPromises.push(new Promise((resolve) => {
-                    tex[k] = tLoad.load(urls[k], () => resolve(), undefined, () => resolve());
+                    tex[k] = tLoad.load(urls[k],
+                        () => { _logTex(k, urls[k], t0, true); resolve(); },
+                        undefined,
+                        () => { _logTex(k, urls[k], t0, false); resolve(); });
                     _applyTexProps(tex[k]);
                 }));
             }
         }
 ```
 
-- [ ] **Step 3: In the first `Promise.all(texLoadPromises).then(...)` (index.html:1675), BEFORE `renderer.compile`/reveal, swap upgrades onto the materials and dispose the loader**
+- [ ] **Step 3: Wrap the first reveal in a once-guarded function with a stall-timeout, and do the upgrade-swap + dispose inside it** (index.html:1675-1691). The existing `.then` body (the `renderer.compile` + warm-up render + overlay fade) moves INTO `_revealMain` unchanged, after the swap block:
 
 ```js
-            // Swap each transcoded KTX2 texture onto the materials that were built with
-            // the lowres backup (match by object identity), then free the lowres backups
-            // and the worker pool. Runs before compile/first-render so no placeholder is
-            // ever uploaded. Bodies whose KTX2 failed keep their lowres backup (no blank).
+        let _revealed = false;
+        const _revealMain = () => {
+            if (_revealed) return; _revealed = true;
+            // Swap each transcoded KTX2 texture onto the materials built with the lowres
+            // backup (match by object identity), then free the backups + the worker pool.
+            // Runs before the loader overlay fades, so the user never sees the lowres base;
+            // pre-swap rAF frames may upload it behind the overlay (harmless).
             if (useKtx2 && _ktx2Upgrades.length) {
                 const slots = ['map', 'normalMap', 'roughnessMap', 'emissiveMap'];
                 const staleBases = new Set();
@@ -256,9 +274,16 @@ import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
                         for (const up of _ktx2Upgrades) if (m[slot] === tex[up.key]) { staleBases.add(m[slot]); m[slot] = up.tex; m.needsUpdate = true; }
                     }
                 });
-                staleBases.forEach((b) => { if (b && b.dispose) b.dispose(); });   // free lowres backup GPU memory
+                staleBases.forEach((b) => { if (b && b.dispose) b.dispose(); });
             }
             if (useKtx2 && ktx2Loader) { try { ktx2Loader.dispose(); } catch (_) {} }
+            // --- existing reveal logic unchanged below: renderer.compile(...), warm-up
+            //     renderer.render(...), then document.body.dataset.ready = "true" ---
+        };
+        Promise.all(texLoadPromises).then(_revealMain);
+        // Safety: never let a stalled transcode hang the main loader. Reveal whatever has
+        // transcoded by the deadline; un-upgraded bodies keep their lowres backup.
+        if (useKtx2) setTimeout(_revealMain, 12000);
 ```
 
 - [ ] **Step 4: Build, install, smoke-test** (full matrix in Task 6)
@@ -267,41 +292,41 @@ import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 ./gradlew.bat :app:assembleDebug
 "$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe" install -r app/build/outputs/apk/debug/app-debug.apk
 ```
-Expected: BUILD SUCCESSFUL; main view shows all bodies textured right-side-up; Saturn ring translucent.
+Expected: BUILD SUCCESSFUL; all bodies textured right-side-up; Saturn ring translucent.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add app/src/main/assets/index.html
-git commit -m "feat(textures): gated KTX2 path (build-with-lowres + upgrade-swap registry, per-body fallback, ?ktx2=off test)"
+git commit -m "feat(textures): gated KTX2 path (build-with-lowres + upgrade-swap, try/catch + 12s reveal-timeout, preserved SLSS telemetry, ?ktx2=off test)"
 ```
 
 ---
 
 ## Task 5: Build config — noCompress + version bump
 
-**Files:** Modify `app/build.gradle.kts` (no existing `androidResources {}` block — adding is clean)
+**Files:** Modify `app/build.gradle.kts` (no existing `androidResources {}` block — adding is clean; current `versionCode = 18`/`versionName = "1.1.0"`)
 
 - [ ] **Step 1: Add inside the `android { }` block**
 
 ```kotlin
     androidResources {
-        noCompress += "ktx2"   // ETC1S is already compressed; skip the APK gzip pass (build-time only)
+        noCompress += "ktx2"   // extension string; ETC1S already compressed — skip the APK gzip pass (build-time only)
     }
 ```
 
-- [ ] **Step 2: Bump version** (phone stays on the even band)
+- [ ] **Step 2: Bump version** (phone even band: 16→18→20; 19 belongs to the wear odd band → 20 skips nothing)
 
 ```kotlin
         versionCode = 20
         versionName = "1.2.0"
 ```
 
-- [ ] **Step 3: Build the release bundle; confirm size**
+- [ ] **Step 3: Build the release bundle; measure the real size**
 
 ```bash
 ./gradlew.bat :app:bundleRelease
-python -c "import os; print('AAB MB:', round(os.path.getsize('app/build/outputs/bundle/release/app-release.aab')/1024/1024,1))"   # expect ~59 MB
+python -c "import os; print('AAB MB:', round(os.path.getsize('app/build/outputs/bundle/release/app-release.aab')/1024/1024,1))"   # estimate ≈ 59 MB — record actual
 ```
 (If gradle signing doesn't auto-engage, sign with jarsigner as in prior releases.)
 
@@ -324,36 +349,38 @@ git commit -m "chore(release): noCompress ktx2; bump to versionCode 20 / 1.2.0 (
 - [ ] **6.6 Home + Lock wallpaper:** set each via the picker → both render.
 - [ ] **6.7 Picker + previews:** both preview iframes render; offset/tilt/labels adjust live.
 - [ ] **6.8 Low-memory device:** the device class that crashed before now launches and runs — the primary goal.
-- [ ] **6.9 Forced-fallback test (real, not "trust"):** install a one-off debug build whose `MainActivity` appends `?ktx2=off` to the load URL (or load it via adb). Confirm ALL 34 bodies render from their lowres backup (blurrier but present — **including Io and Titan from their `.png` backups**), no blank, no crash. This is the only test of the fallback branch.
+- [ ] **6.9 Forced-fallback test:** make the one-line edit `loadUrl("https://appassets.androidplatform.net/assets/index.html?ktx2=off")` in `MainActivity.kt:112`, build a one-off debug APK, install. Confirm ALL 34 bodies render from their lowres backup (blurrier but present — **including Io and Titan from their `.png` backups**), no blank, no crash. (The "load via adb" alternative is NOT viable — the asset host is fixed; the MainActivity edit is mandatory. Revert the edit after.)
 - [ ] **6.10 Worker init log:** in a normal main run, confirm the diagnostic log shows the transcoder/worker initialised and shows ZERO `SLSS_DIAG ktx2 fail` lines (all transcodes succeeded).
-- [ ] **6.11 Wear OS:** `:wear:assembleRelease` still builds; watch face unchanged (no `wear/` files touched).
+- [ ] **6.11 Loader overlay completes:** the main loader overlay fades within ~12 s even under load (the stall-timeout guard) — never hangs.
+- [ ] **6.12 Earth multi-slot swap:** Earth shows the upgraded KTX2 albedo AND retains its relief/roughness shading — confirm the carve-out `normalMap`/`roughnessMap` slots were NOT clobbered by the swap.
+- [ ] **6.13 Wear OS:** `:wear:assembleRelease` still builds; watch face unchanged (no `wear/` files touched).
 - [ ] **Gate:** all pass → proceed. Any fail → STOP, diagnose, do not ship.
 
 ---
 
 ## Task 7: Independent label-occlusion speed tweaks (size-independent; AFTER Task 6 passes)
 
-> Separate from the migration so each is testable alone. These cut per-frame CPU during pan/zoom. Approved scope: occlusion every 10 frames; overlap every 12; exclude invisible hitboxes from the raycast; skip off-screen labels; skip the CSS2D render when the camera is static.
+> Separate from the migration so each is testable alone. Cuts per-frame CPU during pan/zoom. Approved scope: occlusion every 10 frames; overlap every 12; exclude invisible hitboxes from the raycast; skip off-screen labels; (narrowed) skip the CSS2D render only when nothing is moving.
 
-- [ ] **Step 0: Ground against the live code first** — read `app/src/main/assets/index.html` around the `animate()` label passes (occlusion ~3380-3442; overlap ~3510-3564; camera deltas ~3358-3361) and the occluder-array build (~1931, 1960). Confirm the exact variable names (`planetMeshes`, `visibilityRaycaster`, the interval counters) before editing. (Same discipline that corrected Task 4.)
+- [ ] **Step 0: Ground against the live code first** — read `app/src/main/assets/index.html`: occlusion pass (3380-3442; raycast at 3412), overlap pass (3510-3564), `labelRenderer.render()` (3444), camera deltas (3358-3361, currently inside the SLSS diag block at 3353), the `_projectBody(mesh, worldR)` helper (2650), and the occluder push sites (Sun mesh **1725**, planet **pivot** at **1871**, moon `mMesh` **1960**). Confirm names before editing.
 
-- [ ] **Step 1: Build an `occluderMeshes` array of REAL bodies only** (exclude the invisible `_hit_` hitboxes that are currently ray-tested then discarded by name). Populate it where `planetMeshes` is populated (~1931/1960), pushing only the visible body meshes. Commit.
+- [ ] **Step 1: Build an `occluderMeshes` array of REAL visible body meshes** — push the Sun mesh (1725), each planet's **leaf `bodyMesh`** (`data.bodyMesh`, name `"<planet>_body"`, available at ~1766), and each moon `mMesh` (1960). **Do NOT push the planet `pivot` Groups** (a Group has no geometry → `recursive:false` would hit nothing and silently disable planet occlusion). Exclude the invisible `_hit_` hitboxes (already non-load-bearing — the runtime filter at 3419 skips them, so excluding them is safe). Commit.
 
-- [ ] **Step 2: Raycast against `occluderMeshes` with `recursive:false`** instead of `intersectObjects(planetMeshes, true)` (~3412). Remove the post-hoc `_hit_` name filter (~3419) since hitboxes are no longer in the array. Commit.
+- [ ] **Step 2: Raycast `occluderMeshes` with `recursive:false`** at 3412 (replace `intersectObjects(planetMeshes, true)`). Remove ONLY the `_hit_` skip clause at 3419. **KEEP** the `_ring_` skip, the `intx.distance >= targetDist - 0.5` early-break (3415), and the self-name occlusion guard (3420). Commit.
 
-- [ ] **Step 3: Skip off-screen labels before raycasting** — before the per-label `intersectObjects`, project the body to NDC and `continue` if outside the frustum/viewport. Commit.
+- [ ] **Step 3: Skip off-screen labels before raycasting** — reuse the existing `_projectBody(mesh, worldR)` helper (2650): project the target body and `continue` if `behind` or `x/y` outside `[0, window.innerWidth/Height]` (with a small margin for the label's `+1.4*radius` offset). No new projection code. Commit.
 
-- [ ] **Step 4: Raise the intervals** — occlusion pass `5 → 10` frames (~3380); overlap pass `6 → 12` frames (~3510). Commit.
+- [ ] **Step 4: Raise the intervals** — occlusion pass `% 5 → % 10` (3380); overlap pass `% 6 → % 12` (3510). Update the now-stale "every 5/6 frames" comments at 3378/3507. Commit.
 
-- [ ] **Step 5: Skip `labelRenderer.render()` when the camera is static** — guard on the existing `camera_pos_delta`/`target_delta` (~3358-3361): when both ≈ 0 (and no body moved materially), skip the CSS2D render for that frame. Commit.
+- [ ] **Step 5: (NARROWED) Skip `labelRenderer.render()` only when NOTHING is moving** — first hoist the camera-delta computation OUT of the SLSS diag block (3358-3361) so it runs always-on. Then skip the CSS2D render (3444) ONLY when the camera is static (`posDelta≈0 && tgtDelta≈0`) AND time is not advancing (paused/frozen). **Grounding gate:** confirm a reliable "time is frozen" signal exists (e.g. not in live mode and no nudge in progress); bodies update positions every frame (3219-3266) in live mode, so a camera-only check WOULD detach labels from moving bodies. If no clean "time frozen" signal exists, DROP Step 5 (it is the lowest-value tweak). Do not skip the render on any frame where a body moved. Commit.
 
-- [ ] **Step 6: On-device re-run of Task 6.1-6.4** — confirm labels still hide correctly behind bodies, no label flicker, overlap declutter still works, panning visibly smoother. Commit.
+- [ ] **Step 6: On-device re-run of Task 6.1-6.4** — confirm labels still hide correctly behind bodies, no flicker, no label detaching from a moving body, overlap declutter intact, panning visibly smoother. Commit.
 
 ---
 
 ## Task 8: Tear down the throwaway comparison rig (after the real app ships-verified)
 
-- [ ] **Step 1: Remove the rig + its local git exclude**
+- [ ] **Step 1: Remove the rig + its local git exclude** (compare-app is git-excluded, never tracked; not a Gradle module — deletion can't break the build)
 
 ```bash
 rm -rf compare-app
@@ -371,12 +398,12 @@ python -c "p='.git/info/exclude'; open(p,'w').write(''.join(l for l in open(p) i
 ## Size-enabled efficiency assessment (what the smaller textures unlock)
 
 **Free wins (fall out of the migration, no extra code):**
-- **GPU-memory pressure gone** (~1.9 GB → ~300 MB resident): stops texture eviction + re-upload during interaction → fewer stutters; sharply lowers the WebGL-context-loss risk on low-RAM phones (the code already defends context loss at index.html:1031-1041 — this makes that path rare).
-- **Lower render bandwidth + heat/battery:** compressed textures are SAMPLED with far less memory bandwidth than RGBA8. Mobile GPUs are bandwidth-bound, so this can modestly smooth frame times during pan/zoom AND reduce GPU power draw/heat.
-- **Faster cold start:** no JPEG decode (was ~2.5 s main-thread), transcode off-thread, ~8× smaller upload, baked mipmaps (no runtime mip-gen) → ~half the loader time, no load-time jank.
+- **GPU-memory pressure drops sharply** (worst-case full-res RGBA8 of the 8K masters is the GB-class condition that triggers the OOM; ETC1S is ~4–8× smaller per texel — exact resident figure pending measurement, and the 4 uncompressed carve-outs are excluded from the saving). This stops texture eviction + re-upload during interaction → fewer stutters, and makes the WebGL-context-loss path (index.html:1031-1041) rare on low-RAM phones.
+- **Lower render bandwidth + heat/battery:** compressed textures are SAMPLED with less memory bandwidth than RGBA8. Mobile GPUs are bandwidth-bound, so this can modestly smooth frame times during pan/zoom AND reduce GPU power/heat.
+- **Faster cold start:** no JPEG decode (currently a multi-second main-thread cost), transcode off-thread, smaller upload, baked mipmaps (no runtime mip-gen) → materially faster loader fade, no load-time jank. (Magnitudes are estimates; the loader timing is captured by the preserved `texture_load` telemetry.)
 
 **Code opportunities assessed → DECLINED:**
-- **Migrate widget/wallpaper to KTX2 too:** smaller offscreen memory, but the worker/WASM may not initialise inside the Presentation/VirtualDisplay WebView, and there's no on-device proof. Risk > reward → keep surfaces on lowres JPEG.
+- **Migrate widget/wallpaper to KTX2:** smaller offscreen memory, but the worker/WASM may not initialise inside the Presentation/VirtualDisplay WebView, and there's no on-device proof. Risk > reward → keep surfaces on lowres JPEG.
 - **Drop the lowres set:** it's now the fallback → keep it.
 - **Spend freed memory on higher-res resident textures / higher render resolution:** re-creates the pressure just removed; render resolution isn't texture-memory-bound → decline.
 
@@ -385,7 +412,7 @@ python -c "p='.git/info/exclude'; open(p,'w').write(''.join(l for l in open(p) i
 ---
 
 ## Rollback
-If any gate fails without an obvious fix: `git revert` Tasks 2-5. `tools/texture-masters/` + git history restore the JPEG set exactly. The lowres set, all surface code, and `wear/` were never touched, so widget/wallpaper/Wear are unaffected by a rollback.
+If any gate fails without an obvious fix: `git revert` the Task 2, 3, 4 and 5 commits (Task 3 = the loader-bundle commit, inert once Task 4's import is reverted). `tools/texture-masters/` + git history restore the JPEG set exactly. The lowres set, all surface code, and `wear/` were never touched, so widget/wallpaper/Wear are unaffected.
 
 ## Out of scope (separate future work)
 - UASTC / Play Asset Delivery (only if max quality is ever required over size).
