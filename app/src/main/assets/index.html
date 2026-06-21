@@ -896,6 +896,7 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/OrbitControls.js';
         import { CSS2DRenderer, CSS2DObject } from 'three/addons/CSS2DRenderer.js';
+        import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 
         // ============================================================
         // Offline Orbital Mechanics Modules (Stages 6–8)
@@ -1649,37 +1650,85 @@
         // on black, then planets pop in" sequence.
         const tex = {};
         const texLoadPromises = [];
+        // KTX2/ETC1S migration: MAIN surface loads 34 colour bodies as GPU-compressed
+        // .ktx2; 4 carve-outs (Sun/EarthNormal/EarthSpecular/SaturnRing) stay JPEG/PNG.
+        // KTX2Loader.load() does NOT return the texture, so each KTX2 body is BUILT with
+        // its lowres backup (TextureLoader returns synchronously), then UPGRADED to the
+        // .ktx2 via the registry swap in the Promise.all below. KTX2 failure → the lowres
+        // backup stays (no blank). Surface modes never enter the KTX2 branch.
+        const KTX2_KEEP = new Set(['Sun', 'EarthNormal', 'EarthSpecular', 'SaturnRing']);
+        const useKtx2 = (SURFACE === 'main');
+        const _forceNoKtx2 = (new URLSearchParams(location.search).get('ktx2') === 'off');
+        let ktx2Loader = null;
+        if (useKtx2) ktx2Loader = new KTX2Loader().setTranscoderPath('js/libs/basis/').detectSupport(renderer);
+        const _ktx2Upgrades = [];
+        const _applyTexProps = (t) => {
+            if (!t) return;
+            t.colorSpace = THREE.SRGBColorSpace;
+            if (SURFACE === 'main' && renderer.capabilities.getMaxAnisotropy) t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        };
         for (let k in urls) {
+            const _isKtx2 = useKtx2 && !KTX2_KEEP.has(k);
             texLoadPromises.push(new Promise((resolve) => {
                 // SLSS_DIAG_TEMPORARY — per-texture decode timing (plan §3.13).
                 const _slssTexT0 = (typeof performance !== 'undefined') ? performance.now() : 0;
                 const _slssTexMs = () => ((typeof performance !== 'undefined') ? performance.now() : 0) - _slssTexT0;
-                tex[k] = tLoad.load(
-                    urls[k],
-                    () => {                            // onLoad
-                        if (slssEnabled()) slssEvent('texture_load', { key: k, url: urls[k], load_ms: _slssTexMs(), success: true, anisotropy_set: (tex[k] && tex[k].anisotropy) || null });
-                        resolve();
-                    },
-                    undefined,                        // onProgress (unused)
-                    () => {                            // onError → still resolve so one bad texture can't freeze the loader
-                        if (slssEnabled()) slssEvent('texture_load', { key: k, url: urls[k], load_ms: _slssTexMs(), success: false });
-                        resolve();
-                    }
-                );
-                tex[k].colorSpace = THREE.SRGBColorSpace;
-                if (SURFACE === 'main' && renderer.capabilities.getMaxAnisotropy) {
-                    tex[k].anisotropy = renderer.capabilities.getMaxAnisotropy();
+                if (_isKtx2) {
+                    const baseUrl = urls[k].replace('textures/', 'textures/lowres/');
+                    const ktx2Url = 'textures/' + k + '.ktx2';
+                    tex[k] = tLoad.load(baseUrl, () => {
+                        if (_forceNoKtx2) { console.warn('SLSS_DIAG ktx2 forced-off ' + k); if (slssEnabled()) slssEvent('texture_load', { key: k, url: baseUrl, load_ms: _slssTexMs(), success: true, anisotropy_set: (tex[k] && tex[k].anisotropy) || null }); resolve(); return; }
+                        try {
+                            ktx2Loader.load(ktx2Url,
+                                (kt) => { _applyTexProps(kt); _ktx2Upgrades.push({ key: k, tex: kt }); if (slssEnabled()) slssEvent('texture_load', { key: k, url: ktx2Url, load_ms: _slssTexMs(), success: true, anisotropy_set: (kt && kt.anisotropy) || null }); resolve(); },
+                                undefined,
+                                () => { console.warn('SLSS_DIAG ktx2 fail ' + k + ' -> lowres'); if (slssEnabled()) { slssEvent('ktx2_fail', { key: k }); slssEvent('texture_load', { key: k, url: ktx2Url, load_ms: _slssTexMs(), success: false }); } resolve(); });
+                        } catch (e) {
+                            console.warn('SLSS_DIAG ktx2 throw ' + k); if (slssEnabled()) { slssEvent('ktx2_fail', { key: k, threw: true }); slssEvent('texture_load', { key: k, url: ktx2Url, load_ms: _slssTexMs(), success: false }); } resolve();
+                        }
+                    }, undefined, () => { if (slssEnabled()) slssEvent('texture_load', { key: k, url: baseUrl, load_ms: _slssTexMs(), success: false }); resolve(); });
+                    _applyTexProps(tex[k]);
+                } else {
+                    tex[k] = tLoad.load(
+                        urls[k],
+                        () => {                            // onLoad
+                            if (slssEnabled()) slssEvent('texture_load', { key: k, url: urls[k], load_ms: _slssTexMs(), success: true, anisotropy_set: (tex[k] && tex[k].anisotropy) || null });
+                            resolve();
+                        },
+                        undefined,                        // onProgress (unused)
+                        () => {                            // onError → still resolve so one bad texture can't freeze the loader
+                            if (slssEnabled()) slssEvent('texture_load', { key: k, url: urls[k], load_ms: _slssTexMs(), success: false });
+                            resolve();
+                        }
+                    );
+                    _applyTexProps(tex[k]);
                 }
             }));
         }
-        Promise.all(texLoadPromises).then(() => {
+        let _revealedOnce = false;
+        const _revealMain = () => {
+            if (_revealedOnce) return; _revealedOnce = true;
+            // KTX2 upgrade swap: replace each lowres-backup texture with its transcoded
+            // .ktx2 on the materials (match by object identity), then free the backups
+            // and the worker pool. Bodies whose .ktx2 failed keep their lowres backup.
+            if (useKtx2 && _ktx2Upgrades.length) {
+                const _slots = ['map', 'normalMap', 'roughnessMap', 'emissiveMap'];
+                const _staleBases = new Set();
+                scene.traverse((obj) => {
+                    const mats = Array.isArray(obj.material) ? obj.material : (obj.material ? [obj.material] : []);
+                    for (const m of mats) for (const slot of _slots) {
+                        if (!m[slot]) continue;
+                        for (const up of _ktx2Upgrades) if (m[slot] === tex[up.key]) { _staleBases.add(m[slot]); m[slot] = up.tex; m.needsUpdate = true; }
+                    }
+                });
+                _staleBases.forEach((b) => { if (b && b.dispose) b.dispose(); });
+            }
+            if (useKtx2 && ktx2Loader) { try { ktx2Loader.dispose(); } catch (_) {} }
             // Pre-compile shaders BEFORE first user-visible render so the
             // first frame doesn't stutter on shader-program compile (which
             // can take 100-300 ms for a scene with 30+ MeshStandardMaterials
-            // on a midrange Android GPU). renderer.compile traverses the
-            // scene, requests every material's program, and warms the
-            // pipeline. Followed by one explicit render call so any
-            // remaining first-draw cost is paid before the loader fades.
+            // on a midrange Android GPU). Followed by one explicit render call
+            // so any remaining first-draw cost is paid before the loader fades.
             try {
                 renderer.compile(scene, camera);
                 renderer.render(scene, camera);
@@ -1688,7 +1737,10 @@
             document.body.dataset.ready = "true";
             const loader = document.getElementById('app-loader');
             if (loader) setTimeout(() => loader.remove(), 260);
-        });
+        };
+        Promise.all(texLoadPromises).then(_revealMain);
+        // Safety: never let a stalled transcode hang the loader — reveal what's ready.
+        if (useKtx2) setTimeout(_revealMain, 12000);
 
 
         // ============================================================
@@ -1696,6 +1748,12 @@
         // ============================================================
         const planets = {};
         const planetMeshes = [];
+        const occluderMeshes = [];   // Task 7: real visible body meshes only (occlusion raycast target)
+        // Task 7: idle label-render skip state (persists across frames).
+        const _lblCamPosLast = new THREE.Vector3();
+        const _lblCamTgtLast = new THREE.Vector3();
+        let _lblCamInit = false;
+        let _lblLastRenderDNow = -1e9;
         const ringLines = {};
         const labelsList = [];
 
@@ -1723,6 +1781,7 @@
         sun.name = "Sun";
         sun.add(createLabel("Sun", sunVisualRadius));
         planetMeshes.push(sun);
+        occluderMeshes.push(sun);
 
         // Compute initial Julian date via offline OrbitalTimeUtils.
         // Honors any active simulation-time override (TimeOverride.js).
@@ -1869,6 +1928,7 @@
             scene.add(pivot);
             planets[name] = pivot;
             planetMeshes.push(pivot);
+            occluderMeshes.push(bodyMesh);
 
             if (name === "Earth") {
                 earthPivot = pivot;
@@ -1958,6 +2018,7 @@
             }
             
             planetMeshes.push(mMesh);
+            occluderMeshes.push(mMesh);
             activeMoons.push({ mesh: mMesh, config: mc });
         }
 
@@ -3375,9 +3436,9 @@
                 } catch (e) { /* noop */ }
             }
 
-            // Throttled Label Occlusion (every 5 frames). Skipped in surface
+            // Throttled Label Occlusion (every 10 frames). Skipped in surface
             // mode — _capture handles its own dedupe once per render.
-            if (SURFACE === 'main' && frameCount % 5 === 0) {
+            if (SURFACE === 'main' && frameCount % 10 === 0) {
                 const cameraPos = camera.position;
                 for (let i = 0; i < labelsList.length; i++) {
                     const lblDiv = labelsList[i];
@@ -3404,12 +3465,16 @@
                         continue;
                     }
                     
+                    // Task 7: skip the occlusion raycast for off-screen labels.
+                    const _sp = _projectBody(targetMesh, 0);
+                    if (_sp.behind || _sp.x < -64 || _sp.x > window.innerWidth + 64 || _sp.y < -64 || _sp.y > window.innerHeight + 64) continue;
+
                     let isEclipsed = false;
                     targetMesh.getWorldPosition(_labelWorldPos);
                     const targetDist = cameraPos.distanceTo(_labelWorldPos);
                     _labelRayDir.subVectors(_labelWorldPos, cameraPos).normalize();
                     visibilityRaycaster.set(cameraPos, _labelRayDir);
-                    const intersects = visibilityRaycaster.intersectObjects(planetMeshes, true);
+                    const intersects = visibilityRaycaster.intersectObjects(occluderMeshes, false);
                     
                     for(let intx of intersects) {
                         if (intx.distance >= targetDist - 0.5) break;
@@ -3441,7 +3506,22 @@
                 }
             }
             
-            labelRenderer.render(scene, camera);
+            // Task 7 Step 5: skip the label overlay render when idle (camera static,
+            // time not jumping), with a ~2/second heartbeat so live real-time orbital
+            // drift can't visibly detach a label. Orbital maths + the 3D render above
+            // run every frame regardless — this gates ONLY the CSS2D label overlay.
+            {
+                const _pD = _lblCamInit ? camera.position.distanceTo(_lblCamPosLast) : Infinity;
+                const _tD = _lblCamInit ? controls.target.distanceTo(_lblCamTgtLast) : Infinity;
+                _lblCamPosLast.copy(camera.position); _lblCamTgtLast.copy(controls.target); _lblCamInit = true;
+                const _dNow = getEffectiveJ2000Days();
+                const _bigJump = Math.abs(_dNow - _lblLastRenderDNow) > (1 / 86400);   // >1s sim-time = a nudge/jump
+                const _camMoved = (_pD > 1e-4 || _tD > 1e-4);
+                if (SURFACE !== 'main' || _camMoved || _bigJump || (frameCount % 30 === 0) || _lblLastRenderDNow < -1e8) {
+                    labelRenderer.render(scene, camera);
+                    _lblLastRenderDNow = _dNow;
+                }
+            }
 
             // Surface-mode aggressive dedupe for the LIVE preview iframe.
             // The bitmap-render path runs its own dedupe inside _capture; the
@@ -3504,10 +3584,10 @@
                 }
             }
 
-            // Label-overlap fade (every 6 frames ≈ 10 Hz). Stacks orthogonally
+            // Label-overlap fade (every 12 frames). Stacks orthogonally
             // with .hidden-label so the zoom/occlusion logic above still wins.
             // Skipped in surface mode — _capture runs its own dedupe pass.
-            if (SURFACE === 'main' && frameCount % 6 === 0) {
+            if (SURFACE === 'main' && frameCount % 12 === 0) {
                 const labelInfo = [];
                 const camPos = camera.position;
                 for (const lblDiv of labelsList) {

@@ -25,15 +25,22 @@ android {
         buildConfig = true
     }
 
+    androidResources {
+        // ETC1S .ktx2 is already GPU-compressed — skip the APK gzip pass (build-time only;
+        // the asset loader inflates transparently regardless).
+        noCompress += "ktx2"
+    }
+
     defaultConfig {
         applicationId = "com.livesolar.solarsystem"
         minSdk = 31
         targetSdk = 35
-        // 16 already consumed on Play; phone stays on the EVEN band (wear = odd),
-        // so the next phone release is 18. Ships the verified audit fixes
-        // (A1/B1/B2/B3/C1/C2/A3/D1/D2/D3) + the time-nudge layout.
-        versionCode = 18
-        versionName = "1.1.0"
+        // Phone stays on the EVEN band (wear = odd). 18 = audit-fixes release;
+        // 20 = this KTX2/ETC1S texture migration (34 bodies compressed, 4 carve-outs
+        // kept, gated to the main surface with a lowres fallback) + label-occlusion
+        // speed tweaks. Verified on-device via the Solar Compress preview build.
+        versionCode = 20
+        versionName = "1.2.0"
 
         // SLSS_DIAG_TEMPORARY — build commit for diagnostic log envelope.
         buildConfigField("String", "BUILD_COMMIT", "\"$gitCommitSha\"")
