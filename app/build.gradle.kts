@@ -43,8 +43,9 @@ android {
         // temperatures, source-averaged from >=5 cross-examined sources per body) +
         // efficiency-audit minimisations (texture dedup, appcompat removal, WebView
         // onPause, widget battery-not-low constraint, surface antialias, SLSS R8 gate).
-        versionCode = 22
-        versionName = "1.3.0"
+        // 24 = 1.3.1 patch: info-card value font matched to the HUD button size.
+        versionCode = 24
+        versionName = "1.3.1"
 
         // SLSS_DIAG_TEMPORARY — build commit for diagnostic log envelope.
         buildConfigField("String", "BUILD_COMMIT", "\"$gitCommitSha\"")
