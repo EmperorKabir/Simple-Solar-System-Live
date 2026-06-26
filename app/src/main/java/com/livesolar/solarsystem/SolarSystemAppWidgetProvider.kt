@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.os.Bundle
+import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
@@ -42,7 +43,12 @@ class SolarSystemAppWidgetProvider : AppWidgetProvider() {
             val data = Data.Builder().putInt("appWidgetId", appWidgetId).build()
             val periodic = PeriodicWorkRequestBuilder<SolarSystemWidgetWorker>(
                 15, TimeUnit.MINUTES   // WorkManager's lower bound; closest practical match to 10 min spec
-            ).setInputData(data).build()
+            ).setInputData(data)
+                // Defer the heavy periodic WebGL render when the battery is low / saver
+                // is on (Play-vitals friendly). The user-triggered expedited one-shot
+                // below stays UNCONSTRAINED so an explicit refresh is never blocked.
+                .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
+                .build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 "widget-refresh-$appWidgetId",
                 ExistingPeriodicWorkPolicy.UPDATE,

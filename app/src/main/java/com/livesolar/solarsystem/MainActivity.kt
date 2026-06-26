@@ -143,6 +143,19 @@ class MainActivity : Activity() {
         )
     }
 
+    override fun onPause() {
+        super.onPause()
+        // Per-INSTANCE pause (NOT pauseTimers(), which is process-wide and would freeze
+        // in-flight offscreen wallpaper/widget renders) halts the main surface's WebGL
+        // rAF loop while backgrounded — removing sustained off-screen GPU/CPU drain.
+        pendingWebView?.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        pendingWebView?.onResume()
+    }
+
     override fun onDestroy() {
         // D1 — promptly free the WebView's WebGL context back to Chromium's
         // process-global pool (~16) shared with the wallpaper/widget renderers,

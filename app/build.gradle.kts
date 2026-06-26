@@ -39,8 +39,12 @@ android {
         // 20 = this KTX2/ETC1S texture migration (34 bodies compressed, 4 carve-outs
         // kept, gated to the main surface with a lowres fallback) + label-occlusion
         // speed tweaks. Verified on-device via the Solar Compress preview build.
-        versionCode = 20
-        versionName = "1.2.0"
+        // 22 (even/phone band; wear = odd) = per-body info card (gravity + day/night
+        // temperatures, source-averaged from >=5 cross-examined sources per body) +
+        // efficiency-audit minimisations (texture dedup, appcompat removal, WebView
+        // onPause, widget battery-not-low constraint, surface antialias, SLSS R8 gate).
+        versionCode = 22
+        versionName = "1.3.0"
 
         // SLSS_DIAG_TEMPORARY — build commit for diagnostic log envelope.
         buildConfigField("String", "BUILD_COMMIT", "\"$gitCommitSha\"")
@@ -115,7 +119,6 @@ java {
 }
 
 dependencies {
-    implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.core:core-ktx:1.15.0")  // WindowCompat / ViewCompat / WindowInsetsCompat
 
     // WebViewAssetLoader for secure local asset serving (enables ES modules in WebView)

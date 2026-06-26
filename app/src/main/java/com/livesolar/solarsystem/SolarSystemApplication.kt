@@ -15,11 +15,15 @@ class SolarSystemApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        // No-op in release builds (gated inside init by BuildConfig.SLSS_DIAG_ENABLED).
-        SlssLogger.init(this)
-        emitSessionStart()
-        // Install passive system-event observers (no-op if logger disabled).
-        SlssLoggerObservers.install(this)
+        // Gate the entire diag bootstrap on the COMPILE constant so R8 can prune the
+        // observer/metrics/sensor class tree from RELEASE (the unconditional install()
+        // otherwise roots them past the runtime no-op). Debug/diagnostic set
+        // SLSS_DIAG_ENABLED=true → byte-identical behaviour; release was already inert.
+        if (BuildConfig.SLSS_DIAG_ENABLED) {
+            SlssLogger.init(this)
+            emitSessionStart()
+            SlssLoggerObservers.install(this)
+        }
     }
 
     /**
