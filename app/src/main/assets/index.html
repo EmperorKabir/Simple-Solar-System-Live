@@ -1769,6 +1769,9 @@
         let _lblLastRenderDNow = -1e9;
         const ringLines = {};
         const labelsList = [];
+        // Hide a moon's label once the moon projects smaller than this radius
+        // (~1px, near-invisible). mm-based so it's resolution/display-independent.
+        const LABEL_MIN_MOON_PX = 0.16 * 160 / 25.4;
 
         function createLabel(text, radiusScale = 1.0) {
             const div = document.createElement('div');
@@ -2774,6 +2777,7 @@
         // moons separate out as you zoom in. Fixes dead taps (Uranus, a clean
         // ray-miss) AND moon-steal (Charon, a sub-pixel moon nearer the tap).
         let _overviewDist = 0;                               // reset/overview camera distance (set by calcResetView) — the zoom reference for moon selection
+        const _overviewPxR = {};                             // per-planet apparent pixel-radius at the overview framing (parent-relative zoom gate for moon-tap selection); populated by calcResetView
         const PICK_THUMB_MM = 7;                              // user-chosen thumb target
         const PICK_RADIUS_CSS = PICK_THUMB_MM * 160 / 25.4;  // mm -> dp/CSS px (~44)
         const _pickTmp = new THREE.Vector3();
@@ -2802,9 +2806,10 @@
         }
         function pickBodyAtScreen(tapX, tapY) {
             const Rt = PICK_RADIUS_CSS;          // snap tolerance (~7mm thumb)
-            const MOON_ZOOM_FRAC = 0.7;          // moons unlock once camD drops below this fraction of the overview distance (the zoom-in signal — kills galaxy-view moon steals like Oberon)
-            const MOON_SEP_PX = 15;              // a moon must be > this many px from the parent centre to be its own target (far moon like Triton/Earth's Moon, not a close one like Proteus)
+            const MOON_ZOOM_FRAC = 0.7;          // (legacy, kept for the tap_pick_diag log only via _zoomedIn below; NOT used in the selection decision)
+            const MOON_SEP_PX = Math.round(2.4 * 160 / 25.4);  // ~15px = 2.4mm: min parent-centre separation for a moon to be its own target. Resolution-independent. (NB NOT the 7mm/~44px thumb — a separate, smaller constant.)
             const MOON_PRIORITY_FACTOR = 0.6;    // ...AND the tap must be clearly nearer the moon than the planet (moonGap < 0.6*parentGap), so a tap aimed at the planet that incidentally lands nearer a close moon (Uranus's Umbriel/Titania) still selects the PLANET
+            const MOON_UNLOCK_ZOOM = 2.5;        // parent-relative zoom gate: a moon is only its own target once its PARENT looks >=2.5x its reset-view size (ps.pxR >= 2.5*overviewPxR[host]). Works for outer planets where camera-distance-from-Sun barely changes when zooming in (the flaw that retired the old camD gate).
             camera.updateMatrixWorld(true);   // force: project() must not use a stale inverse after a camera move
             const _camD = camera.position.length();
             const _zoomedIn = _overviewDist > 0 && _camD < MOON_ZOOM_FRAC * _overviewDist;
@@ -2836,29 +2841,32 @@
                 const ms = _projectBody(am.mesh, am.config.size);
                 if (ms.behind) continue;
                 const ps = _projectBody(parent, planetsData[am.config.host] ? planetsData[am.config.host].size : 1);
-                // A moon is its own target when its CENTRE is more than a finger
-                // (MOON_SEP_PX) from its parent on screen: a clearly-separated moon
-                // (Triton cgap 33, Earth's Moon 18, Io/Europa/Ganymede when zoomed
-                // in) separates, while a close one that hugs its planet (Charon 13,
-                // Proteus 12) folds in, so a tap near it selects the parent. NO zoom
-                // gate: an outer planet (Neptune orbits ~90 units out) barely changes
-                // camera distance when you zoom in, so a camD gate wrongly blocked
-                // Triton even when clearly separated; and a deliberate planet tap
-                // hits the planet's own dot regardless (labels are non-interactive).
-                // A moon transiting the disc is handled by the front-body tie-break.
+                // A moon is its own target ONLY when you've zoomed toward its parent
+                // AND it is clearly separated AND the tap is clearly on it. The
+                // parent-relative zoom gate (ps.pxR vs the parent's reset-view pxR) is
+                // resolution-independent and works for OUTER planets too: Neptune's
+                // distance-from-Sun barely changes when zooming in, but its on-screen
+                // size does — which is why the old origin-distance camD gate was
+                // retired (it wrongly blocked Triton). Missing overview reference
+                // (pre-first-reset) => locked, i.e. select the planet. At the overview
+                // every planet sits near its reset pxR, so all moons fold to the planet
+                // (kills Kerberos/Hydra/Oberon/Iapetus... galaxy-view steals).
+                const _ovR = _overviewPxR[am.config.host];
+                const _zoomedToParent = _ovR > 0 && ps.pxR >= MOON_UNLOCK_ZOOM * _ovR;
                 const cgap = Math.hypot(ms.x - ps.x, ms.y - ps.y);
-                if (cgap > MOON_SEP_PX) {
-                    // Separated enough to be its own target — but only let it win if
-                    // the tap is CLEARLY nearer the moon than the planet. A tap aimed
-                    // at the planet that just lands nearer a close moon (Uranus's
-                    // Umbriel/Titania, 16-40px out) selects the PLANET; a deliberate
-                    // tap right on a separated moon (Triton, Earth's Moon, Io...) wins.
+                if (_zoomedToParent && cgap > MOON_SEP_PX) {
+                    // Zoomed in AND separated — let the moon win only if the tap is
+                    // CLEARLY nearer it than the planet (a planet-aimed tap that just
+                    // lands nearer a close moon, e.g. Umbriel/Titania, still selects
+                    // the PLANET); a deliberate tap on a separated moon wins.
                     const moonGap = Math.hypot(tapX - ms.x, tapY - ms.y);
                     const parentGap = Math.hypot(tapX - ps.x, tapY - ps.y);
                     if (moonGap < parentGap * MOON_PRIORITY_FACTOR) consider(am.mesh, am.config.name, ms);
-                    else consider(parent, am.config.host, ms);
+                    else consider(parent, am.config.host, ps);
                 } else {
-                    consider(parent, am.config.host, ms);
+                    // Zoomed out, or moon hugging the parent: fold into the planet
+                    // (use the parent's OWN projection ps, not the moon's ms).
+                    consider(parent, am.config.host, ps);
                 }
             }
             cand.sort((a, b) => a.gap - b.gap);
@@ -3113,6 +3121,21 @@
                     requiredDist *= k;
                 }
                 _overviewDist = camera.position.length();   // overview distance — the zoom reference for moon-tap selection
+                // Capture each planet's apparent pixel-radius at this overview framing.
+                // The moon-tap picker compares the parent's current pxR against this
+                // (ps.pxR / overviewPxR) as a parent-relative zoom signal — works for
+                // outer planets where camera-distance-from-Sun hardly changes.
+                camera.updateMatrixWorld(true);
+                {
+                    const _ovHalfV = THREE.MathUtils.degToRad(camera.fov) / 2;
+                    const _ovTmp = new THREE.Vector3();
+                    for (const _pn in planets) {
+                        planets[_pn].getWorldPosition(_ovTmp);
+                        const _d = camera.position.distanceTo(_ovTmp);
+                        const _r = planetsData[_pn] ? planetsData[_pn].size : 1;
+                        _overviewPxR[_pn] = _d > 1e-6 ? (_r / _d) * (window.innerHeight / 2) / Math.tan(_ovHalfV) : 0;
+                    }
+                }
             } else {
                 // Surface (widget/wallpaper): centre the projected (NDC) bounding
                 // box of the rings + bodies so the outer ring (e.g. Pluto) is
@@ -3538,11 +3561,20 @@
                     }
                     
                     // Task 7: skip the occlusion raycast for off-screen labels.
-                    const _sp = _projectBody(targetMesh, 0);
+                    // _bodySize feeds the off-screen projection AND (for moons) the
+                    // apparent-size label hide below.
+                    const _bodySize = (objName === "Sun") ? sunVisualRadius
+                        : (planetsData[objName] ? planetsData[objName].size
+                        : (moonConfig ? moonConfig.size : 0));
+                    const _sp = _projectBody(targetMesh, _bodySize);
                     if (_sp.behind || _sp.x < -64 || _sp.x > window.innerWidth + 64 || _sp.y < -64 || _sp.y > window.innerHeight + 64) continue;
 
                     let isEclipsed = false;
                     targetMesh.getWorldPosition(_labelWorldPos);
+                    // Sample the LABEL anchor (offset above the body, where the CSS2D
+                    // label sits), not the body centre — so a label poking over a
+                    // foreground body fades. Sub-pixel offset for moons (no-op there).
+                    _labelWorldPos.y += _bodySize * 1.4;
                     const targetDist = cameraPos.distanceTo(_labelWorldPos);
                     _labelRayDir.subVectors(_labelWorldPos, cameraPos).normalize();
                     visibilityRaycaster.set(cameraPos, _labelRayDir);
@@ -3564,15 +3596,16 @@
                         if (isEclipsed) lblDiv.classList.add('hidden-label');
                         else lblDiv.classList.remove('hidden-label');
                     } else if (moonConfig) {
-                        const hostWorld = _labelHostWorld;
-                        if(planets[moonConfig.host]) planets[moonConfig.host].getWorldPosition(hostWorld);
-                        const hostDist = cameraPos.distanceTo(hostWorld);
-                        const hideThreshold = planetsData[moonConfig.host].size * 45.0;
-                        if (hostDist > hideThreshold) {
+                        // Apparent-size hide: drop a moon's label once the moon itself
+                        // projects below ~1px (near-invisible), regardless of host size.
+                        // Replaces the old host-distance*45 rule (which let moons of big
+                        // planets keep labels long after shrinking to a dot).
+                        if (_sp.pxR < LABEL_MIN_MOON_PX) {
+                            lblDiv.classList.add('hidden-label');
+                        } else if (isEclipsed) {
                             lblDiv.classList.add('hidden-label');
                         } else {
-                            if (isEclipsed) lblDiv.classList.add('hidden-label');
-                            else lblDiv.classList.remove('hidden-label');
+                            lblDiv.classList.remove('hidden-label');
                         }
                     }
                 }
