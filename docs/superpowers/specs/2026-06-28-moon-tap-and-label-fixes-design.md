@@ -62,3 +62,20 @@ Build via the `android-build-and-device-test` skill. **Do NOT install/push until
   the moon shrinks toward invisible when zoomed out; selected-moon label stays. Tune `MOON_UNLOCK_ZOOM`,
   `MOON_SEP` mm, `LABEL_MIN_MOON_PX` from the SLSS logs + visual check.
 - No regression to orbital positions, camera framing, widget/wallpaper surfaces (occlusion/picker are main-only).
+
+## REVISION (2026-06-28, post on-device test) — first approach overcompensated, replaced
+On-device the parent-relative zoom gate (MOON_UNLOCK_ZOOM=2.5) and the apparent-size label floor
+(LABEL_MIN_MOON_PX~1px) BOTH overcompensated. Evidence from device logs (tap_pick_diag): Jupiter's overview
+radius is 5.7px so the gate unlocked moons only at 14.3px, but the natural "inspect Jupiter" zoom is ~11px →
+moons stayed folded (Ganymede taps → Jupiter or dead-tap). Galilean moons project only 0.6–1.1px even zoomed in
+→ under the 1px label floor → labels hidden though visible. Root failure: thresholds set from reasoning, not
+measurement; only the over-show direction was checked, never the over-hide; the new gate vars weren't logged.
+
+**Replaced with (user directive: "distance from planet + visibility, NOT moon size or zoom"):** a single
+screen-separation threshold `MOON_SEP_PX = 5mm (~31px)`, module-level, shared by BOTH the tap picker and the
+moon-label rule. A moon is its own tap target AND shows its label only when its screen gap from the parent
+exceeds MOON_SEP_PX (and, for labels, not occluded); else it folds into the planet. No zoom gate, no size floor,
+no host-distance rule, no _overviewPxR. Calibrated from logs: overview gaps fold (Pluto's moons max ~20px < 31),
+inspect gaps separate (Ganymede 42–191px > 31). **Two-sided on-device verification:** overview tap Pluto →
+Pluto (moons folded); zoomed tap Ganymede → Ganymede (labelled). Pluto outer-moon max separation at overview
+~20px is structurally below 31px → steal cannot recur there at any phase.
