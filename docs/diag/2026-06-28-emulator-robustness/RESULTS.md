@@ -1,5 +1,17 @@
 # Emulator robustness test — moon tap-pick + label fix (2026-06-28)
 
+## Evidence screenshots (this folder)
+- `01-foldtablet-FONT-1.0-overview.png` — Fold tablet, normal font, overview (17:30).
+- `02-foldtablet-FONT-1.0-jupiter.png` — normal font, zoomed into Jupiter (Galileans labelled) (17:33).
+- `03-foldtablet-FONT-1.5-HIGH-overview-buttons-wrap.png` — **high font ×1.5**, HUD buttons wrap to two lines,
+  fewer moon labels (17:36).
+- `04-foldtablet-FONT-1.5-HIGH-overview2.png` — high font, overview again (17:37).
+- `05-foldtablet-FONT-0.85-LOW-jupiter.png` — **low font ×0.85**, compact HUD, more moon labels (17:39).
+- `06-COMPARE-normal-vs-highfont.png` — side-by-side ×1.0 vs ×1.5 (the button-wrap difference).
+Captures span 17:22→17:39; font set via `adb shell settings put system font_scale {0.85|1.0|1.5}` with a cold
+relaunch each time (the WebView only re-reads system font scale on cold start).
+
+
 Goal: verify the single screen-separation rule (`MOON_SEP_PX = 5mm ≈ 31 CSS-px`, shared by tap + label) is
 robust across **display types and font scales** ("robust for all devices and display types"). Driven on the
 **PMP_Fold** AVD (7.6" foldable, unfolded 1768×2208 @420dpi = 673×841 dp) + font-scale variants. Method: SLSS
