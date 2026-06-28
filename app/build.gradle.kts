@@ -44,8 +44,11 @@ android {
         // efficiency-audit minimisations (texture dedup, appcompat removal, WebView
         // onPause, widget battery-not-low constraint, surface antialias, SLSS R8 gate).
         // 24 = 1.3.1 patch: info-card value font matched to the HUD button size.
-        versionCode = 24
-        versionName = "1.3.1"
+        // 26 = 1.3.2: moon tap-pick steal fix (parent-separation rule, no zoom gate —
+        // stops outer moons like Kerberos/Hydra stealing planet taps) + moon-label fixes
+        // (show by screen-separation, and suppress labels for sub-pixel/invisible moons).
+        versionCode = 26
+        versionName = "1.3.2"
 
         // SLSS_DIAG_TEMPORARY — build commit for diagnostic log envelope.
         buildConfigField("String", "BUILD_COMMIT", "\"$gitCommitSha\"")
