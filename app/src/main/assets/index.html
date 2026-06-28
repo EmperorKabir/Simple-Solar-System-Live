@@ -2781,6 +2781,14 @@
         // fold into the planet; zoomed-in inspect gaps ~42px separate out. Signal is
         // distance-from-planet + visibility — NOT moon size or zoom level.
         const MOON_SEP_PX = Math.round(5.0 * 160 / 25.4);
+        // Suppress a moon's label when the body itself renders fewer than this many ACTUAL
+        // on-screen pixels across (diameter = 2 * pxR * renderer.getPixelRatio()). Moons
+        // clamped to the minimum visual radius (Hydra/Kerberos/Nix/Styx, mesh radius 0.03)
+        // project to ~1 faint anti-aliased pixel or less and are effectively invisible —
+        // don't label a body you can't see. 1.5 keeps the smallest VISIBLE moon (Oberon
+        // ~2.3 device-px) and drops the invisible ones (Hydra ~1.2, Kerberos ~0.8). Uses
+        // the real pixel ratio, so it means the same physically on every display.
+        const MOON_LABEL_MIN_RENDERED_PX = 1.5;
         const PICK_THUMB_MM = 7;                              // user-chosen thumb target
         const PICK_RADIUS_CSS = PICK_THUMB_MM * 160 / 25.4;  // mm -> dp/CSS px (~44)
         const _pickTmp = new THREE.Vector3();
@@ -3577,18 +3585,19 @@
                         if (isEclipsed) lblDiv.classList.add('hidden-label');
                         else lblDiv.classList.remove('hidden-label');
                     } else if (moonConfig) {
-                        // Show a moon's label only when it is CLEARLY SEPARATED from its
-                        // parent on screen (same MOON_SEP_PX as tap selection) and not
-                        // occluded. Crammed against the planet at the overview => hidden;
-                        // pulls away as you zoom into the system => appears. Distance +
-                        // visibility, NOT moon size.
+                        // Show a moon's label only when (a) the moon actually RENDERS at
+                        // least ~1.5 on-screen pixels across (else it's a sub-pixel,
+                        // invisible dot like Hydra/Kerberos — don't label what you can't
+                        // see), AND (b) it is CLEARLY SEPARATED from its parent (same
+                        // MOON_SEP_PX as tap selection), AND (c) it is not occluded.
                         let _mcgap = Infinity;
                         const _hostPivot = planets[moonConfig.host];
                         if (_hostPivot) {
                             const _hsp = _projectBody(_hostPivot, planetsData[moonConfig.host] ? planetsData[moonConfig.host].size : 1);
                             _mcgap = Math.hypot(_sp.x - _hsp.x, _sp.y - _hsp.y);
                         }
-                        if (_mcgap > MOON_SEP_PX && !isEclipsed) {
+                        const _renderedDiamPx = 2 * _sp.pxR * renderer.getPixelRatio();
+                        if (_renderedDiamPx >= MOON_LABEL_MIN_RENDERED_PX && _mcgap > MOON_SEP_PX && !isEclipsed) {
                             lblDiv.classList.remove('hidden-label');
                         } else {
                             lblDiv.classList.add('hidden-label');
