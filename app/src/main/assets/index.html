@@ -3542,8 +3542,8 @@
                     }
                     
                     // Task 7: skip the occlusion raycast for off-screen labels.
-                    // _bodySize feeds the off-screen projection AND (for moons) the
-                    // apparent-size label hide below.
+                    // _bodySize feeds the off-screen projection AND the label-anchor
+                    // offset (body + size*1.4) used as the occlusion sample point.
                     const _bodySize = (objName === "Sun") ? sunVisualRadius
                         : (planetsData[objName] ? planetsData[objName].size
                         : (moonConfig ? moonConfig.size : 0));
