@@ -47,8 +47,11 @@ android {
         // 26 = 1.3.2: moon tap-pick steal fix (parent-separation rule, no zoom gate —
         // stops outer moons like Kerberos/Hydra stealing planet taps) + moon-label fixes
         // (show by screen-separation, and suppress labels for sub-pixel/invisible moons).
-        versionCode = 26
-        versionName = "1.3.2"
+        // 28 = 1.3.3: lock-wallpaper wake "zoom flash" fix — dimension-aware paint
+        // (per-dimension cache consulted on mismatch) + contain/letterbox fallback.
+        // User-verified on-device via the Solar Test build before release.
+        versionCode = 28
+        versionName = "1.3.3"
 
         // SLSS_DIAG_TEMPORARY — build commit for diagnostic log envelope.
         buildConfigField("String", "BUILD_COMMIT", "\"$gitCommitSha\"")
