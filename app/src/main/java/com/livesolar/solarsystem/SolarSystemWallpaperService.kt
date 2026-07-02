@@ -8,6 +8,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.RectF
 import kotlin.math.max
+import kotlin.math.min
 import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.Looper
@@ -396,26 +397,66 @@ abstract class SolarSystemWallpaperService : WallpaperService() {
         private fun paintToSurface(bm: Bitmap?) {
             val holder = surfaceHolder ?: return
             if (!holder.surface.isValid) return
+            // Dimension-aware paint: if the bitmap was rendered for a DIFFERENT
+            // surface size than the one we're about to draw on (fold state changed
+            // while the screen was off — on wake the engine's widthPx/heightPx can
+            // lag the real surface), prefer the correct-framed per-dimension disk
+            // cache over scaling the wrong-size bitmap (the transient "zoomed in
+            // then resized" wake flash). One ~20-80 ms decode of a ~150-300 KB
+            // WebP, only on this rare mismatch path — the same decode that
+            // onCreate/onSurfaceChanged already perform. Decoded BEFORE locking
+            // the canvas so the surface lock is never held through disk I/O.
+            var toDraw = bm
+            val fw = holder.surfaceFrame.width()
+            val fh = holder.surfaceFrame.height()
+            if (toDraw != null && fw > 0 && fh > 0 && (toDraw.width != fw || toDraw.height != fh)) {
+                var cacheHit = false
+                try {
+                    val f = diskCacheFile(fw, fh)
+                    if (f.exists()) {
+                        val cached = android.graphics.BitmapFactory.decodeFile(f.absolutePath)
+                        if (cached != null && cached.width == fw && cached.height == fh) {
+                            toDraw = cached
+                            lastBitmap = cached   // keep the repaint cache consistent with the surface
+                            cacheHit = true
+                        }
+                    }
+                } catch (_: Throwable) { /* fall through to letterboxed draw */ }
+                // SLSS_DIAG_TEMPORARY — record every dimension-mismatch paint and
+                // whether the per-dimension cache rescued it (wake-zoom diagnosis).
+                if (SlssLogger.enabled) {
+                    SlssLogger.logEvent(
+                        "wallpaper_render",
+                        mapOf(
+                            "stage" to "paint_dim_mismatch",
+                            "surface" to surfaceKind(),
+                            "bitmap_dims_px" to mapOf("w" to (bm?.width ?: 0), "h" to (bm?.height ?: 0)),
+                            "surface_frame_px" to mapOf("w" to fw, "h" to fh),
+                            "per_dim_cache_hit" to cacheHit
+                        )
+                    )
+                }
+            }
             var canvas: Canvas? = null
             try {
                 canvas = holder.lockCanvas() ?: return
                 canvas.drawColor(Color.BLACK)
-                if (bm != null) {
+                if (toDraw != null) {
                     val sw = canvas.width.toFloat(); val sh = canvas.height.toFloat()
-                    val bw = bm.width.toFloat(); val bh = bm.height.toFloat()
+                    val bw = toDraw.width.toFloat(); val bh = toDraw.height.toFloat()
                     if (bw == sw && bh == sh) {
                         // Exact match (the normal case): 1:1 blit, no scaling.
-                        canvas.drawBitmap(bm, 0f, 0f, null)
+                        canvas.drawBitmap(toDraw, 0f, 0f, null)
                     } else {
-                        // Dimension mismatch (stale/cached bitmap, or surface
-                        // resized after render). COVER-scale: fill the surface
-                        // preserving aspect, centred, overflow cropped — keeps
-                        // the (centred) solar system on-screen instead of
-                        // blitting the bitmap's top-left corner off to the side.
-                        val scale = max(sw / bw, sh / bh)
+                        // Dimension mismatch with no cached frame for this size:
+                        // CONTAIN-scale — fit inside, centred, letterboxed. The
+                        // scene is a solar system on pure black, so the bars are
+                        // invisible; a briefly-smaller frame reads far better than
+                        // the old COVER zoom-crop (the "zoomed in" wake flash).
+                        val scale = min(sw / bw, sh / bh)
                         val dw = bw * scale; val dh = bh * scale
                         val left = (sw - dw) / 2f; val top = (sh - dh) / 2f
-                        canvas.drawBitmap(bm, null, RectF(left, top, left + dw, top + dh), null)
+                        canvas.drawBitmap(toDraw, null, RectF(left, top, left + dw, top + dh), null)
                     }
                 }
             } catch (_: Throwable) {

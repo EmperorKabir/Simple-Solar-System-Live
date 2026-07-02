@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Build-type override: the `diagnostic` variant installs alongside the Play
      Store release (applicationId …​.solarsystem.diag) and is labelled "Solar Test"
-     so it is clearly distinct on the launcher. Used for on-device testing of the
-     moon tap-pick + label fixes without touching the published app. -->
+     so it is clearly distinct on the launcher AND in the live-wallpaper picker
+     (the Play app's services show "Solar System (home)/(lock)"; without these
+     overrides the two apps' wallpapers would be indistinguishable there). -->
 <resources>
     <string name="app_name">Solar Test</string>
+    <string name="widget_label">Solar Test</string>
+    <string name="wallpaper_label_home">Solar Test (home)</string>
+    <string name="wallpaper_label_lock">Solar Test (lock)</string>
 </resources>
