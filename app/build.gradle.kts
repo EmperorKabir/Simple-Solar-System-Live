@@ -19,7 +19,13 @@ val gitCommitSha: String = try {
 
 android {
     namespace = "com.livesolar.solarsystem"
-    compileSdk = 35
+    // 36 = Play target-API deadline (31 Aug 2026: phone updates must target
+    // Android 16 / API 36; the Wear bundle's floor is 35 and stays put).
+    // Verified zero behaviour delta for this app: no back-interception
+    // (predictive back default is fine), no windowOptOutEdgeToEdgeEnforcement
+    // (already edge-to-edge since target 35), no orientation locks. AGP 8.9.3
+    // supports compileSdk 36 natively.
+    compileSdk = 36
 
     buildFeatures {
         buildConfig = true
@@ -34,7 +40,7 @@ android {
     defaultConfig {
         applicationId = "com.livesolar.solarsystem"
         minSdk = 31
-        targetSdk = 35
+        targetSdk = 36
         // Phone stays on the EVEN band (wear = odd). 18 = audit-fixes release;
         // 20 = this KTX2/ETC1S texture migration (34 bodies compressed, 4 carve-outs
         // kept, gated to the main surface with a lowres fallback) + label-occlusion
@@ -50,8 +56,12 @@ android {
         // 28 = 1.3.3: lock-wallpaper wake "zoom flash" fix — dimension-aware paint
         // (per-dimension cache consulted on mismatch) + contain/letterbox fallback.
         // User-verified on-device via the Solar Test build before release.
-        versionCode = 28
-        versionName = "1.3.3"
+        // 30 = 1.3.4: target/compile SDK 35 -> 36 (Play 31-Aug-2026 phone deadline;
+        // wear stays 35, its own floor). Verified on an Android 16 emulator: render,
+        // tap-select, predictive back, relaunch. Distinct code so no artifact can be
+        // confused with the SDK-35 build of 28.
+        versionCode = 30
+        versionName = "1.3.4"
 
         // SLSS_DIAG_TEMPORARY — build commit for diagnostic log envelope.
         buildConfigField("String", "BUILD_COMMIT", "\"$gitCommitSha\"")
